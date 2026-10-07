@@ -19,13 +19,13 @@ function password_ok($pw): bool
 function auth_login(): never
 {
     $b = body();
-    $email = s_lower(str($b['email'] ?? null));
+    $username = s_lower(str($b['username'] ?? null));
     $password = $b['password'] ?? null;
-    $u = $email === '' ? null : db_one('SELECT * FROM users WHERE email = ? LIMIT 1', [$email]);
+    $u = $username === '' ? null : db_one('SELECT * FROM users WHERE username = ? LIMIT 1', [$username]);
     $hash = $u ? (string)$u['password_hash'] : AUTH_DUMMY_HASH;
     $valid = is_string($password) && $password !== '' && password_verify($password, $hash);
     if (!$u || !$valid) {
-        fail(401, 'invalid_credentials', 'อีเมลหรือรหัสผ่านไม่ถูกต้อง');
+        fail(401, 'invalid_credentials', 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง');
     }
     if ($u['status'] === 'suspended') {
         fail(403, 'account_suspended', 'บัญชีนี้ถูกระงับ');
@@ -47,6 +47,7 @@ function auth_register(): never
 {
     $b = body();
     $name = str($b['name'] ?? null);
+    $username = s_lower(str($b['username'] ?? null));
     $email = s_lower(str($b['email'] ?? null));
     $phone = str($b['phone'] ?? null);
     $pw = $b['password'] ?? '';
@@ -57,18 +58,24 @@ function auth_register(): never
         || preg_match('/^[0-9\-+ ]{9,15}$/D', $phone) !== 1 || !password_ok($pw)) {
         fail(422, 'validation', 'กรุณากรอกข้อมูลให้ครบถ้วน (รหัสผ่านอย่างน้อย 8 ตัวอักษร)');
     }
+    if (!valid_username($username)) {
+        fail(422, 'validation', USERNAME_INVALID);
+    }
+    if (db_val('SELECT COUNT(*) FROM users WHERE username = ?', [$username]) > 0) {
+        fail(409, 'username_taken', 'ชื่อผู้ใช้นี้ถูกใช้งานแล้ว');
+    }
     if (db_val('SELECT COUNT(*) FROM users WHERE email = ?', [$email]) > 0) {
         fail(409, 'email_taken', 'อีเมลนี้ถูกใช้งานแล้ว');
     }
     $now = now_str();
     try {
         db_exec(
-            "INSERT INTO users (name, email, phone, role, status, password_hash, notify_email, notify_sms, created_at, last_login_at) VALUES (?, ?, ?, 'customer', 'active', ?, 1, 0, ?, ?)",
-            [$name, $email, $phone, password_hash($pw, PASSWORD_DEFAULT), $now, $now]
+            "INSERT INTO users (username, name, email, phone, role, status, password_hash, notify_email, notify_sms, created_at, last_login_at) VALUES (?, ?, ?, ?, 'customer', 'active', ?, 1, 0, ?, ?)",
+            [$username, $name, $email, $phone, password_hash($pw, PASSWORD_DEFAULT), $now, $now]
         );
     } catch (PDOException $e) {
         if (is_duplicate($e)) {
-            fail(409, 'email_taken', 'อีเมลนี้ถูกใช้งานแล้ว');
+            fail(409, 'username_taken', 'ชื่อผู้ใช้หรืออีเมลนี้ถูกใช้งานแล้ว');
         }
         throw $e;
     }

@@ -26,6 +26,11 @@
         <button class="btn btn-outline-secondary btn-sm" type="button" data-theme-toggle aria-label="สลับโหมดสว่าง/มืด"><i class="bi bi-moon-stars-fill"></i></button>
       </div>
 
+      <div class="institution text-center mb-4">
+        <p class="h5 text-brand fw-semibold mb-1">ระบบจองล็อกเกอร์ออนไลน์</p>
+        <p class="small text-body-secondary mb-0">สาขาวิชาระบบสารสนเทศและคอมพิวเตอร์ธุรกิจและเทคโนโลยีสารสนเทศ<br>มหาวิทยาลัยเทคโนโลยีราชมงคลสุวรรณภูมิ</p>
+      </div>
+
       <span class="badge rounded-pill bg-brand-soft text-brand fw-medium mb-2"><i class="bi bi-shield-lock me-1" aria-hidden="true"></i>ระบบหลังบ้าน</span>
       <h1 class="h4 mb-1">เข้าสู่ระบบสำหรับเจ้าหน้าที่</h1>
       <p class="text-body-secondary small mb-4">จัดการล็อกเกอร์ การจอง ลูกค้า และรายงานของ LockerGo ได้ในที่เดียว</p>
@@ -34,11 +39,11 @@
 
       <form id="login-form" novalidate>
         <div class="mb-3">
-          <label for="email" class="form-label">อีเมล</label>
+          <label for="username" class="form-label">ชื่อผู้ใช้</label>
           <div class="input-group has-validation">
-            <span class="input-group-text" aria-hidden="true"><i class="bi bi-envelope"></i></span>
-            <input type="email" class="form-control" id="email" name="email" autocomplete="username" placeholder="name@lockergo.example" required aria-describedby="email-feedback">
-            <div class="invalid-feedback" id="email-feedback">กรุณากรอกอีเมลให้ถูกต้อง</div>
+            <span class="input-group-text" aria-hidden="true"><i class="bi bi-person"></i></span>
+            <input type="text" class="form-control" id="username" name="username" autocomplete="username" autocapitalize="none" spellcheck="false" placeholder="ชื่อผู้ใช้" required aria-describedby="username-feedback">
+            <div class="invalid-feedback" id="username-feedback">กรุณากรอกชื่อผู้ใช้</div>
           </div>
         </div>
 
@@ -70,27 +75,27 @@
         <ul class="list-unstyled vstack gap-2 mb-2">
           <li class="d-flex align-items-center gap-2">
             <div class="flex-grow-1 lh-sm">
-              <div class="fw-medium text-break">admin@demo.com</div>
+              <div class="fw-medium text-break">admin</div>
               <div class="text-body-secondary small">Super Admin · รหัสผ่าน admin1234</div>
             </div>
-            <button type="button" class="btn btn-sm btn-outline-primary" data-fill="admin@demo.com" aria-label="กรอกข้อมูลบัญชี admin@demo.com">ใช้บัญชีนี้</button>
+            <button type="button" class="btn btn-sm btn-outline-primary" data-fill="admin" aria-label="กรอกข้อมูลบัญชี admin">ใช้บัญชีนี้</button>
           </li>
           <li class="d-flex align-items-center gap-2">
             <div class="flex-grow-1 lh-sm">
-              <div class="fw-medium text-break">manager@demo.com</div>
+              <div class="fw-medium text-break">manager</div>
               <div class="text-body-secondary small">Manager · รหัสผ่าน admin1234</div>
             </div>
-            <button type="button" class="btn btn-sm btn-outline-primary" data-fill="manager@demo.com" aria-label="กรอกข้อมูลบัญชี manager@demo.com">ใช้บัญชีนี้</button>
+            <button type="button" class="btn btn-sm btn-outline-primary" data-fill="manager" aria-label="กรอกข้อมูลบัญชี manager">ใช้บัญชีนี้</button>
           </li>
           <li class="d-flex align-items-center gap-2">
             <div class="flex-grow-1 lh-sm">
-              <div class="fw-medium text-break">staff@demo.com</div>
+              <div class="fw-medium text-break">staff</div>
               <div class="text-body-secondary small">Staff · รหัสผ่าน admin1234</div>
             </div>
-            <button type="button" class="btn btn-sm btn-outline-primary" data-fill="staff@demo.com" aria-label="กรอกข้อมูลบัญชี staff@demo.com">ใช้บัญชีนี้</button>
+            <button type="button" class="btn btn-sm btn-outline-primary" data-fill="staff" aria-label="กรอกข้อมูลบัญชี staff">ใช้บัญชีนี้</button>
           </li>
         </ul>
-        <p class="small text-body-secondary mb-0">บัญชีลูกค้า user@demo.com / demo1234 ใช้ได้ที่ <a href="../login.html">หน้าเข้าสู่ระบบลูกค้า</a> เท่านั้น (เข้าหลังบ้านไม่ได้)</p>
+        <p class="small text-body-secondary mb-0">บัญชีลูกค้า user / demo1234 ใช้ได้ที่ <a href="../login.html">หน้าเข้าสู่ระบบลูกค้า</a> เท่านั้น (เข้าหลังบ้านไม่ได้)</p>
       </section>
 
       <hr class="my-4">
@@ -132,7 +137,7 @@
 
   // Demo accounts: fill the form
   document.querySelectorAll('[data-fill]').forEach((btn) => btn.addEventListener('click', () => {
-    form.email.value = btn.dataset.fill;
+    form.username.value = btn.dataset.fill;
     pwInput.value = 'admin1234';
     form.classList.remove('was-validated');
     alertBox.innerHTML = '';
@@ -145,7 +150,7 @@
     if (!LG.validate(form)) { const bad = form.querySelector(':invalid'); if (bad) bad.focus(); return; }
     await LG.busy(submitBtn, async () => {
       try {
-        const user = await Auth.login(form.email.value.trim(), pwInput.value, true, form.remember.checked);
+        const user = await Auth.login(form.username.value.trim(), pwInput.value, true, form.remember.checked);
         LG.toast(`ยินดีต้อนรับ ${user.name}`);
         location.href = Auth.next('index.html');
       } catch (err) {

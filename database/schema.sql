@@ -11,6 +11,7 @@ SET FOREIGN_KEY_CHECKS = 1;
 -- customers and staff share one table; `role` tells them apart
 CREATE TABLE users (
   id            INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  username      VARCHAR(30)  NOT NULL,   -- login name (a-z 0-9 . _ -, lower-case)
   name          VARCHAR(120) NOT NULL,
   email         VARCHAR(190) NOT NULL,
   phone         VARCHAR(30)  NOT NULL DEFAULT '',
@@ -21,6 +22,7 @@ CREATE TABLE users (
   notify_sms    TINYINT(1) NOT NULL DEFAULT 0,
   created_at    DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   last_login_at DATETIME NULL,
+  UNIQUE KEY uq_users_username (username),
   UNIQUE KEY uq_users_email (email),
   KEY idx_users_role (role)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

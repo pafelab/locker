@@ -41,10 +41,10 @@ window.DS = (() => {
   return {
     init, mode: () => mode,
 
-    // --- auth: me() -> user|null; login(...) -> user {id,name,email,phone,role,notifyEmail,notifySms} ---
+    // --- auth: me() -> user|null; login(...) -> user {id,username,name,email,phone,role,notifyEmail,notifySms} ---
     me: () => req('GET', 'auth', q({ action: 'me' })),
-    login: (email, password, admin = false, remember = false) => req('POST', 'auth', { query: { action: 'login' }, body: { email, password, admin, remember } }),
-    register: (data) => req('POST', 'auth', { query: { action: 'register' }, body: data }),   // {name,email,phone,password}
+    login: (username, password, admin = false, remember = false) => req('POST', 'auth', { query: { action: 'login' }, body: { username, password, admin, remember } }),
+    register: (data) => req('POST', 'auth', { query: { action: 'register' }, body: data }),   // {username,name,email,phone,password}
     logout: () => req('POST', 'auth', q({ action: 'logout' })),
     forgotPassword: (email) => req('POST', 'auth', { query: { action: 'forgot' }, body: { email } }),
     updateProfile: (data) => req('PUT', 'auth', { query: { action: 'profile' }, body: data }),   // {name,phone,notifyEmail,notifySms}

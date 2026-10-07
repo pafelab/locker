@@ -24,6 +24,11 @@
         <button type="button" class="btn btn-outline-secondary btn-sm" data-theme-toggle aria-label="สลับโหมดสว่าง/มืด"><i class="bi bi-moon-stars-fill"></i></button>
       </div>
 
+      <div class="institution text-center mb-4">
+        <p class="h5 text-brand fw-semibold mb-1">ระบบจองล็อกเกอร์ออนไลน์</p>
+        <p class="small text-body-secondary mb-0">สาขาวิชาระบบสารสนเทศและคอมพิวเตอร์ธุรกิจและเทคโนโลยีสารสนเทศ<br>มหาวิทยาลัยเทคโนโลยีราชมงคลสุวรรณภูมิ</p>
+      </div>
+
       <h1 class="h3 mb-1">เข้าสู่ระบบ</h1>
       <p class="text-body-secondary mb-4">ยินดีต้อนรับกลับ! เข้าสู่ระบบเพื่อจองและจัดการล็อกเกอร์ของคุณ</p>
 
@@ -31,9 +36,9 @@
         <div id="form-alert" class="alert alert-danger d-none" role="alert"></div>
 
         <div class="mb-3">
-          <label for="email" class="form-label">อีเมล</label>
-          <input type="email" class="form-control" id="email" name="email" autocomplete="email" placeholder="name@example.com" required>
-          <div class="invalid-feedback">กรุณากรอกอีเมลให้ถูกต้อง</div>
+          <label for="username" class="form-label">ชื่อผู้ใช้</label>
+          <input type="text" class="form-control" id="username" name="username" autocomplete="username" autocapitalize="none" spellcheck="false" placeholder="ชื่อผู้ใช้" required>
+          <div class="invalid-feedback">กรุณากรอกชื่อผู้ใช้</div>
         </div>
 
         <div class="mb-3">
@@ -60,9 +65,9 @@
 
       <section class="demo-box" aria-labelledby="demo-title">
         <h2 id="demo-title" class="h6 mb-2"><i class="bi bi-person-badge me-1"></i>บัญชีทดลองใช้งาน</h2>
-        <p class="mb-2">ลูกค้า: <span class="font-monospace">user@demo.com</span> / <span class="font-monospace">demo1234</span></p>
+        <p class="mb-2">ลูกค้า: <span class="font-monospace">user</span> / <span class="font-monospace">demo1234</span></p>
         <button type="button" class="btn btn-outline-primary btn-sm mb-2" id="use-demo"><i class="bi bi-magic me-1"></i>ใช้บัญชีทดลอง</button>
-        <p class="mb-0 text-body-secondary">สำหรับเจ้าหน้าที่ เข้าสู่ระบบหลังบ้านที่ <a href="admin/login.html">หน้าเข้าสู่ระบบเจ้าหน้าที่</a> (<span class="font-monospace">admin@demo.com</span> / <span class="font-monospace">admin1234</span>)</p>
+        <p class="mb-0 text-body-secondary">สำหรับเจ้าหน้าที่ เข้าสู่ระบบหลังบ้านที่ <a href="admin/login.html">หน้าเข้าสู่ระบบเจ้าหน้าที่</a> (<span class="font-monospace">admin</span> / <span class="font-monospace">admin1234</span>)</p>
       </section>
 
       <p class="text-center mt-4 mb-0"><a href="index.html" class="link-secondary text-decoration-none small"><i class="bi bi-arrow-left me-1"></i>กลับหน้าแรก</a></p>
@@ -81,7 +86,7 @@
 (async () => {
   const form = document.getElementById('login-form');
   const alertBox = document.getElementById('form-alert');
-  const email = document.getElementById('email');
+  const username = document.getElementById('username');
   const password = document.getElementById('password');
   const target = Auth.next('my-bookings.html');
 
@@ -100,7 +105,7 @@
 
   // Demo account
   document.getElementById('use-demo').addEventListener('click', () => {
-    email.value = 'user@demo.com';
+    username.value = 'user';
     password.value = 'demo1234';
     alertBox.classList.add('d-none');
     form.classList.remove('was-validated');
@@ -114,7 +119,7 @@
     const btn = document.getElementById('login-btn');
     await LG.busy(btn, async () => {
       try {
-        const u = await Auth.login(email.value.trim(), password.value, false, document.getElementById('remember').checked);
+        const u = await Auth.login(username.value.trim(), password.value, false, document.getElementById('remember').checked);
         LG.toast(`ยินดีต้อนรับ คุณ${u.name}`);
         location.replace(target);
       } catch (e) {

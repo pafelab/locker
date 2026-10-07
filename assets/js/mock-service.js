@@ -4,7 +4,7 @@
  * The PHP files in /api must stay behaviourally identical to this file (it is the reference implementation).
  */
 window.MockService = (() => {
-  const DB_KEY = 'lg_mock_db', SESSION_KEY = 'lg_mock_session';
+  const DB_KEY = 'lg_mock_db_v2', SESSION_KEY = 'lg_mock_session';
   const ACTIVE = ['pending', 'confirmed', 'active'];   // booking statuses that occupy a locker
   const HOURS = MockData.HOURS_PER;
   let db;
@@ -28,7 +28,8 @@ window.MockService = (() => {
   const today = () => fmt(new Date()).slice(0, 10);
   const str = (v) => (v == null ? '' : String(v).trim());
   const byId = (rows, id) => rows.find((r) => r.id === +id);
-  const publicUser = (u) => u && { id: u.id, name: u.name, email: u.email, phone: u.phone, role: u.role, notifyEmail: +u.notifyEmail, notifySms: +u.notifySms };
+  const USERNAME_RE = /^[a-z0-9._-]{3,30}$/, USERNAME_INVALID = 'ชื่อผู้ใช้ต้องเป็น a-z, 0-9, จุด, ขีดล่าง หรือขีดกลาง ยาว 3-30 ตัวอักษร';
+  const publicUser = (u) => u && { id: u.id, username: u.username, name: u.name, email: u.email, phone: u.phone, role: u.role, notifyEmail: +u.notifyEmail, notifySms: +u.notifySms };
 
   const me = () => { const u = byId(db.users, session()); return u && u.status !== 'suspended' ? u : null; };   // suspension ends live sessions
   function needUser() { const u = me(); if (!u) fail(401, 'unauthenticated', 'กรุณาเข้าสู่ระบบ'); return u; }
@@ -55,19 +56,21 @@ window.MockService = (() => {
   // ---------- auth ----------
   const auth = {
     'GET me': () => publicUser(me()) || null,
-    'POST login': ({ email, password, admin }) => {
-      const u = db.users.find((x) => x.email === str(email).toLowerCase() && x.password === password);
-      if (!u) fail(401, 'invalid_credentials', 'อีเมลหรือรหัสผ่านไม่ถูกต้อง');
+    'POST login': ({ username, password, admin }) => {
+      const u = db.users.find((x) => x.username === str(username).toLowerCase() && x.password === password);
+      if (!u) fail(401, 'invalid_credentials', 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง');
       if (u.status === 'suspended') fail(403, 'account_suspended', 'บัญชีนี้ถูกระงับ');
       if (admin && u.role === 'customer') fail(403, 'forbidden', 'บัญชีนี้ไม่มีสิทธิ์เข้าสู่ระบบหลังบ้าน');
       u.lastLoginAt = fmt(new Date()); setSession(u.id); save();
       return publicUser(u);
     },
     'POST register': (b) => {
-      const name = str(b.name), email = str(b.email).toLowerCase(), phone = str(b.phone), pw = b.password || '';
+      const name = str(b.name), username = str(b.username).toLowerCase(), email = str(b.email).toLowerCase(), phone = str(b.phone), pw = b.password || '';
       if (!name || !/^\S+@\S+\.\S+$/.test(email) || !/^[0-9\-+ ]{9,15}$/.test(phone) || pw.length < 8) fail(422, 'validation', 'กรุณากรอกข้อมูลให้ครบถ้วน (รหัสผ่านอย่างน้อย 8 ตัวอักษร)');
+      if (!USERNAME_RE.test(username)) fail(422, 'validation', USERNAME_INVALID);
+      if (db.users.some((u) => u.username === username)) fail(409, 'username_taken', 'ชื่อผู้ใช้นี้ถูกใช้งานแล้ว');
       if (db.users.some((u) => u.email === email)) fail(409, 'email_taken', 'อีเมลนี้ถูกใช้งานแล้ว');
-      const u = { id: nextId(db.users), name, email, phone, role: 'customer', password: pw, status: 'active', notifyEmail: 1, notifySms: 0, createdAt: fmt(new Date()), lastLoginAt: fmt(new Date()) };
+      const u = { id: nextId(db.users), username, name, email, phone, role: 'customer', password: pw, status: 'active', notifyEmail: 1, notifySms: 0, createdAt: fmt(new Date()), lastLoginAt: fmt(new Date()) };
       db.users.push(u); setSession(u.id); save();
       return publicUser(u);
     },
@@ -248,7 +251,7 @@ window.MockService = (() => {
   function customerOut(u) {
     const bs = db.bookings.filter((b) => b.userId === u.id);
     const paid = db.payments.filter((p) => p.status === 'paid' && bs.some((b) => b.id === p.bookingId));
-    return { id: u.id, name: u.name, email: u.email, phone: u.phone, status: u.status, createdAt: u.createdAt, lastLoginAt: u.lastLoginAt, bookingCount: bs.length, totalSpent: paid.reduce((s, p) => s + p.amount, 0) };
+    return { id: u.id, username: u.username, name: u.name, email: u.email, phone: u.phone, status: u.status, createdAt: u.createdAt, lastLoginAt: u.lastLoginAt, bookingCount: bs.length, totalSpent: paid.reduce((s, p) => s + p.amount, 0) };
   }
   const customers = {
     'GET': (b, q) => {
@@ -274,10 +277,12 @@ window.MockService = (() => {
       p.status = 'refunded'; log('คืนเงิน', paymentOut(p).bookingRef); save(); return paymentOut(p);
     },
   };
-  const staffOut = (u) => ({ id: u.id, name: u.name, email: u.email, phone: u.phone, role: u.role, status: u.status, lastLoginAt: u.lastLoginAt });
+  const staffOut = (u) => ({ id: u.id, username: u.username, name: u.name, email: u.email, phone: u.phone, role: u.role, status: u.status, lastLoginAt: u.lastLoginAt });
   function staffBody(b, cur) {
-    const o = { name: str(b.name), email: str(b.email).toLowerCase(), phone: str(b.phone), role: b.role, status: b.status || 'active' };
+    const o = { username: str(b.username).toLowerCase(), name: str(b.name), email: str(b.email).toLowerCase(), phone: str(b.phone), role: b.role, status: b.status || 'active' };
     if (!o.name || !/^\S+@\S+\.\S+$/.test(o.email) || !['super_admin', 'manager', 'staff'].includes(o.role) || (!cur && (b.password || '').length < 8)) fail(422, 'validation', 'ข้อมูลพนักงานไม่ถูกต้อง (รหัสผ่านอย่างน้อย 8 ตัวอักษร)');
+    if (!USERNAME_RE.test(o.username)) fail(422, 'validation', USERNAME_INVALID);
+    if (db.users.some((u) => u.username === o.username && u.id !== cur?.id)) fail(409, 'username_taken', 'ชื่อผู้ใช้นี้ถูกใช้งานแล้ว');
     if (db.users.some((u) => u.email === o.email && u.id !== cur?.id)) fail(409, 'email_taken', 'อีเมลนี้ถูกใช้งานแล้ว');
     return o;
   }

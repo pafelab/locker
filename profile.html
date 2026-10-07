@@ -55,10 +55,16 @@
                 <input type="tel" class="form-control" id="p-phone" name="phone" autocomplete="tel" inputmode="tel" placeholder="08X-XXX-XXXX" pattern="0[0-9]{1,2}-?[0-9]{3}-?[0-9]{4}" required>
                 <div class="invalid-feedback">กรุณากรอกเบอร์โทรศัพท์ให้ถูกต้อง เช่น 081-234-5678</div>
               </div>
-              <div class="col-12">
+              <div class="col-md-6">
+                <label for="p-username" class="form-label">ชื่อผู้ใช้</label>
+                <input type="text" class="form-control" id="p-username" name="username" autocomplete="username" readonly aria-describedby="p-email-help">
+              </div>
+              <div class="col-md-6">
                 <label for="p-email" class="form-label">อีเมล</label>
                 <input type="email" class="form-control" id="p-email" name="email" autocomplete="email" readonly aria-describedby="p-email-help">
-                <div id="p-email-help" class="form-text">อีเมลใช้เข้าสู่ระบบและไม่สามารถเปลี่ยนได้ หากต้องการเปลี่ยน กรุณา<a href="contact.html">ติดต่อเรา</a></div>
+              </div>
+              <div class="col-12">
+                <div id="p-email-help" class="form-text mt-0">ชื่อผู้ใช้ใช้เข้าสู่ระบบ ชื่อผู้ใช้และอีเมลไม่สามารถเปลี่ยนได้ หากต้องการเปลี่ยน กรุณา<a href="contact.html">ติดต่อเรา</a></div>
               </div>
             </div>
             <div class="text-end mt-4">
@@ -150,6 +156,7 @@
   function fillPersonal() {
     $('p-name').value = me.name;
     $('p-phone').value = me.phone || '';
+    $('p-username').value = me.username || '';
     $('p-email').value = me.email;
   }
   function fillNotify() {

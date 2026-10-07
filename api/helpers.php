@@ -494,10 +494,17 @@ function log_activity(string $action, string $target): void
 function map_user_public(array $r): array
 {
     return [
-        'id' => (int)$r['id'], 'name' => $r['name'], 'email' => $r['email'], 'phone' => $r['phone'], 'role' => $r['role'],
+        'id' => (int)$r['id'], 'username' => $r['username'], 'name' => $r['name'], 'email' => $r['email'], 'phone' => $r['phone'], 'role' => $r['role'],
         'notifyEmail' => (int)$r['notify_email'], 'notifySms' => (int)$r['notify_sms'],
     ];
 }
+
+/** Login name: 3-30 chars of a-z 0-9 . _ - (stored lower-case). Same rule as mock-service.js. */
+function valid_username(string $s): bool
+{
+    return preg_match('/^[a-z0-9._-]{3,30}$/D', $s) === 1;
+}
+const USERNAME_INVALID = 'ชื่อผู้ใช้ต้องเป็น a-z, 0-9, จุด, ขีดล่าง หรือขีดกลาง ยาว 3-30 ตัวอักษร';
 
 function map_locker(array $r): array
 {
@@ -543,7 +550,7 @@ function map_payment(array $r): array
 function map_customer(array $r): array
 {
     return [
-        'id' => (int)$r['id'], 'name' => $r['name'], 'email' => $r['email'], 'phone' => $r['phone'], 'status' => $r['status'],
+        'id' => (int)$r['id'], 'username' => $r['username'], 'name' => $r['name'], 'email' => $r['email'], 'phone' => $r['phone'], 'status' => $r['status'],
         'createdAt' => $r['created_at'], 'lastLoginAt' => $r['last_login_at'],
         'bookingCount' => (int)$r['booking_count'], 'totalSpent' => (int)$r['total_spent'],
     ];
@@ -552,7 +559,7 @@ function map_customer(array $r): array
 function map_staff(array $r): array
 {
     return [
-        'id' => (int)$r['id'], 'name' => $r['name'], 'email' => $r['email'], 'phone' => $r['phone'], 'role' => $r['role'],
+        'id' => (int)$r['id'], 'username' => $r['username'], 'name' => $r['name'], 'email' => $r['email'], 'phone' => $r['phone'], 'role' => $r['role'],
         'status' => $r['status'], 'lastLoginAt' => $r['last_login_at'],
     ];
 }

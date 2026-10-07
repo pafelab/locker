@@ -9,7 +9,7 @@ window.Auth = {
   },
   isStaff: (u) => !!u && u.role !== 'customer',
 
-  async login(email, password, admin = false, remember = false) { return (this._u = await DS.login(email, password, admin, remember)); },
+  async login(username, password, admin = false, remember = false) { return (this._u = await DS.login(username, password, admin, remember)); },
   async register(data) { return (this._u = await DS.register(data)); },
   async logout() { await DS.logout(); this._u = null; },
 
