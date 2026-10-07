@@ -75,6 +75,8 @@
   const sz = LG.SIZES[b.size] || { label: b.size || '' };
   const method = LG.PAY_METHODS[b.paymentMethod] || '-';
   const gross = Number(b.amount) + Number(b.discount || 0);
+  const days = Math.max(1, Number(b.quantity) || 1);
+  const unitPrice = Math.round(gross / days);   // bookings are daily only: per-day price = gross / days
   const live = !['cancelled', 'completed'].includes(b.status);
   const row = (label, value) => `<div class="d-flex justify-content-between gap-3 py-2 border-bottom"><dt class="fw-normal text-body-secondary">${label}</dt><dd class="mb-0 text-end fw-semibold">${value}</dd></div>`;
 
@@ -103,7 +105,7 @@
             <h2 class="h5 mb-3" id="sec-detail"><i class="bi bi-info-circle me-2 text-brand"></i>รายละเอียดการจอง</h2>
             <dl class="mb-0">
               ${row('ล็อกเกอร์', `${esc(b.lockerCode)} · ขนาด ${esc(b.size)} (${esc(sz.label)})`)}
-              ${row('สาขา', esc(b.locationName))}
+              ${row('ที่ตั้ง', esc(b.locationName))}
               ${loc ? row('ที่อยู่', `<span class="fw-normal small">${esc(loc.address)}</span>`) : ''}
               ${loc && loc.openHours ? row('เวลาทำการ', esc(loc.openHours)) : ''}
               ${row('เริ่มใช้งาน', LG.fmt.datetime(b.startAt))}
@@ -145,14 +147,14 @@
         <div class="row g-3">
           <div class="col-md-6">
             <dl class="mb-0">
-              ${row('ค่าบริการ', LG.fmt.baht(gross))}
+              ${row(`ค่าเช่าตู้ ${LG.fmt.baht(unitPrice)} / วัน × ${days} วัน`, LG.fmt.baht(gross))}
               ${row(`ส่วนลด${b.promoCode ? ` (${esc(b.promoCode)})` : ''}`, `${b.discount ? '-' : ''}${LG.fmt.baht(b.discount || 0)}`)}
               <div class="d-flex justify-content-between align-items-baseline py-2"><dt class="fw-semibold">ยอดชำระสุทธิ</dt><dd class="mb-0 fs-4 fw-bold text-brand">${LG.fmt.baht(b.amount)}</dd></div>
             </dl>
           </div>
           <div class="col-md-6">
             <dl class="mb-0">
-              ${row('วิธีชำระเงิน', esc(method))}
+              ${row('วิธีชำระเงิน', esc(method) + (b.paymentMethod === 'promptpay' && +b.hasSlip === 1 ? ' <span class="badge text-bg-success ms-1"><i class="bi bi-paperclip me-1" aria-hidden="true"></i>แนบสลิปแล้ว</span>' : ''))}
               ${row('สถานะการชำระ', b.paymentStatus ? LG.badge('payment', b.paymentStatus) : '-')}
               ${row('วันที่ทำรายการ', LG.fmt.datetime(b.createdAt))}
             </dl>
@@ -216,7 +218,7 @@
       `วันที่ทำรายการ : ${LG.fmt.datetime(b.createdAt)}`,
       `สถานะการจอง   : ${(LG.STATUS.booking[b.status] || [b.status])[0]}`, line,
       `ล็อกเกอร์      : ${b.lockerCode} (ขนาด ${b.size} ${sz.label})`,
-      `สาขา          : ${b.locationName}`,
+      `ตึก           : ${b.locationName}`,
       ...(loc ? [`ที่อยู่        : ${loc.address}`] : []),
       `เริ่มใช้งาน    : ${LG.fmt.datetime(b.startAt)}`,
       `สิ้นสุด        : ${LG.fmt.datetime(b.endAt)}`,
@@ -224,7 +226,7 @@
       `ผู้จอง         : ${b.customerName}`,
       `อีเมล          : ${b.customerEmail}`,
       `โทรศัพท์       : ${b.customerPhone}`, line,
-      `ค่าบริการ      : ${LG.fmt.baht(gross)}`,
+      `ค่าเช่าตู้      : ${LG.fmt.baht(unitPrice)} / วัน x ${days} วัน = ${LG.fmt.baht(gross)}`,
       `ส่วนลด         : ${LG.fmt.baht(b.discount || 0)}${b.promoCode ? ` (${b.promoCode})` : ''}`,
       `ยอดชำระสุทธิ   : ${LG.fmt.baht(b.amount)}`,
       `วิธีชำระเงิน   : ${method}`,

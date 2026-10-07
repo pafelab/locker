@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>ราคาและโปรโมชัน | LockerGo</title>
-<meta name="description" content="กำหนดราคาล็อกเกอร์ตามขนาดและระยะเวลา พร้อมจัดการรหัสโปรโมชันส่วนลดของ LockerGo">
+<meta name="description" content="กำหนดราคาล็อกเกอร์ต่อวันตามขนาด พร้อมจัดการรหัสโปรโมชันส่วนลดของ LockerGo">
 <link rel="icon" type="image/svg+xml" href="../assets/img/favicon.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -23,8 +23,8 @@
       <!-- section 1: prices -->
       <section class="mb-5" aria-labelledby="price-heading">
         <div class="mb-3">
-          <h2 class="h5 mb-1" id="price-heading">ราคาตามขนาดและระยะเวลา</h2>
-          <p class="text-body-secondary small mb-0">กำหนดราคาต่อหน่วย (บาท) ของล็อกเกอร์แต่ละขนาด แก้ไขแล้วกด "บันทึก" ในแถวนั้น ราคาใหม่จะใช้กับการจองครั้งต่อไป</p>
+          <h2 class="h5 mb-1" id="price-heading">ราคาตามขนาด (ต่อวัน)</h2>
+          <p class="text-body-secondary small mb-0">กำหนดราคาต่อวัน (บาท) ของล็อกเกอร์แต่ละขนาด แก้ไขแล้วกด "บันทึก" ในแถวนั้น ราคาใหม่จะใช้กับการจองครั้งต่อไป</p>
         </div>
         <div class="card card-soft table-card">
           <div id="price-area" class="p-3"><div class="placeholder-glow" aria-hidden="true"><span class="placeholder col-12 rounded mb-2 py-3"></span><span class="placeholder col-12 rounded mb-2 py-3"></span><span class="placeholder col-12 rounded mb-2 py-3"></span></div><span class="visually-hidden" role="status">กำลังโหลด...</span></div>
@@ -109,11 +109,11 @@
 <script>
 (async () => {
   const user = await Admin.ready;
+  if (!user) return;
   const $ = (s) => document.querySelector(s);
   const priceArea = $('#price-area'), promoArea = $('#promo-area'), form = $('#promo-form');
   const modal = bootstrap.Modal.getOrCreateInstance('#promo-modal');
-  const SIZE_ORDER = ['S', 'M', 'L', 'XL'];
-  const UNITS = [['hour', 'ต่อชั่วโมง'], ['day', 'ต่อวัน'], ['month', 'ต่อเดือน']];
+  const SIZE_ORDER = Object.keys(LG.SIZES);   // S, M, L, XL, XXL
   let prices = [], promos = [];
 
   // ---------- prices ----------
@@ -122,16 +122,17 @@
     if (!rows.length) { priceArea.innerHTML = LG.empty('ยังไม่มีข้อมูลราคา', 'tags'); return; }
     priceArea.className = '';
     priceArea.innerHTML = `<div class="table-responsive"><table class="table align-middle">
-      <caption class="visually-hidden">ตารางราคาล็อกเกอร์ตามขนาดและระยะเวลา</caption>
-      <thead><tr><th scope="col">ขนาด</th>${UNITS.map(([, l]) => `<th scope="col">${l}</th>`).join('')}<th scope="col" class="text-end">จัดการ</th></tr></thead>
+      <caption class="visually-hidden">ตารางราคาล็อกเกอร์ต่อวันตามขนาด</caption>
+      <thead><tr><th scope="col">ขนาด</th><th scope="col">ราคาต่อวัน</th><th scope="col" class="text-end">จัดการ</th></tr></thead>
       <tbody>${rows.map((p) => {
         const info = LG.SIZES[p.size] || { label: p.size, dim: '' };
         return `<tr data-size="${p.size}">
           <th scope="row"><div class="d-flex align-items-center gap-2"><span class="size-art px-2 py-1" aria-hidden="true">${p.size}</span><div><div>${LG.esc(info.label)}</div><div class="small text-body-secondary fw-normal text-nowrap">${LG.esc(info.dim)}</div></div></div></th>
-          ${UNITS.map(([k, l]) => `<td><label class="visually-hidden" for="pr-${p.size}-${k}">ราคา${LG.esc(info.label)} ${l}</label>
+          <td><label class="visually-hidden" for="pr-${p.size}-day">ราคา${LG.esc(info.label)} ต่อวัน</label>
             <div class="input-group input-group-sm has-validation"><span class="input-group-text">฿</span>
-            <input type="number" class="form-control" id="pr-${p.size}-${k}" name="${k}" form="pf-${p.size}" min="0" max="1000000" step="1" required inputmode="numeric" value="${+p[k]}">
-            <div class="invalid-feedback">ราคาต้องเป็นตัวเลขตั้งแต่ 0 ขึ้นไป</div></div></td>`).join('')}
+            <input type="number" class="form-control" id="pr-${p.size}-day" name="day" form="pf-${p.size}" min="0" max="1000000" step="1" required inputmode="numeric" value="${+p.day}">
+            <span class="input-group-text">/ วัน</span>
+            <div class="invalid-feedback">ราคาต้องเป็นตัวเลขตั้งแต่ 0 ขึ้นไป</div></div></td>
           <td class="text-end"><form id="pf-${p.size}" data-size="${p.size}" novalidate><button type="submit" class="btn btn-primary btn-sm"><i class="bi bi-check-lg me-1" aria-hidden="true"></i>บันทึก<span class="visually-hidden"> ราคาขนาด ${LG.esc(info.label)}</span></button></form></td>
         </tr>`;
       }).join('')}</tbody></table></div>`;
@@ -140,10 +141,14 @@
       const tr = f.closest('tr');
       tr.classList.add('was-validated');
       if (!f.checkValidity()) return;
-      const get = (k) => +tr.querySelector(`input[name="${k}"]`).value;
+      const row = prices.find((x) => x.size === f.dataset.size);
+      if (!row) return;
+      const day = +tr.querySelector('input[name="day"]').value;
       await LG.busy(f.querySelector('button'), async () => {
         try {
-          await DS.savePrice({ size: f.dataset.size, hour: get('hour'), day: get('day'), month: get('month') });
+          // hour / month stay in data unchanged; only the per-day price is editable
+          await DS.savePrice({ size: row.size, hour: +row.hour, day, month: +row.month });
+          row.day = day;
           tr.classList.remove('was-validated');
           LG.toast(`บันทึกราคาขนาด ${f.dataset.size} เรียบร้อย`);
         } catch (e) { LG.toastError(e); }

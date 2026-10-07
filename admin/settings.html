@@ -94,15 +94,15 @@
               <form id="form-rules" novalidate>
                 <div class="row g-3">
                   <div class="col-sm-6 col-lg-3">
-                    <label class="form-label" for="minDuration">ระยะเวลาจองขั้นต่ำ (ชั่วโมง) <span class="text-danger" aria-hidden="true">*</span></label>
-                    <input type="number" class="form-control" id="minDuration" name="minDuration" required min="1" max="8760" step="1" inputmode="numeric">
-                    <div class="invalid-feedback">กรุณากรอกจำนวนชั่วโมงตั้งแต่ 1 ขึ้นไป</div>
+                    <label class="form-label" for="minDuration">ระยะเวลาจองขั้นต่ำ (วัน) <span class="text-danger" aria-hidden="true">*</span></label>
+                    <input type="number" class="form-control" id="minDuration" name="minDuration" required min="1" max="365" step="1" inputmode="numeric">
+                    <div class="invalid-feedback">กรุณากรอกจำนวนวัน 1 - 365</div>
                   </div>
                   <div class="col-sm-6 col-lg-3">
-                    <label class="form-label" for="maxDuration">ระยะเวลาจองสูงสุด (ชั่วโมง) <span class="text-danger" aria-hidden="true">*</span></label>
-                    <input type="number" class="form-control" id="maxDuration" name="maxDuration" required min="1" max="8760" step="1" inputmode="numeric" aria-describedby="max-help">
-                    <div class="invalid-feedback" id="max-feedback">กรุณากรอกจำนวนชั่วโมงสูงสุด</div>
-                    <div class="form-text" id="max-help">720 ชั่วโมง = 30 วัน</div>
+                    <label class="form-label" for="maxDuration">ระยะเวลาจองสูงสุด (วัน) <span class="text-danger" aria-hidden="true">*</span></label>
+                    <input type="number" class="form-control" id="maxDuration" name="maxDuration" required min="1" max="365" step="1" inputmode="numeric" aria-describedby="max-help">
+                    <div class="invalid-feedback" id="max-feedback">กรุณากรอกจำนวนวันสูงสุด</div>
+                    <div class="form-text" id="max-help">ลูกค้าจองเป็นรายวัน จองได้ตั้งแต่ขั้นต่ำถึงสูงสุดตามจำนวนวันที่กำหนด</div>
                   </div>
                   <div class="col-sm-6 col-lg-3">
                     <label class="form-label" for="gracePeriod">เวลาผ่อนผันหลังหมดเวลา (นาที) <span class="text-danger" aria-hidden="true">*</span></label>
@@ -187,7 +187,7 @@
                     </div>
                   </div>
                 </div>
-                <p class="form-text mt-3 mb-0">ตัวอย่างใช้ค่าสมมติ: {ref} = LG260712A1, {locker} = A-12, {pin} = 482916</p>
+                <p class="form-text mt-3 mb-0">ตัวอย่างใช้ค่าสมมติ: {ref} = LG260712A1, {locker} = T1-S01, {pin} = 482916</p>
                 <div class="d-flex justify-content-end mt-3">
                   <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg me-1" aria-hidden="true"></i>บันทึกแม่แบบ</button>
                 </div>
@@ -291,9 +291,10 @@
   const loadingBox = document.getElementById('settings-loading');
   const loadingBody = document.getElementById('settings-loading-body');
   const area = document.getElementById('settings-area');
-  const SAMPLE = { '{ref}': 'LG260712A1', '{locker}': 'A-12', '{pin}': '482916' };
+  const SAMPLE = { '{ref}': 'LG260712A1', '{locker}': 'T1-S01', '{pin}': '482916' };
   const TEXT_FIELDS = ['siteName', 'tagline', 'contactEmail', 'contactPhone', 'address', 'cancelPolicy', 'tplConfirm', 'tplReminder', 'tplCancel'];
-  const NUM_FIELDS = ['minDuration', 'maxDuration', 'gracePeriod', 'cancelFreeHours'];
+  const NUM_FIELDS = ['gracePeriod', 'cancelFreeHours'];
+  const DAY_FIELDS = ['minDuration', 'maxDuration'];   // stored in hours, edited in days
   let settings = {};
 
   const el = (id) => document.getElementById(id);
@@ -314,6 +315,7 @@
   function fill() {
     TEXT_FIELDS.forEach((k) => { const f = document.getElementById(k); if (f) f.value = settings[k] ?? ''; });
     NUM_FIELDS.forEach((k) => { el(k).value = settings[k] ?? ''; });
+    DAY_FIELDS.forEach((k) => { el(k).value = settings[k] != null && settings[k] !== '' ? Math.max(1, Math.round(Number(settings[k]) / 24)) : ''; });
     const theme = settings.defaultTheme === 'dark' ? 'dark' : 'light';
     el('theme-' + theme).checked = true;
     ['tplConfirm', 'tplReminder', 'tplCancel'].forEach(renderPreview);
@@ -364,13 +366,17 @@
     const min = Number(el('minDuration').value), max = Number(el('maxDuration').value), maxEl = el('maxDuration');
     const bad = el('minDuration').value !== '' && el('maxDuration').value !== '' && min > max;
     maxEl.setCustomValidity(bad ? 'invalid' : '');
-    el('max-feedback').textContent = bad ? 'ระยะเวลาสูงสุดต้องไม่น้อยกว่าระยะเวลาขั้นต่ำ' : (maxEl.validity.valueMissing ? 'กรุณากรอกจำนวนชั่วโมงสูงสุด' : 'กรุณากรอกจำนวนชั่วโมงตั้งแต่ 1 ขึ้นไป');
+    const v = maxEl.validity;
+    el('max-feedback').textContent = bad ? 'ระยะเวลาสูงสุดต้องไม่น้อยกว่าระยะเวลาขั้นต่ำ'
+      : v.valueMissing ? 'กรุณากรอกจำนวนวันสูงสุด'
+      : (v.rangeOverflow || v.rangeUnderflow || v.stepMismatch || v.badInput) ? 'กรุณากรอกจำนวนวัน 1 - 365'
+      : 'กรุณากรอกจำนวนวันสูงสุด';
   }
   ['minDuration', 'maxDuration'].forEach((id) => el(id).addEventListener('input', checkRange));
   forms.rules.addEventListener('submit', (ev) => {
     ev.preventDefault(); checkRange();
     save(forms.rules, () => ({
-      minDuration: Number(el('minDuration').value), maxDuration: Number(el('maxDuration').value),
+      minDuration: Number(el('minDuration').value) * 24, maxDuration: Number(el('maxDuration').value) * 24,   // days -> hours
       gracePeriod: Number(el('gracePeriod').value), cancelFreeHours: Number(el('cancelFreeHours').value),
       cancelPolicy: el('cancelPolicy').value.trim(),
     }), submitBtn(forms.rules), 'บันทึกกฎการจองแล้ว');

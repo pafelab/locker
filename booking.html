@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>จองล็อกเกอร์ | LockerGo</title>
-<meta name="description" content="จองล็อกเกอร์ออนไลน์ใน 6 ขั้นตอนง่ายๆ เลือกสาขา วันเวลา กรอกข้อมูล ตรวจสอบ ชำระเงิน แล้วรับรหัส PIN ทันที">
+<meta name="description" content="จองล็อกเกอร์ออนไลน์ใน 6 ขั้นตอนง่ายๆ เลือกตึก วันที่ จำนวนวัน กรอกข้อมูล ตรวจสอบ ชำระเงิน แล้วรับรหัส PIN ทันที">
 <link rel="icon" type="image/svg+xml" href="assets/img/favicon.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -28,8 +28,8 @@
 
     <div id="wizard" hidden>
       <ol class="wizard-steps" id="steps" aria-label="ขั้นตอนการจอง">
-        <li><span>สาขาและล็อกเกอร์</span></li>
-        <li><span>วันเวลาและระยะเวลา</span></li>
+        <li><span>ตึกและล็อกเกอร์</span></li>
+        <li><span>วันที่และจำนวนวัน</span></li>
         <li><span>ข้อมูลผู้จอง</span></li>
         <li><span>ตรวจสอบ</span></li>
         <li><span>ชำระเงิน</span></li>
@@ -43,14 +43,14 @@
 
               <!-- Step 1 -->
               <section id="step-1" aria-labelledby="h-1">
-                <h2 class="h4 mb-1" id="h-1" tabindex="-1">1. เลือกสาขาและล็อกเกอร์</h2>
-                <p class="text-body-secondary">เลือกสาขาและขนาด แล้วแตะล็อกเกอร์ที่ว่างเพื่อเลือก</p>
+                <h2 class="h4 mb-1" id="h-1" tabindex="-1">1. เลือกตึกและล็อกเกอร์</h2>
+                <p class="text-body-secondary">เลือกตึกหรือขนาด (แต่ละตึกมีล็อกเกอร์ขนาดเดียว) แล้วแตะล็อกเกอร์ที่ว่างเพื่อเลือก</p>
                 <form id="form-1" novalidate>
                   <div class="row g-3 mb-3">
                     <div class="col-sm-7">
-                      <label for="b-location" class="form-label">สาขา <span class="text-danger" aria-hidden="true">*</span></label>
+                      <label for="b-location" class="form-label">ตึก <span class="text-danger" aria-hidden="true">*</span></label>
                       <select id="b-location" class="form-select" required></select>
-                      <div class="invalid-feedback">กรุณาเลือกสาขา</div>
+                      <div class="invalid-feedback">กรุณาเลือกตึก</div>
                     </div>
                     <div class="col-sm-5">
                       <label for="b-size" class="form-label">ขนาดล็อกเกอร์</label>
@@ -71,8 +71,8 @@
 
               <!-- Step 2 -->
               <section id="step-2" aria-labelledby="h-2" hidden>
-                <h2 class="h4 mb-1" id="h-2" tabindex="-1">2. วันเวลาและระยะเวลา</h2>
-                <p class="text-body-secondary">เลือกวัน เวลาเริ่มใช้งาน และระยะเวลาที่ต้องการ ราคาจะคำนวณให้อัตโนมัติ</p>
+                <h2 class="h4 mb-1" id="h-2" tabindex="-1">2. วันที่และจำนวนวัน</h2>
+                <p class="text-body-secondary">เลือกวันและเวลาเริ่มใช้งาน พร้อมจำนวนวันที่ต้องการ ราคาจะคำนวณให้อัตโนมัติ</p>
                 <form id="form-2" novalidate>
                   <div class="row g-3">
                     <div class="col-sm-6">
@@ -85,19 +85,13 @@
                       <select id="b-time" class="form-select" required></select>
                       <div class="invalid-feedback">กรุณาเลือกเวลาเริ่ม</div>
                     </div>
-                    <div class="col-12">
-                      <fieldset>
-                        <legend class="form-label fs-6">ประเภทระยะเวลา</legend>
-                        <div class="btn-group w-100" role="group" id="type-group"></div>
-                      </fieldset>
-                    </div>
                     <div class="col-sm-6">
-                      <label for="b-qty" class="form-label">จำนวน (<span id="qty-unit">ชั่วโมง</span>) <span class="text-danger" aria-hidden="true">*</span></label>
+                      <label for="b-qty" class="form-label">จำนวนวัน <span class="text-danger" aria-hidden="true">*</span></label>
                       <div class="input-group has-validation">
                         <button type="button" class="btn btn-outline-secondary" id="qty-minus" aria-label="ลดจำนวน"><i class="bi bi-dash-lg"></i></button>
-                        <input type="number" id="b-qty" class="form-control text-center" min="1" max="720" step="1" inputmode="numeric" required>
+                        <input type="number" id="b-qty" class="form-control text-center" min="1" max="30" step="1" inputmode="numeric" required>
                         <button type="button" class="btn btn-outline-secondary" id="qty-plus" aria-label="เพิ่มจำนวน"><i class="bi bi-plus-lg"></i></button>
-                        <div class="invalid-feedback" id="qty-feedback">กรุณากรอกจำนวนเป็นเลขจำนวนเต็ม</div>
+                        <div class="invalid-feedback" id="qty-feedback">กรุณากรอกจำนวนวันเป็นเลขจำนวนเต็ม</div>
                       </div>
                       <div class="form-text" id="qty-hint"></div>
                     </div>
@@ -157,6 +151,7 @@
                 <p class="text-body-secondary">เลือกวิธีชำระเงิน (ระบบตัวอย่าง ไม่มีการตัดเงินจริง)</p>
                 <form id="form-5" novalidate>
                   <div id="pay-alert" class="alert alert-danger d-none" role="alert"></div>
+                  <div id="pay-summary" class="card border-primary bg-brand-soft mb-3" aria-live="polite"></div>
                   <fieldset class="mb-3">
                     <legend class="form-label fs-6">วิธีชำระเงิน</legend>
                     <div class="row g-2" id="pay-methods"></div>
@@ -189,15 +184,34 @@
                   </div>
 
                   <div id="pay-promptpay" hidden>
-                    <div class="text-center py-3">
-                      <div class="qr-placeholder mx-auto mb-3" role="img" aria-label="คิวอาร์โค้ดพร้อมเพย์ (ตัวอย่าง)"></div>
-                      <p class="mb-1 fw-semibold">สแกนเพื่อชำระเงินผ่านพร้อมเพย์</p>
-                      <p class="text-body-secondary small mb-0">ยอดชำระ <strong id="pp-amount"></strong> · เปิดแอปธนาคารแล้วสแกน จากนั้นกดปุ่ม "ชำระเงิน" (จำลอง)</p>
+                    <div class="row justify-content-center g-3 py-2">
+                      <div class="col-8 col-sm-6 col-md-5 text-center">
+                        <img src="assets/img/qr.jpg" alt="คิวอาร์โค้ดพร้อมเพย์สำหรับชำระเงิน" class="img-fluid rounded border mb-2">
+                        <p class="mb-0 fw-semibold">สแกนเพื่อชำระเงินผ่านพร้อมเพย์</p>
+                        <p class="mb-0">ยอดที่ต้องโอน <strong class="text-brand fs-5" id="pp-amount"></strong></p>
+                      </div>
+                      <div class="col-12 col-md-10">
+                        <ol class="small text-body-secondary ps-3 mb-3">
+                          <li>เปิดแอปธนาคารแล้วสแกนคิวอาร์โค้ดด้านบน</li>
+                          <li>โอนเงินตามยอดที่ต้องชำระให้ตรงจำนวน</li>
+                          <li>บันทึกสลิปการโอนเงิน แล้วแนบไฟล์ด้านล่าง จากนั้นกดปุ่ม "ชำระเงิน"</li>
+                        </ol>
+                        <div id="slip-field">
+                          <label for="p-slip" class="form-label">แนบสลิปการโอนเงิน</label>
+                          <input type="file" id="p-slip" class="form-control" accept="image/jpeg,image/png,image/webp" required aria-describedby="slip-help">
+                          <div class="invalid-feedback" id="slip-feedback">กรุณาแนบสลิปการโอนเงิน</div>
+                          <div class="form-text" id="slip-help">รองรับไฟล์ภาพ JPG, PNG, WebP ระบบเก็บสลิปไว้เป็นหลักฐานเท่านั้น และไม่ได้ตรวจสอบสลิปโดยอัตโนมัติ</div>
+                        </div>
+                        <div id="slip-preview" class="row g-2 align-items-end" hidden>
+                          <div class="col-6 col-sm-4 col-md-3"><img id="slip-img" class="img-fluid rounded border" alt="ตัวอย่างสลิปที่แนบ"></div>
+                          <div class="col-auto"><button type="button" class="btn btn-outline-secondary btn-sm" id="slip-change"><i class="bi bi-arrow-repeat me-1" aria-hidden="true"></i>เปลี่ยนไฟล์</button></div>
+                        </div>
+                      </div>
                     </div>
                   </div>
 
                   <div id="pay-cash" hidden>
-                    <div class="alert alert-info d-flex gap-2" role="note"><i class="bi bi-cash-coin"></i><div>ชำระเงินสดที่เคาน์เตอร์สาขาเมื่อมารับบริการ กดปุ่ม "ชำระเงิน" เพื่อยืนยันการจองและรับรหัส PIN</div></div>
+                    <div class="alert alert-info d-flex gap-2" role="note"><i class="bi bi-cash-coin"></i><div>ชำระเงินสดที่เคาน์เตอร์เมื่อมารับบริการ กดปุ่ม "ชำระเงิน" เพื่อยืนยันการจองและรับรหัส PIN</div></div>
                   </div>
                 </form>
               </section>
@@ -250,7 +264,7 @@
   const $ = (id) => document.getElementById(id);
   const esc = LG.esc;
   const p2 = (n) => String(n).padStart(2, '0');
-  const HOURS_PER = (window.MockData && MockData.HOURS_PER) || { hour: 1, day: 24, month: 720 };
+  const DAY_MS = 24 * 3600000;
   const PAY_ICON = { card: 'credit-card-2-front', promptpay: 'qr-code-scan', cash: 'cash-coin' };
   const STEP_COUNT = 6;
   const localStr = (d) => `${LG.fmt.isoDate(d)} ${p2(d.getHours())}:${p2(d.getMinutes())}:00`;
@@ -259,64 +273,56 @@
 
   // ---------- boot: reference data ----------
   let locations = [], prices = [], settings = null;
+  const sizeByLoc = new Map(), locBySize = new Map();   // each building holds one size (derived from the lockers)
   try {
-    const res = await Promise.all([DS.getLocations(), DS.getPricing(), DS.getSettings().catch(() => null)]);
+    const res = await Promise.all([DS.getLocations(), DS.getPricing(), DS.getSettings().catch(() => null), DS.getLockers().catch(() => [])]);
     locations = res[0]; prices = res[1].prices || []; settings = res[2];
+    res[3].forEach((l) => { if (!sizeByLoc.has(l.locationId)) sizeByLoc.set(l.locationId, l.size); if (!locBySize.has(l.size)) locBySize.set(l.size, l.locationId); });
   } catch (e) {
     $('boot-body').innerHTML = LG.errorBox(e) + '<a class="btn btn-outline-primary" href="booking.html"><i class="bi bi-arrow-clockwise me-1"></i>ลองใหม่</a>';
     return;
   }
-  const minH = Math.max(1, Number(settings && settings.minDuration) || 1);
+  // settings store the duration limits in hours; the UI works in days
+  const minH = Math.max(1, Number(settings && settings.minDuration) || 24);
   const maxH = Math.max(1, Number(settings && settings.maxDuration) || 720);
-  const limits = (type) => ({ min: Math.max(1, Math.ceil(minH / HOURS_PER[type])), max: Math.floor(maxH / HOURS_PER[type]) });
+  const limits = () => ({ min: Math.max(1, Math.ceil(minH / 24)), max: Math.max(1, Math.floor(maxH / 24)) });
 
   // ---------- state ----------
   const state = {
     step: 1, locationId: '', size: '', locker: null,
-    date: '', time: '', type: 'hour', qty: 1,
+    date: '', time: '', qty: 1,
     name: user.name || '', email: user.email || '', phone: user.phone || '',
-    promo: null, method: 'card',
+    promo: null, method: 'promptpay', slip: '',
   };
   const startDate = () => new Date(`${state.date}T${state.time}:00`);
-  const endDate = () => new Date(startDate().getTime() + state.qty * HOURS_PER[state.type] * 3600000);
+  const endDate = () => new Date(startDate().getTime() + state.qty * DAY_MS);
   const startStr = () => `${state.date} ${state.time}:00`;
-  const unitPrice = () => { const row = prices.find((p) => p.size === (state.locker && state.locker.size)); return row ? Number(row[state.type]) : 0; };
+  const unitPrice = () => { const row = prices.find((p) => p.size === (state.locker && state.locker.size)); return row ? Number(row.day) : 0; };
   const calc = () => quote(unitPrice(), state.qty, state.promo);
 
   // ---------- prefill from URL ----------
   const nxt = new Date(Date.now() + 3600000);
-  const qLoc = LG.qs('locationId'), qSize = LG.qs('size'), qDate = LG.qs('date'), qTime = LG.qs('time'), qType = LG.qs('type');
-  const qHours = parseInt(LG.qs('hours'), 10), qQty = parseInt(LG.qs('qty'), 10), qLocker = parseInt(LG.qs('lockerId'), 10);
+  const qLoc = LG.qs('locationId'), qSize = LG.qs('size'), qDate = LG.qs('date'), qTime = LG.qs('time');
+  const qDays = parseInt(LG.qs('days'), 10), qLocker = parseInt(LG.qs('lockerId'), 10);
   const validDate = qDate && /^\d{4}-\d{2}-\d{2}$/.test(qDate) && qDate >= LG.fmt.isoDate();
   state.date = validDate ? qDate : LG.fmt.isoDate(nxt);
   state.time = /^([01]\d|2[0-3]):[0-5]\d$/.test(qTime || '') ? `${qTime.slice(0, 2)}:00` : `${p2(nxt.getHours())}:00`;
-  if (Object.prototype.hasOwnProperty.call(HOURS_PER, qType)) {
-    state.type = qType;
-    state.qty = qQty > 0 ? qQty : qHours > 0 ? (qType === 'hour' ? qHours : Math.ceil(qHours / HOURS_PER[qType])) : 1;
-  } else if (qHours > 0) {
-    if (qHours % 720 === 0) { state.type = 'month'; state.qty = qHours / 720; }
-    else if (qHours % 24 === 0) { state.type = 'day'; state.qty = qHours / 24; }
-    else { state.type = 'hour'; state.qty = qHours; }
-  } else if (qQty > 0) {
-    state.qty = qQty;
-  }
-  if (!limits(state.type).max) state.type = 'hour';
-  state.qty = Math.min(Math.max(state.qty, limits(state.type).min), limits(state.type).max);
+  if (qDays > 0) state.qty = qDays;
+  state.qty = Math.min(Math.max(state.qty, limits().min), limits().max);
   if (qLoc && locations.some((l) => String(l.id) === qLoc)) state.locationId = qLoc;
-  if (qSize && LG.SIZES[qSize]) state.size = qSize;
+  if (qSize && LG.SIZES[qSize]) { state.size = qSize; if (locBySize.has(qSize)) state.locationId = String(locBySize.get(qSize)); }
+  if (state.locationId && sizeByLoc.has(+state.locationId)) state.size = sizeByLoc.get(+state.locationId);
   if (qLocker > 0) {
     try {
       const l = await DS.getLocker(qLocker);
-      state.locker = l; state.locationId = String(l.locationId);
-      if (state.size && state.size !== l.size) state.size = '';
+      state.locker = l; state.locationId = String(l.locationId); state.size = l.size;
     } catch (e) { LG.toast('ไม่พบล็อกเกอร์ที่ระบุ กรุณาเลือกใหม่', 'warning'); }
   }
 
   // ---------- build static controls ----------
-  $('b-location').innerHTML = '<option value="">เลือกสาขา</option>' + locations.map((l) => `<option value="${l.id}">${esc(l.name)}</option>`).join('');
+  $('b-location').innerHTML = '<option value="">เลือกตึก</option>' + locations.map((l) => `<option value="${l.id}">${esc(l.name)}${sizeByLoc.has(l.id) ? ` · ขนาด ${esc(sizeByLoc.get(l.id))}` : ''}</option>`).join('');
   $('b-size').innerHTML = '<option value="">ทุกขนาด</option>' + Object.entries(LG.SIZES).map(([k, s]) => `<option value="${k}">${k} - ${esc(s.label)}</option>`).join('');
   $('legend').innerHTML = LG.legend();
-  $('type-group').innerHTML = Object.entries(LG.DURATION).map(([k, label]) => `<input type="radio" class="btn-check" name="durationType" id="t-${k}" value="${k}"${limits(k).max < 1 ? ' disabled' : ''}><label class="btn btn-outline-primary" for="t-${k}">ราย${esc(label)}</label>`).join('');
   $('pay-methods').innerHTML = Object.entries(LG.PAY_METHODS).map(([k, label]) => `<div class="col-sm-4"><input type="radio" class="btn-check" name="method" id="m-${k}" value="${k}"><label class="btn btn-outline-primary w-100 py-3" for="m-${k}"><i class="bi bi-${PAY_ICON[k]} fs-4 d-block mb-1" aria-hidden="true"></i>${esc(label)}</label></div>`).join('');
   $('b-date').min = LG.fmt.isoDate();
 
@@ -331,7 +337,6 @@
   function syncInputs() {
     $('b-location').value = state.locationId; $('b-size').value = state.size;
     $('b-date').value = state.date; fillTimes();
-    document.querySelectorAll('input[name="durationType"]').forEach((r) => { r.checked = r.value === state.type; });
     applyQtyLimits();
     $('b-qty').value = state.qty;
     $('c-name').value = state.name; $('c-email').value = state.email; $('c-phone').value = state.phone;
@@ -340,12 +345,11 @@
   }
 
   function applyQtyLimits() {
-    const { min, max } = limits(state.type), qty = $('b-qty');
+    const { min, max } = limits(), qty = $('b-qty');
     qty.min = min; qty.max = max;
     state.qty = Math.min(Math.max(state.qty, min), max);
-    $('qty-unit').textContent = LG.DURATION[state.type];
-    $('qty-hint').textContent = `จองได้ ${min}-${max} ${LG.DURATION[state.type]}`;
-    $('qty-feedback').textContent = `กรุณากรอกจำนวนเต็ม ${min}-${max} ${LG.DURATION[state.type]}`;
+    $('qty-hint').textContent = `จองได้ ${min}-${max} วัน`;
+    $('qty-feedback').textContent = `กรุณากรอกจำนวนวันเป็นเลขจำนวนเต็ม ${min}-${max}`;
   }
 
   // ---------- locker grid (step 1) ----------
@@ -374,7 +378,7 @@
     const id = ++gridSeq;
     renderWindowNote();
     if (!state.locationId) {
-      gridRows = []; gridEl.innerHTML = LG.empty('เลือกสาขาเพื่อดูล็อกเกอร์ที่ว่าง', 'geo-alt'); $('grid-count').textContent = ''; return;
+      gridRows = []; gridEl.innerHTML = LG.empty('เลือกตึกเพื่อดูล็อกเกอร์ที่ว่าง', 'geo-alt'); $('grid-count').textContent = ''; return;
     }
     gridEl.innerHTML = LG.skeleton(4);
     const query = { locationId: state.locationId, start: localStr(startDate()), end: localStr(endDate()) };
@@ -402,36 +406,36 @@
   const dtRow = (label, value) => `<div class="d-flex justify-content-between gap-3 mb-1"><dt class="fw-normal text-body-secondary">${label}</dt><dd class="mb-0 text-end fw-semibold">${value}</dd></div>`;
   function priceRows() {
     const c = calc();
-    return `<div class="d-flex justify-content-between small"><span>${LG.fmt.baht(unitPrice())} × ${state.qty} ${LG.DURATION[state.type]}</span><span>${LG.fmt.baht(c.gross)}</span></div>
+    return `<div class="d-flex justify-content-between gap-3 small"><span>ค่าเช่าตู้ ${LG.fmt.baht(unitPrice())} / วัน × ${state.qty} วัน</span><span class="text-nowrap">${LG.fmt.baht(c.gross)}</span></div>
       <div class="d-flex justify-content-between small${c.discount ? ' text-success' : ' text-body-secondary'}"><span>ส่วนลด${state.promo ? ` (${esc(state.promo.code)})` : ''}</span><span>${c.discount ? '-' : ''}${LG.fmt.baht(c.discount)}</span></div>
       <div class="d-flex justify-content-between align-items-baseline mt-2 pt-2 border-top"><span class="fw-semibold">ยอดรวมสุทธิ</span><span class="fs-4 fw-bold text-brand">${LG.fmt.baht(c.total)}</span></div>`;
   }
   function renderSummary() {
     const l = state.locker, box = $('summary');
-    if (!l) { box.innerHTML = '<p class="text-body-secondary small mb-0"><i class="bi bi-info-circle me-1"></i>ยังไม่ได้เลือกล็อกเกอร์ เลือกสาขาและล็อกเกอร์ที่ว่างเพื่อดูราคา</p>'; return; }
+    if (!l) { box.innerHTML = '<p class="text-body-secondary small mb-0"><i class="bi bi-info-circle me-1"></i>ยังไม่ได้เลือกล็อกเกอร์ เลือกตึกและล็อกเกอร์ที่ว่างเพื่อดูราคา</p>'; return; }
     const sz = LG.SIZES[l.size] || {};
     box.innerHTML = `<dl class="small mb-3">
       ${dtRow('ล็อกเกอร์', `${esc(l.code)} · ${esc(l.size)} (${esc(sz.label || '')})`)}
-      ${dtRow('สาขา', esc(l.locationName || ''))}
+      ${dtRow('ที่ตั้ง', esc(l.locationName || ''))}
       ${dtRow('เริ่ม', LG.fmt.datetime(startDate()))}
       ${dtRow('สิ้นสุด', LG.fmt.datetime(endDate()))}
-      ${dtRow('ระยะเวลา', LG.fmt.duration(state.type, state.qty))}
+      ${dtRow('ระยะเวลา', LG.fmt.duration('day', state.qty))}
     </dl><hr class="my-2">${priceRows()}`;
   }
   function renderEnd() {
     $('end-text').textContent = LG.fmt.datetime(endDate());
     const l = state.locker, box = $('rate-box');
     const row = l && prices.find((p) => p.size === l.size);
-    box.innerHTML = row ? `<h3 class="h6">อัตราค่าบริการขนาด ${esc(l.size)}</h3><div class="row row-cols-3 g-2 text-center">${[['hour', 'ต่อชั่วโมง'], ['day', 'ต่อวัน'], ['month', 'ต่อเดือน']].map(([k, t]) => `<div class="col"><div class="border rounded p-2 h-100${state.type === k ? ' border-primary bg-brand-soft' : ''}"><div class="small text-body-secondary">${t}</div><div class="fw-semibold">${LG.fmt.baht(row[k])}</div></div></div>`).join('')}</div>` : '';
+    box.innerHTML = row ? `<h3 class="h6">อัตราค่าบริการขนาด ${esc(l.size)}</h3><div class="border border-primary bg-brand-soft rounded p-2 text-center"><div class="small text-body-secondary">ต่อวัน</div><div class="fw-semibold">${LG.fmt.baht(row.day)}</div></div>` : '';
   }
   function renderReview() {
     const l = state.locker; if (!l) return;
     const sz = LG.SIZES[l.size] || {};
     $('review').innerHTML = `<div class="row g-3">
       <div class="col-md-6"><div class="border rounded p-3 h-100"><h3 class="h6 mb-2"><i class="bi bi-lock-fill me-1 text-brand"></i>ล็อกเกอร์</h3><dl class="small mb-0">
-        ${dtRow('รหัส', esc(l.code))}${dtRow('ขนาด', `${esc(l.size)} (${esc(sz.label || '')})`)}${dtRow('สาขา', esc(l.locationName || ''))}${dtRow('โซน', esc(l.zone || '-'))}</dl></div></div>
+        ${dtRow('รหัส', esc(l.code))}${dtRow('ขนาด', `${esc(l.size)} (${esc(sz.label || '')})`)}${dtRow('ที่ตั้ง', esc(l.locationName || ''))}${dtRow('โซน', esc(l.zone || '-'))}</dl></div></div>
       <div class="col-md-6"><div class="border rounded p-3 h-100"><h3 class="h6 mb-2"><i class="bi bi-calendar-event me-1 text-brand"></i>ช่วงเวลา</h3><dl class="small mb-0">
-        ${dtRow('เริ่ม', LG.fmt.datetime(startDate()))}${dtRow('สิ้นสุด', LG.fmt.datetime(endDate()))}${dtRow('ระยะเวลา', LG.fmt.duration(state.type, state.qty))}</dl></div></div>
+        ${dtRow('เริ่ม', LG.fmt.datetime(startDate()))}${dtRow('สิ้นสุด', LG.fmt.datetime(endDate()))}${dtRow('ระยะเวลา', LG.fmt.duration('day', state.qty))}</dl></div></div>
       <div class="col-12"><div class="border rounded p-3"><h3 class="h6 mb-2"><i class="bi bi-person-fill me-1 text-brand"></i>ผู้จอง</h3><dl class="small mb-0">
         ${dtRow('ชื่อ', esc(state.name))}${dtRow('อีเมล', esc(state.email))}${dtRow('โทรศัพท์', esc(state.phone))}</dl></div></div></div>`;
     $('review-price').innerHTML = `<div class="border rounded p-3 bg-body-tertiary"><h3 class="h6 mb-2">รายละเอียดราคา</h3>${priceRows()}</div>`;
@@ -442,7 +446,13 @@
     if (state.step === 5) renderPayAmount();
   }
   function renderPayAmount() {
-    const t = LG.fmt.baht(calc().total);
+    const c = calc(), t = LG.fmt.baht(c.total);
+    $('pay-summary').innerHTML = `<div class="card-body">
+      <h3 class="h6 mb-2"><i class="bi bi-receipt me-1 text-brand" aria-hidden="true"></i>สรุปยอดที่ต้องชำระ</h3>
+      <div class="d-flex justify-content-between gap-3"><span>ค่าเช่าตู้ ${LG.fmt.baht(unitPrice())} / วัน × ${state.qty} วัน</span><span class="fw-semibold text-nowrap">= ${LG.fmt.baht(c.gross)}</span></div>
+      ${c.discount ? `<div class="d-flex justify-content-between gap-3 text-success"><span>ส่วนลด${state.promo ? ` (${esc(state.promo.code)})` : ''}</span><span class="text-nowrap">-${LG.fmt.baht(c.discount)}</span></div>` : ''}
+      <div class="d-flex justify-content-between align-items-baseline gap-3 mt-2 pt-2 border-top"><span class="fw-semibold">ยอดที่ต้องชำระ</span><span class="display-6 fw-bold text-brand text-nowrap">${t}</span></div>
+    </div>`;
     $('pp-amount').textContent = t;
     $('btn-next').innerHTML = `<i class="bi bi-lock-fill me-1"></i>ชำระเงิน ${t}`;
   }
@@ -485,7 +495,68 @@
     $('pay-promptpay').hidden = state.method !== 'promptpay';
     $('pay-cash').hidden = state.method !== 'cash';
     $('pay-card').querySelectorAll('input').forEach((i) => { i.disabled = state.method !== 'card'; });
+    $('p-slip').disabled = state.method !== 'promptpay';
   }
+
+  // ---------- payment slip (kept as proof only, never verified) ----------
+  const SLIP_MAX_IN = 10 * 1024 * 1024, SLIP_MAX_SIDE = 1200, SLIP_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
+  const SLIP_REQUIRED_MSG = 'กรุณาแนบสลิปการโอนเงิน';
+  function slipError(msg) {
+    const input = $('p-slip');
+    input.setCustomValidity('invalid');
+    $('slip-feedback').textContent = msg;
+    input.classList.add('is-invalid');
+  }
+  function clearSlip() {
+    state.slip = '';
+    const input = $('p-slip');
+    input.value = ''; input.classList.remove('is-invalid');
+    $('slip-feedback').textContent = SLIP_REQUIRED_MSG;
+    input.setCustomValidity('');
+    $('slip-img').removeAttribute('src');
+    $('slip-preview').hidden = true; $('slip-field').hidden = false;
+  }
+  /** Downscale to max 1200 px and re-encode as JPEG q0.8 (white background for transparent PNG/WebP). */
+  function readSlip(file) {
+    return new Promise((resolve, reject) => {
+      const url = URL.createObjectURL(file), img = new Image();
+      img.onload = () => {
+        URL.revokeObjectURL(url);
+        try {
+          const scale = Math.min(1, SLIP_MAX_SIDE / Math.max(img.naturalWidth, img.naturalHeight));
+          const w = Math.max(1, Math.round(img.naturalWidth * scale)), h = Math.max(1, Math.round(img.naturalHeight * scale));
+          const cv = document.createElement('canvas'); cv.width = w; cv.height = h;
+          const ctx = cv.getContext('2d');
+          ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, w, h);
+          ctx.drawImage(img, 0, 0, w, h);
+          resolve(cv.toDataURL('image/jpeg', 0.8));
+        } catch (e) { reject(e); }
+      };
+      img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('bad image')); };
+      img.src = url;
+    });
+  }
+  $('p-slip').addEventListener('change', async (ev) => {
+    const input = ev.target, file = input.files && input.files[0];
+    state.slip = ''; input.classList.remove('is-invalid');
+    if (!file) { input.setCustomValidity(''); $('slip-feedback').textContent = SLIP_REQUIRED_MSG; return; }
+    if (!SLIP_TYPES.includes(file.type)) { slipError('ไฟล์สลิปต้องเป็นรูปภาพ JPG, PNG หรือ WebP เท่านั้น'); return; }
+    if (file.size > SLIP_MAX_IN) { slipError('ไฟล์สลิปมีขนาดใหญ่เกินไป (ไม่เกิน 10 MB)'); return; }
+    input.setCustomValidity('processing');
+    try {
+      const data = await readSlip(file);
+      if (input.files[0] !== file) return;   // a newer pick replaced this one
+      state.slip = data;
+      input.setCustomValidity('');
+      $('slip-img').src = data;
+      $('slip-field').hidden = true; $('slip-preview').hidden = false;
+      $('slip-change').focus();
+    } catch (e) {
+      if (input.files[0] !== file) return;   // stale pick: do not invalidate the newer file
+      slipError('ไม่สามารถอ่านไฟล์ภาพได้ กรุณาเลือกไฟล์อื่น');
+    }
+  });
+  $('slip-change').addEventListener('click', () => { clearSlip(); $('p-slip').focus(); });
   $('pay-methods').addEventListener('change', (ev) => { if (ev.target.name === 'method') { state.method = ev.target.value; togglePayPanels(); } });
   $('p-number').addEventListener('input', (ev) => { const d = ev.target.value.replace(/\D/g, '').slice(0, 19); ev.target.value = d.replace(/(.{4})/g, '$1 ').trim(); ev.target.setCustomValidity(''); });
   $('p-exp').addEventListener('input', (ev) => { let d = ev.target.value.replace(/\D/g, '').slice(0, 4); if (d.length > 2) d = `${d.slice(0, 2)}/${d.slice(2)}`; ev.target.value = d; ev.target.setCustomValidity(''); });
@@ -500,12 +571,16 @@
   // ---------- inputs -> state ----------
   $('b-location').addEventListener('change', (ev) => {
     state.locationId = ev.target.value;
+    state.size = state.locationId && sizeByLoc.has(+state.locationId) ? sizeByLoc.get(+state.locationId) : '';
+    $('b-size').value = state.size;
     if (state.locker && String(state.locker.locationId) !== state.locationId) { state.locker = null; renderPicked(); }
     renderAll(); loadGrid();
   });
   $('b-size').addEventListener('change', (ev) => {
     state.size = ev.target.value;
-    if (state.locker && state.size && state.locker.size !== state.size) { state.locker = null; renderPicked(); }
+    state.locationId = state.size && locBySize.has(state.size) ? String(locBySize.get(state.size)) : '';
+    $('b-location').value = state.locationId;
+    if (state.locker && String(state.locker.locationId) !== state.locationId) { state.locker = null; renderPicked(); }
     renderAll(); loadGrid();
   });
   $('b-date').addEventListener('change', (ev) => {
@@ -513,17 +588,13 @@
     state.date = ev.target.value; fillTimes(); $('b-time').value = state.time; renderAll(); scheduleGrid();
   });
   $('b-time').addEventListener('change', (ev) => { state.time = ev.target.value; renderAll(); scheduleGrid(); });
-  $('type-group').addEventListener('change', (ev) => {
-    if (ev.target.name !== 'durationType') return;
-    state.type = ev.target.value; applyQtyLimits(); $('b-qty').value = state.qty; renderAll(); scheduleGrid();
-  });
   function setQty(v) {
-    const n = parseInt(v, 10), { min, max } = limits(state.type);
+    const n = parseInt(v, 10), { min, max } = limits();
     if (Number.isInteger(n) && n >= min && n <= max) { state.qty = n; renderAll(); scheduleGrid(); }
   }
   $('b-qty').addEventListener('input', (ev) => setQty(ev.target.value));
-  $('qty-minus').addEventListener('click', () => { const { min } = limits(state.type); state.qty = Math.max(min, (parseInt($('b-qty').value, 10) || state.qty) - 1); $('b-qty').value = state.qty; renderAll(); scheduleGrid(); });
-  $('qty-plus').addEventListener('click', () => { const { max } = limits(state.type); state.qty = Math.min(max, (parseInt($('b-qty').value, 10) || state.qty) + 1); $('b-qty').value = state.qty; renderAll(); scheduleGrid(); });
+  $('qty-minus').addEventListener('click', () => { const { min } = limits(); state.qty = Math.max(min, (parseInt($('b-qty').value, 10) || state.qty) - 1); $('b-qty').value = state.qty; renderAll(); scheduleGrid(); });
+  $('qty-plus').addEventListener('click', () => { const { max } = limits(); state.qty = Math.min(max, (parseInt($('b-qty').value, 10) || state.qty) + 1); $('b-qty').value = state.qty; renderAll(); scheduleGrid(); });
   $('c-name').addEventListener('input', (ev) => { state.name = ev.target.value.trim(); });
   $('c-email').addEventListener('input', (ev) => { state.email = ev.target.value.trim(); });
   $('c-phone').addEventListener('input', (ev) => { state.phone = ev.target.value.trim(); });
@@ -601,9 +672,10 @@
     btnBack.disabled = true;
     try {
       const b = await DS.createBooking({
-        lockerId: state.locker.id, startAt: startStr(), durationType: state.type, quantity: state.qty,
+        lockerId: state.locker.id, startAt: startStr(), durationType: 'day', quantity: state.qty,
         customerName: state.name, customerEmail: state.email, customerPhone: state.phone,
         promoCode: state.promo ? state.promo.code : '', paymentMethod: state.method,
+        ...(state.method === 'promptpay' ? { slip: state.slip } : {}),
       });
       const url = `booking-success.html?ref=${encodeURIComponent(b.ref)}`;
       $('done-ref').textContent = b.ref; $('done-link').href = url;
@@ -615,6 +687,11 @@
       if (e.status === 409) {
         LG.toastError(e);
         state.locker = null; renderPicked(); renderAll(); await go(1);
+      } else if (e.code === 'invalid_slip' || e.code === 'slip_required') {
+        clearSlip();
+        slipError(e.message || SLIP_REQUIRED_MSG);
+        LG.validate($('form-5'));
+        $('p-slip').focus();
       } else if (e.code === 'invalid_promo') {
         LG.toastError(e); state.promo = null; renderAll(); await go(4);
       } else {
@@ -637,7 +714,7 @@
   document.querySelectorAll('#wizard form').forEach((form) => {
     form.addEventListener('submit', (ev) => ev.preventDefault());
     form.addEventListener('keydown', (ev) => {
-      if (ev.key === 'Enter' && ev.target.tagName === 'INPUT' && !['checkbox', 'radio', 'button'].includes(ev.target.type) && ev.target.id !== 'promo-code') { ev.preventDefault(); btnNext.click(); }
+      if (ev.key === 'Enter' && ev.target.tagName === 'INPUT' && !['checkbox', 'radio', 'button', 'file'].includes(ev.target.type) && ev.target.id !== 'promo-code') { ev.preventDefault(); btnNext.click(); }
     });
   });
 

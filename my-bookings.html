@@ -83,12 +83,12 @@
         <div id="extend-alert" class="alert alert-danger d-none" role="alert"></div>
         <p class="mb-3" id="extend-summary"></p>
         <div class="mb-3">
-          <label for="extend-qty" class="form-label">ต้องการต่อเวลาเพิ่ม (<span id="extend-unit">ชั่วโมง</span>)</label>
-          <input type="number" class="form-control" id="extend-qty" name="quantity" min="1" max="72" step="1" value="1" inputmode="numeric" required>
-          <div class="invalid-feedback" id="extend-feedback">กรุณากรอกจำนวนเต็มตั้งแต่ 1 ขึ้นไป</div>
+          <label for="extend-qty" class="form-label">ต้องการต่อเวลาเพิ่ม (วัน)</label>
+          <input type="number" class="form-control" id="extend-qty" name="quantity" min="1" max="30" step="1" value="1" inputmode="numeric" required>
+          <div class="invalid-feedback" id="extend-feedback">กรุณากรอกจำนวนวันเป็นเลขจำนวนเต็ม</div>
         </div>
         <dl class="row mb-0 small bg-body-tertiary rounded p-3 mx-0" aria-live="polite">
-          <dt class="col-7 fw-normal text-body-secondary">ราคาต่อหน่วย</dt><dd class="col-5 text-end mb-1" id="extend-unit-price">-</dd>
+          <dt class="col-7 fw-normal text-body-secondary">ราคาต่อวัน</dt><dd class="col-5 text-end mb-1" id="extend-unit-price">-</dd>
           <dt class="col-7 fw-normal text-body-secondary">เวลาสิ้นสุดใหม่</dt><dd class="col-5 text-end mb-1" id="extend-new-end">-</dd>
           <dt class="col-7 fw-semibold">ค่าบริการส่วนที่เพิ่ม</dt><dd class="col-5 text-end mb-0 fw-semibold text-brand fs-5" id="extend-total">-</dd>
         </dl>
@@ -113,8 +113,8 @@
 (async () => {
   const user = await Auth.require('customer');
   const $ = (id) => document.getElementById(id);
-  const HOURS = { hour: 1, day: 24, month: 720 };               // hours per duration unit (same as the API)
-  const MAX_QTY = { hour: 72, day: 30, month: 12 };            // sensible limit for one extension
+  const DAY_MS = 24 * 3600000;
+  const MAX_DAYS = 30;                                          // sensible limit for one extension
   const TABS = {
     upcoming: { statuses: ['pending', 'confirmed'], empty: 'ยังไม่มีการจองที่กำลังจะมาถึง', icon: 'calendar-event' },
     active: { statuses: ['active'], empty: 'ไม่มีล็อกเกอร์ที่กำลังใช้งานในขณะนี้', icon: 'unlock' },
@@ -134,7 +134,7 @@
   const extendModal = new bootstrap.Modal($('extend-modal'));
   const unitPrice = (b) => {
     const row = prices && prices.prices.find((p) => p.size === b.size);
-    return row ? Number(row[b.durationType]) : 0;
+    return row ? Number(row.day) : 0;
   };
 
   // ---------- rendering ----------
@@ -200,7 +200,7 @@
       <dl class="row mb-0">
         ${row('สถานะ', LG.badge('booking', b.status))}
         ${row('ล็อกเกอร์', `${LG.esc(b.lockerCode)} (ขนาด ${LG.esc(b.size)} - ${LG.esc((LG.SIZES[b.size] || {}).label || '')})`)}
-        ${row('สาขา', LG.esc(b.locationName))}
+        ${row('ที่ตั้ง', LG.esc(b.locationName))}
         ${row('เริ่มต้น', LG.fmt.datetime(b.startAt))}
         ${row('สิ้นสุด', LG.fmt.datetime(b.endAt))}
         ${row('ระยะเวลา', LG.esc(LG.fmt.duration(b.durationType, b.quantity)))}
@@ -216,10 +216,10 @@
   // ---------- extend ----------
   function updatePreview() {
     const b = extending, input = $('extend-qty'), qty = Number(input.value);
-    const ok = b && Number.isInteger(qty) && qty >= 1 && qty <= MAX_QTY[b.durationType];
+    const ok = b && Number.isInteger(qty) && qty >= 1 && qty <= MAX_DAYS;
     $('extend-alert').classList.add('d-none');
     if (!ok) { $('extend-new-end').textContent = '-'; $('extend-total').textContent = '-'; return; }
-    const end = new Date(LG.toDate(b.endAt).getTime() + qty * HOURS[b.durationType] * 3600000);
+    const end = new Date(LG.toDate(b.endAt).getTime() + qty * DAY_MS);
     $('extend-new-end').textContent = LG.fmt.datetime(end);
     $('extend-total').textContent = LG.fmt.baht(quote(unitPrice(b), qty, null).total);
   }
@@ -227,14 +227,12 @@
   async function openExtend(b) {
     try { prices = prices || await DS.getPricing(); } catch (e) { LG.toastError(e); return; }
     extending = b;
-    const unit = LG.DURATION[b.durationType] || b.durationType;
     const input = $('extend-qty');
     $('extend-form').classList.remove('was-validated');
-    input.max = MAX_QTY[b.durationType]; input.value = 1;
-    $('extend-feedback').textContent = `กรุณากรอกจำนวนเต็มระหว่าง 1 - ${MAX_QTY[b.durationType]}`;
-    $('extend-unit').textContent = unit;
+    input.max = MAX_DAYS; input.value = 1;
+    $('extend-feedback').textContent = `กรุณากรอกจำนวนวันเป็นเลขจำนวนเต็มระหว่าง 1 - ${MAX_DAYS}`;
     $('extend-summary').innerHTML = `ล็อกเกอร์ <strong>${LG.esc(b.lockerCode)}</strong> (${LG.esc(b.locationName)}) สิ้นสุดเวลา <strong>${LG.fmt.datetime(b.endAt)}</strong>`;
-    $('extend-unit-price').textContent = `${LG.fmt.baht(unitPrice(b))} / ${unit}`;
+    $('extend-unit-price').textContent = `${LG.fmt.baht(unitPrice(b))} / วัน`;
     updatePreview();
     extendModal.show();
   }

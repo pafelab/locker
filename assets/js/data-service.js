@@ -66,7 +66,7 @@ window.DS = (() => {
     // --- bookings: see mock-service bookingOut(); filters {q,status,from,to,mine} ---
     getBookings: (filters = {}) => req('GET', 'bookings', q(filters)),
     getBooking: (idOrRef) => req('GET', 'bookings', q(/^LG/.test(idOrRef) ? { ref: idOrRef } : { id: idOrRef })),
-    createBooking: (data) => req('POST', 'bookings', { body: data }),   // {lockerId,startAt,durationType,quantity,customerName,customerEmail,customerPhone,promoCode,paymentMethod,userId?}
+    createBooking: (data) => req('POST', 'bookings', { body: data }),   // {lockerId,startAt,durationType,quantity,customerName,customerEmail,customerPhone,promoCode,paymentMethod,slip?,userId?} slip = image data URL (required for promptpay)
     updateBookingStatus: (id, status) => req('PUT', 'bookings', { query: { id, action: 'status' }, body: { status } }),
     extendBooking: (id, quantity) => req('PUT', 'bookings', { query: { id, action: 'extend' }, body: { quantity } }),
 
@@ -84,6 +84,7 @@ window.DS = (() => {
 
     // --- payments (admin) ---
     getPayments: (filters = {}) => req('GET', 'payments', q(filters)),
+    getPaymentSlip: (id) => req('GET', 'payments', q({ id, action: 'slip' })),   // -> {slip: data URL | null} (admin)
     refundPayment: (id) => req('PUT', 'payments', { query: { id, action: 'refund' } }),
 
     // --- staff (admin; writes need super_admin) ---

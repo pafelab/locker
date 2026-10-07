@@ -13,7 +13,7 @@
   // [page key, file, label, icon]
   const MENU = [
     ['ภาพรวม', [['dashboard', 'index.html', 'แดชบอร์ด', 'speedometer2']]],
-    ['การดำเนินงาน', [['bookings', 'bookings.html', 'การจอง', 'calendar-check'], ['lockers', 'lockers.html', 'ล็อกเกอร์', 'grid-3x3-gap'], ['customers', 'customers.html', 'ลูกค้า', 'people'], ['locations', 'locations.html', 'สาขาและโซน', 'geo-alt']]],
+    ['การดำเนินงาน', [['bookings', 'bookings.html', 'การจอง', 'calendar-check'], ['lockers', 'lockers.html', 'ล็อกเกอร์', 'grid-3x3-gap'], ['customers', 'customers.html', 'ลูกค้า', 'people'], ['locations', 'locations.html', 'ตึก', 'building']]],
     ['การเงิน', [['payments', 'payments.html', 'การชำระเงิน', 'credit-card'], ['pricing', 'pricing.html', 'ราคาและโปรโมชัน', 'tags'], ['reports', 'reports.html', 'รายงาน', 'bar-chart-line']]],
     ['ระบบ', [['staff', 'staff.html', 'พนักงานและสิทธิ์', 'person-badge'], ['activity-log', 'activity-log.html', 'บันทึกกิจกรรม', 'clock-history'], ['settings', 'settings.html', 'ตั้งค่า', 'gear']]],
   ];

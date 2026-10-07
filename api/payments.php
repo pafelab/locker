@@ -1,12 +1,19 @@
 <?php
 /**
- * Payments (staff only). GET [?status=&q=] | PUT ?id=[&action=refund]  (refund a paid payment)
+ * Payments (staff only). GET [?status=&q=] | GET ?id=&action=slip (stored transfer slip as a data URL) | PUT ?id=[&action=refund]  (refund a paid payment)
  */
 require __DIR__ . '/helpers.php';
 
 switch (method()) {
     case 'GET':
         require_admin();
+        if (qparam('action') === 'slip') {
+            $row = db_one('SELECT id, slip_path FROM payments WHERE id = ?', [qint(qparam('id'))]);
+            if (!$row) {
+                fail(404, 'not_found', 'ไม่พบรายการชำระเงิน');
+            }
+            ok(['slip' => lg_slip_read($row['slip_path'] === null ? null : (string)$row['slip_path'])]);
+        }
         $where = [];
         $params = [];
         $status = qparam('status');

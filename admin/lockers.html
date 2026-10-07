@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>จัดการล็อกเกอร์ | LockerGo</title>
-<meta name="description" content="เพิ่ม แก้ไข ลบ และเปลี่ยนสถานะล็อกเกอร์ทุกสาขา ดูภาพรวมแบบตารางผังและแบบรายการ">
+<meta name="description" content="เพิ่ม แก้ไข ลบ และเปลี่ยนสถานะล็อกเกอร์ทุกตึก ดูภาพรวมแบบตารางผังและแบบรายการ">
 <link rel="icon" type="image/svg+xml" href="../assets/img/favicon.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -30,8 +30,8 @@
         <div class="card-body">
           <form id="filters" class="row g-3 align-items-end" role="search" novalidate>
             <div class="col-12 col-md-6 col-xl-3">
-              <label class="form-label small mb-1" for="fLocation">สาขา</label>
-              <select class="form-select" id="fLocation"><option value="">ทุกสาขา</option></select>
+              <label class="form-label small mb-1" for="fLocation">ตึก</label>
+              <select class="form-select" id="fLocation"><option value="">ทุกตึก</option></select>
             </div>
             <div class="col-6 col-md-3 col-xl-2">
               <label class="form-label small mb-1" for="fSize">ขนาด</label>
@@ -45,7 +45,7 @@
               <label class="form-label small mb-1" for="fQuery">ค้นหารหัสล็อกเกอร์</label>
               <div class="input-group">
                 <span class="input-group-text"><i class="bi bi-search" aria-hidden="true"></i></span>
-                <input type="search" class="form-control" id="fQuery" placeholder="เช่น SI-A01" autocomplete="off">
+                <input type="search" class="form-control" id="fQuery" placeholder="เช่น T1-S01" autocomplete="off">
               </div>
             </div>
             <div class="col-12 col-md-4 col-xl-2 d-grid">
@@ -95,13 +95,13 @@
         <div class="alert alert-danger d-none" id="formError" role="alert"></div>
         <div class="mb-3">
           <label class="form-label" for="lCode">รหัสล็อกเกอร์ <span class="text-danger" aria-hidden="true">*</span></label>
-          <input type="text" class="form-control" id="lCode" required maxlength="20" pattern="[A-Za-z0-9_\-]+" placeholder="เช่น SI-A21" autocomplete="off">
+          <input type="text" class="form-control" id="lCode" required maxlength="20" pattern="[A-Za-z0-9_\-]+" placeholder="เช่น T1-S21" autocomplete="off">
           <div class="invalid-feedback">กรุณากรอกรหัสล็อกเกอร์ (ภาษาอังกฤษ ตัวเลข หรือเครื่องหมาย - _ เท่านั้น)</div>
         </div>
         <div class="mb-3">
-          <label class="form-label" for="lLocation">สาขา <span class="text-danger" aria-hidden="true">*</span></label>
+          <label class="form-label" for="lLocation">ตึก <span class="text-danger" aria-hidden="true">*</span></label>
           <select class="form-select" id="lLocation" required></select>
-          <div class="invalid-feedback">กรุณาเลือกสาขา</div>
+          <div class="invalid-feedback">กรุณาเลือกตึก</div>
         </div>
         <div class="row g-3 mb-3">
           <div class="col-sm-6">
@@ -188,10 +188,29 @@
 
   const state = { lockers: [], locations: [], view: 'grid', page: 1, selected: new Set(), pageIds: [], editId: null, detailId: null };
 
+  // building <-> size link, derived from the lockers each building holds (one size per building)
+  const sizeOfLoc = new Map(), locOfSize = new Map();
+  function buildMaps() {
+    sizeOfLoc.clear(); locOfSize.clear();
+    state.lockers.forEach((l) => {
+      if (!sizeOfLoc.has(l.locationId)) sizeOfLoc.set(l.locationId, l.size);
+      if (!locOfSize.has(l.size)) locOfSize.set(l.size, l.locationId);
+    });
+  }
+
   // ---------- option builders ----------
   const sizeOptions = (all) => (all ? '<option value="">ทุกขนาด</option>' : '') + SIZE_KEYS.map((k) => `<option value="${k}">${k} - ${esc(LG.SIZES[k].label)}</option>`).join('');
   const statusOptions = (all, selected) => (all ? '<option value="">ทุกสถานะ</option>' : '') + STATUS_KEYS.map((k) => `<option value="${k}"${k === selected ? ' selected' : ''}>${esc(LG.STATUS.locker[k][0])}</option>`).join('');
-  const locationOptions = () => state.locations.map((x) => `<option value="${x.id}">${esc(x.name)}</option>`).join('');
+  const locationOptions = () => state.locations.map((x) => `<option value="${x.id}">${esc(x.name)}${sizeOfLoc.has(x.id) ? ` · ขนาด ${esc(sizeOfLoc.get(x.id))}` : ''}</option>`).join('');
+  const setOptions = (sel, html) => {
+    const v = sel.value;
+    sel.innerHTML = html;
+    if (v && [...sel.options].some((o) => o.value === v)) sel.value = v;
+  };
+  const refreshLocationOptions = () => {
+    setOptions(el.fLoc, '<option value="">ทุกตึก</option>' + locationOptions());
+    setOptions(el.lLoc, locationOptions());
+  };
 
   const hideModal = (modalEl) => new Promise((resolve) => {
     const inst = bootstrap.Modal.getInstance(modalEl);
@@ -204,6 +223,8 @@
   async function reload() {
     try {
       state.lockers = (await DS.getLockers()).sort((a, b) => a.locationId - b.locationId || collator.compare(a.code, b.code));
+      buildMaps();
+      refreshLocationOptions();
       render();
     } catch (e) {
       el.stats.innerHTML = '';
@@ -245,7 +266,7 @@
       + [...groups.entries()].map(([locId, items]) => {
         const free = items.filter((l) => l.status === 'available').length;
         return `<section class="card card-soft mb-3" aria-labelledby="loc-h-${locId}"><div class="card-body">
-          <div class="d-flex flex-wrap align-items-center gap-2 mb-3"><h2 class="h6 mb-0" id="loc-h-${locId}"><i class="bi bi-geo-alt-fill text-brand me-1" aria-hidden="true"></i>${esc(items[0].locationName)}</h2>
+          <div class="d-flex flex-wrap align-items-center gap-2 mb-3"><h2 class="h6 mb-0" id="loc-h-${locId}"><i class="bi bi-geo-alt-fill text-brand me-1" aria-hidden="true"></i>${esc(items[0].locationName)}${sizeOfLoc.has(locId) ? ` · ขนาด ${esc(sizeOfLoc.get(locId))}` : ''}</h2>
             <span class="badge text-bg-secondary rounded-pill">${items.length} ช่อง</span><span class="small text-body-secondary ms-auto">ว่าง ${free} / ${items.length}</span></div>
           <div data-grid="${locId}"></div></div></section>`;
       }).join('');
@@ -261,7 +282,7 @@
       <caption class="visually-hidden">รายการล็อกเกอร์</caption>
       <thead><tr>
         <th scope="col"><input class="form-check-input" type="checkbox" id="chkAll" aria-label="เลือกทั้งหมดในหน้านี้"></th>
-        <th scope="col">รหัส</th><th scope="col">สาขา</th><th scope="col">โซน</th><th scope="col">ขนาด</th><th scope="col">สถานะ</th><th scope="col" class="text-end">จัดการ</th>
+        <th scope="col">รหัส</th><th scope="col">ตึก</th><th scope="col">โซน</th><th scope="col">ขนาด</th><th scope="col">สถานะ</th><th scope="col" class="text-end">จัดการ</th>
       </tr></thead>
       <tbody>${pg.rows.map((l) => {
         const checked = state.selected.has(l.id);
@@ -324,7 +345,7 @@
     const s = LG.SIZES[l.size] || {};
     $('#detailTitle').textContent = `ล็อกเกอร์ ${l.code}`;
     $('#detailInfo').innerHTML = `
-      <dt class="col-4 text-body-secondary fw-normal">สาขา</dt><dd class="col-8">${esc(l.locationName)}</dd>
+      <dt class="col-4 text-body-secondary fw-normal">ที่ตั้ง</dt><dd class="col-8">${esc(l.locationName)}</dd>
       <dt class="col-4 text-body-secondary fw-normal">โซน</dt><dd class="col-8">${esc(l.zone || '-')}</dd>
       <dt class="col-4 text-body-secondary fw-normal">ขนาด</dt><dd class="col-8">${esc(l.size)} (${esc(s.label || '')})<div class="small text-body-secondary">${esc(s.dim || '')}</div></dd>
       <dt class="col-4 text-body-secondary fw-normal">สถานะ</dt><dd class="col-8 mb-0">${LG.badge('locker', l.status)}</dd>`;
@@ -352,10 +373,19 @@
     const zones = loc ? String(loc.zones || '').split(/[,،]\s*/).map((z) => z.trim()).filter(Boolean) : [];
     $('#zoneList').innerHTML = zones.map((z) => `<option value="${esc(z)}"></option>`).join('');
   }
-  el.lLoc.addEventListener('change', fillZones);
+  // linked selectors: a building pre-selects the size it holds, a size selects the building that holds it (both stay editable)
+  el.lLoc.addEventListener('change', () => {
+    const s = sizeOfLoc.get(+el.lLoc.value);
+    if (s) el.lSize.value = s;
+    fillZones();
+  });
+  el.lSize.addEventListener('change', () => {
+    const id = locOfSize.get(el.lSize.value);
+    if (id !== undefined) { el.lLoc.value = String(id); fillZones(); }
+  });
 
   function openForm(l) {
-    if (!state.locations.length) { LG.toast('กรุณาเพิ่มสาขาก่อนเพิ่มล็อกเกอร์', 'warning'); return; }
+    if (!state.locations.length) { LG.toast('กรุณาเพิ่มตึกก่อนเพิ่มล็อกเกอร์', 'warning'); return; }
     state.editId = l ? l.id : null;
     el.form.reset();
     el.form.classList.remove('was-validated');
@@ -363,7 +393,7 @@
     $('#lockerModalTitle').textContent = l ? `แก้ไขล็อกเกอร์ ${l.code}` : 'เพิ่มล็อกเกอร์';
     el.lCode.value = l ? l.code : '';
     el.lLoc.value = String(l ? l.locationId : (el.fLoc.value || state.locations[0].id));
-    el.lSize.value = l ? l.size : 'M';
+    el.lSize.value = l ? l.size : (sizeOfLoc.get(+el.lLoc.value) || SIZE_KEYS[0]);
     el.lZone.value = l ? (l.zone || '') : '';
     el.lStatus.value = l ? l.status : 'available';
     fillZones();
@@ -396,6 +426,9 @@
 
   // ---------- filters / view switch ----------
   const rerender = () => { state.page = 1; render(); };
+  // linked filters: choosing a building selects its size and vice versa; "all" clears both
+  el.fLoc.addEventListener('change', () => { el.fSize.value = el.fLoc.value ? (sizeOfLoc.get(+el.fLoc.value) || '') : ''; });
+  el.fSize.addEventListener('change', () => { el.fLoc.value = el.fSize.value && locOfSize.has(el.fSize.value) ? String(locOfSize.get(el.fSize.value)) : ''; });
   [el.fLoc, el.fSize, el.fStatus].forEach((s) => s.addEventListener('change', rerender));
   let timer;
   el.fQ.addEventListener('input', () => { clearTimeout(timer); timer = setTimeout(rerender, 200); });
@@ -476,20 +509,21 @@
 
   el.stats.innerHTML = LG.skeleton(2);
   el.content.innerHTML = LG.skeleton(8);
-  try { state.locations = await DS.getLocations(); }
-  catch (e) { el.stats.innerHTML = ''; el.count.textContent = ''; el.content.innerHTML = LG.errorBox(e); return; }
+  try {
+    [state.locations, state.lockers] = await Promise.all([DS.getLocations(), DS.getLockers()]);
+    buildMaps();
+  } catch (e) { el.stats.innerHTML = ''; el.count.textContent = ''; el.content.innerHTML = LG.errorBox(e); return; }
 
-  el.fLoc.innerHTML = '<option value="">ทุกสาขา</option>' + locationOptions();
   el.fSize.innerHTML = sizeOptions(true);
   el.fStatus.innerHTML = statusOptions(true);
   el.bulkStatus.innerHTML = '<option value="">เลือกสถานะใหม่...</option>' + statusOptions(false);
-  el.lLoc.innerHTML = locationOptions();
   el.lSize.innerHTML = sizeOptions(false);
   el.lStatus.innerHTML = statusOptions(false);
+  refreshLocationOptions();
 
   const qStatus = LG.qs('status'), qLoc = LG.qs('locationId');
   if (qStatus && STATUS_KEYS.includes(qStatus)) el.fStatus.value = qStatus;
-  if (qLoc && state.locations.some((x) => String(x.id) === qLoc)) el.fLoc.value = qLoc;
+  if (qLoc && state.locations.some((x) => String(x.id) === qLoc)) { el.fLoc.value = qLoc; el.fSize.value = sizeOfLoc.get(+qLoc) || ''; }
 
   await reload();
 })();

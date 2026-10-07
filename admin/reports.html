@@ -73,7 +73,7 @@
           </div>
           <div class="col-12">
             <div class="card card-soft"><div class="card-body">
-              <h2 class="h6 mb-1">อัตราการใช้งานแยกตามสาขา</h2>
+              <h2 class="h6 mb-1">อัตราการใช้งานแยกตามตึก</h2>
               <p class="small text-body-secondary">คำนวณจากสถานะล็อกเกอร์ ณ ปัจจุบัน (จองแล้ว + ใช้งานอยู่)</p>
               <div id="chart-occupancy"></div>
             </div></div>
@@ -83,7 +83,7 @@
 
       <section aria-labelledby="top-title">
         <div class="card card-soft">
-          <div class="card-header bg-transparent py-3"><h2 class="h6 mb-0" id="top-title">สาขายอดนิยม</h2></div>
+          <div class="card-header bg-transparent py-3"><h2 class="h6 mb-0" id="top-title">ตึกยอดนิยม</h2></div>
           <div class="card-body p-0 table-card" id="top-box"></div>
         </div>
       </section>
@@ -177,10 +177,10 @@
 
   function renderTop(rows) {
     const box = $('top-box');
-    if (!rows.length) { box.innerHTML = LG.empty('ยังไม่มีข้อมูลสาขา', 'geo-alt'); return; }
+    if (!rows.length) { box.innerHTML = LG.empty('ยังไม่มีข้อมูลตึก', 'geo-alt'); return; }
     box.innerHTML = `<div class="table-responsive"><table class="table table-hover">
-      <caption class="visually-hidden">สรุปผลการดำเนินงานแยกตามสาขา</caption>
-      <thead><tr><th scope="col">#</th><th scope="col">สาขา</th><th scope="col" class="text-end">การจอง</th><th scope="col" class="text-end">รายได้</th><th scope="col" class="text-end">อัตราการใช้งาน</th></tr></thead>
+      <caption class="visually-hidden">สรุปผลการดำเนินงานแยกตามตึก</caption>
+      <thead><tr><th scope="col">#</th><th scope="col">ตึก</th><th scope="col" class="text-end">การจอง</th><th scope="col" class="text-end">รายได้</th><th scope="col" class="text-end">อัตราการใช้งาน</th></tr></thead>
       <tbody>${rows.map((l, i) => `<tr>
         <td>${i + 1}</td><td class="fw-medium">${esc(l.name)}</td>
         <td class="text-end">${l.bookings.toLocaleString('th-TH')}</td>
@@ -218,8 +218,8 @@
       });
     }
 
-    if (!top.length) { $('chart-occupancy').innerHTML = LG.empty('ยังไม่มีข้อมูลสาขา', 'geo-alt'); return; }
-    charts.occupancy = new Chart(mount('occupancy', 'chart-occupancy', `กราฟแท่งแนวนอนอัตราการใช้งานแยกตามสาขา ${top.length} สาขา`), {
+    if (!top.length) { $('chart-occupancy').innerHTML = LG.empty('ยังไม่มีข้อมูลตึก', 'geo-alt'); return; }
+    charts.occupancy = new Chart(mount('occupancy', 'chart-occupancy', `กราฟแท่งแนวนอนอัตราการใช้งานแยกตามตึก ${top.length} ตึก`), {
       type: 'bar',
       data: { labels: top.map((l) => l.name), datasets: [{ label: 'อัตราการใช้งาน', data: top.map((l) => l.occupancy), backgroundColor: hexA(green, 0.85), borderRadius: 4, maxBarThickness: 26 }] },
       options: {
@@ -261,7 +261,7 @@
         ['วันที่', 'จำนวนการจอง', 'รายได้ (บาท)'],
         ...report.bookingsByDay.map((d) => [dayLabel(d.date), d.count, amountBy.get(d.date) || 0]),
         [],
-        ['สาขา', 'จำนวนการจอง', 'รายได้ (บาท)', 'อัตราการใช้งาน (%)'],
+        ['ตึก', 'จำนวนการจอง', 'รายได้ (บาท)', 'อัตราการใช้งาน (%)'],
         ...report.topLocations.map((l) => [l.name, l.bookings, l.revenue, l.occupancy]),
       ];
       LG.csv(`lockergo-report-${report.from}_${report.to}.csv`, rows);

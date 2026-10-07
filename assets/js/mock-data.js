@@ -6,8 +6,9 @@
  *   MockData.build()  -> tables with real 'YYYY-MM-DD HH:MM:SS' strings (used by mock-service)
  */
 (function (root) {
-  const SIZES = ['S', 'M', 'L', 'XL'];
-  const PRICES = { S: [10, 50, 800], M: [15, 80, 1200], L: [25, 120, 1800], XL: [40, 200, 3000] };
+  const SIZES = ['S', 'M', 'L', 'XL', 'XXL'];
+  // [hour, day, month] — bookings are daily only; hour/month are kept in the table but not offered
+  const PRICES = { S: [10, 50, 800], M: [15, 80, 1200], L: [25, 120, 1800], XL: [40, 200, 3000], XXL: [60, 300, 4500] };
   const HOURS_PER = { hour: 1, day: 24, month: 720 };
 
   function rng(seed) { // mulberry32
@@ -24,27 +25,25 @@
     const int = (a, b) => a + Math.floor(r() * (b - a + 1));
     const pick = (a) => a[Math.floor(r() * a.length)];
 
-    // ---- locations ----
-    const locations = [
-      { id: 1, name: 'LockerGo สยามสแควร์', address: 'ซอย 3 ถนนพระราม 1 แขวงวังใหม่ เขตปทุมวัน กรุงเทพฯ 10330', zones: 'A, B', openHours: '08:00 - 22:00', phone: '02-123-4501', prefix: 'SI' },
-      { id: 2, name: 'LockerGo หมอชิต', address: 'สถานีขนส่งผู้โดยสารกรุงเทพ (จตุจักร) ถนนกำแพงเพชร 2 กรุงเทพฯ 10900', zones: 'A, B', openHours: '06:00 - 23:00', phone: '02-123-4502', prefix: 'MO' },
-      { id: 3, name: 'LockerGo สุวรรณภูมิ', address: 'ท่าอากาศยานสุวรรณภูมิ อาคารผู้โดยสาร ชั้น 2 บางพลี สมุทรปราการ 10540', zones: 'A, B', openHours: '24 ชั่วโมง', phone: '02-123-4503', prefix: 'SU' },
-      { id: 4, name: 'LockerGo เชียงใหม่ นิมมาน', address: 'ถนนนิมมานเหมินท์ ซอย 9 อ.เมือง จ.เชียงใหม่ 50200', zones: 'A, B', openHours: '09:00 - 21:00', phone: '053-123-450', prefix: 'CM' },
-    ];
+    // ---- locations = buildings; each building stores ONE size: ตึก 1 = S, ตึก 2 = M, ตึก 3 = L, ตึก 4 = XL, ตึก 5 = XXL ----
+    const UNI = 'มหาวิทยาลัยเทคโนโลยีราชมงคลสุวรรณภูมิ';
+    const locations = SIZES.map((size, i) => ({
+      id: i + 1, name: `ตึก ${i + 1}`, address: `ชั้น 1 ตึก ${i + 1} ${UNI}`, zones: 'A', openHours: '07:00 - 20:00',
+      phone: `035-709-10${i + 1}`, prefix: `T${i + 1}`, size,
+    }));
 
-    // ---- lockers: 16 per location (6 S, 5 M, 3 L, 2 XL) = 64 ----
+    // ---- lockers: smaller sizes get more lockers (16 + 14 + 12 + 10 + 8 = 60) ----
     const lockers = [];
-    const mix = { S: 6, M: 5, L: 3, XL: 2 };
+    const mix = { S: 16, M: 14, L: 12, XL: 10, XXL: 8 };
     locations.forEach((loc) => {
-      SIZES.forEach((size) => {
-        for (let n = 1; n <= mix[size]; n++) {
-          lockers.push({
-            id: lockers.length + 1, code: `${loc.prefix}-${size}${String(n).padStart(2, '0')}`,
-            locationId: loc.id, size, zone: size === 'S' || size === 'M' ? 'A' : 'B', status: 'available',
-          });
-        }
-      });
+      for (let n = 1; n <= mix[loc.size]; n++) {
+        lockers.push({
+          id: lockers.length + 1, code: `${loc.prefix}-${loc.size}${String(n).padStart(2, '0')}`,
+          locationId: loc.id, size: loc.size, zone: 'A', status: 'available',
+        });
+      }
     });
+    locations.forEach((l) => { delete l.size; });
 
     // ---- users: 1-3 staff, 4-18 customers ----
     const names = ['สมชาย ใจดี', 'สุดา รักเรียน', 'ปกรณ์ วงศ์สุวรรณ', 'นภัสสร แก้วมณี', 'ธนากร ศรีสุข', 'พิมพ์ชนก อินทร์แก้ว',
@@ -80,15 +79,12 @@
     plan.forEach((kind) => {
       for (let tries = 0; tries < 50; tries++) {
         const locker = pick(lockers);
-        let type = 'hour', qty = int(1, 12), startH;
-        if (kind === 'completed') {
-          const d = int(2, 45);
-          if (r() < .5) { type = 'day'; qty = int(1, 2); }
-          if (d > 35 && r() < .3) { type = 'month'; qty = 1; }
-          startH = -24 * d + int(8, 20);
-        } else if (kind === 'active') { type = 'day'; qty = int(2, 5); startH = -24 + int(8, 20); }
-        else if (kind === 'today') { startH = int(9, 20); }
-        else { startH = 24 * int(1, 10) + int(8, 20); if (r() < .4) { type = 'day'; qty = int(1, 3); } }
+        const type = 'day';   // daily bookings only
+        let qty = int(1, 3), startH;
+        if (kind === 'completed') startH = -24 * int(4, 45) + int(8, 18);
+        else if (kind === 'active') { const back = int(1, 2); qty = back + int(1, 3); startH = -24 * back + int(8, 18); }
+        else if (kind === 'today') { qty = 1; startH = int(8, 18); }
+        else startH = 24 * int(1, 10) + int(8, 18);
         const endH = startH + qty * HOURS_PER[type];
         if (!free(locker.id, startH, endH)) continue;
         (taken[locker.id] = taken[locker.id] || []).push([startH, endH]);
@@ -131,8 +127,8 @@
       { id: 3, code: 'OLDPROMO', type: 'percent', value: 20, active: 0, expiresH: -24 * 30 },
     ];
 
-    const acts = [['เพิ่มล็อกเกอร์', 'SI-S01'], ['แก้ไขราคา', 'ขนาด M'], ['ยกเลิกการจอง', 'LG260012'], ['เปลี่ยนสถานะล็อกเกอร์', 'MO-L02 → ซ่อมบำรุง'],
-      ['ยืนยันการจอง', 'LG260030'], ['คืนเงิน', 'LG260012'], ['เพิ่มรหัสโปรโมชัน', 'SONGKRAN50'], ['แก้ไขสาขา', 'LockerGo เชียงใหม่ นิมมาน'],
+    const acts = [['เพิ่มล็อกเกอร์', 'T1-S01'], ['แก้ไขราคา', 'ขนาด M'], ['ยกเลิกการจอง', 'LG260012'], ['เปลี่ยนสถานะล็อกเกอร์', 'T3-L02 → ซ่อมบำรุง'],
+      ['ยืนยันการจอง', 'LG260030'], ['คืนเงิน', 'LG260012'], ['เพิ่มรหัสโปรโมชัน', 'SONGKRAN50'], ['แก้ไขตึก', 'ตึก 4'],
       ['ปิดการจอง (เสร็จสิ้น)', 'LG260021'], ['แก้ไขการตั้งค่าระบบ', 'กฎการจอง']];
     const activity = [];
     for (let i = 0; i < 24; i++) {
@@ -143,11 +139,12 @@
 
     const settings = {
       siteName: 'LockerGo', tagline: 'ล็อกเกอร์ปลอดภัย จองง่าย ใช้ได้ทันที',
-      contactEmail: 'hello@lockergo.example', contactPhone: '02-123-4500', address: '99 อาคารตัวอย่าง ถนนพระราม 1 กรุงเทพฯ 10330',
-      minDuration: 1, maxDuration: 720, gracePeriod: 15, cancelFreeHours: 24,
+      contactEmail: 'hello@lockergo.example', contactPhone: '035-709-100', address: 'มหาวิทยาลัยเทคโนโลยีราชมงคลสุวรรณภูมิ',
+      minDuration: 24, maxDuration: 720,   // stored in HOURS: 1 to 30 days (daily bookings only)
+      gracePeriod: 15, cancelFreeHours: 24,
       cancelPolicy: 'ยกเลิกฟรีก่อนเวลาเริ่มใช้งาน 24 ชั่วโมง หลังจากนั้นคืนเงิน 50%',
       tplConfirm: 'การจอง {ref} ยืนยันแล้ว ล็อกเกอร์ {locker} รหัส PIN {pin}',
-      tplReminder: 'แจ้งเตือน: การจอง {ref} จะเริ่มใช้งานในอีก 1 ชั่วโมง',
+      tplReminder: 'แจ้งเตือน: การจอง {ref} จะเริ่มใช้งานพรุ่งนี้',
       tplCancel: 'การจอง {ref} ถูกยกเลิกแล้ว ขอบคุณที่ใช้บริการ',
       defaultTheme: 'light',
     };

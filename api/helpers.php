@@ -12,7 +12,7 @@ require_once __DIR__ . '/db.php';
 
 const LG_ACTIVE = ['pending', 'confirmed', 'active'];                 // booking statuses that occupy a locker
 const LG_HOURS = ['hour' => 1, 'day' => 24, 'month' => 720];
-const LG_SIZES = ['S', 'M', 'L', 'XL'];
+const LG_SIZES = ['S', 'M', 'L', 'XL', 'XXL'];
 const LG_PRICE_COLUMN = ['hour' => 'hour_price', 'day' => 'day_price', 'month' => 'month_price'];
 const LG_NO_PROMO_MESSAGE = 'รหัสโปรโมชันไม่ถูกต้องหรือหมดอายุ';
 
@@ -27,7 +27,8 @@ const LOCATION_SELECT = "SELECT loc.*, "
     . "FROM locations loc";
 
 const BOOKING_SELECT = "SELECT b.*, l.code AS locker_code, l.location_id AS location_id, COALESCE(loc.name, '') AS location_name, "
-    . "l.size AS size, p.status AS payment_status, p.method AS payment_method "
+    . "l.size AS size, p.id AS payment_id, p.status AS payment_status, p.method AS payment_method, "
+    . "(CASE WHEN p.slip_path IS NULL THEN 0 ELSE 1 END) AS has_slip "
     . "FROM bookings b "
     . "LEFT JOIN lockers l ON l.id = b.locker_id "
     . "LEFT JOIN locations loc ON loc.id = l.location_id "
@@ -534,7 +535,9 @@ function map_booking(array $r): array
         'createdAt' => $r['created_at'],
         'lockerCode' => $r['locker_code'], 'locationId' => $r['location_id'] === null ? null : (int)$r['location_id'],
         'locationName' => (string)($r['location_name'] ?? ''), 'size' => $r['size'],
+        'paymentId' => $r['payment_id'] === null ? null : (int)$r['payment_id'],
         'paymentStatus' => $r['payment_status'], 'paymentMethod' => $r['payment_method'],
+        'hasSlip' => (int)$r['has_slip'],
     ];
 }
 
@@ -543,6 +546,7 @@ function map_payment(array $r): array
     return [
         'id' => (int)$r['id'], 'bookingId' => (int)$r['booking_id'], 'amount' => (int)$r['amount'], 'method' => $r['method'],
         'status' => $r['status'], 'createdAt' => $r['created_at'],
+        'hasSlip' => (isset($r['slip_path']) && $r['slip_path'] !== '') ? 1 : 0,   // the slip itself is never listed
         'bookingRef' => $r['booking_ref'] ?? null, 'customerName' => $r['customer_name'] ?? null,
     ];
 }
@@ -663,6 +667,112 @@ function find_promo(string $code): array
         fail(422, 'invalid_promo', LG_NO_PROMO_MESSAGE);
     }
     return $p;
+}
+
+// ---------------------------------------------------------------------------------------------------------------
+// Transfer slips (proof of payment only, never verified). Files live in <project root>/storage/slips/<paymentId>-<32 hex random>.<ext> (unguessable names, so a missing web-server deny rule does not expose them)
+// ---------------------------------------------------------------------------------------------------------------
+const LG_SLIP_RE = '/^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+\/]+=*$/D';   // same rule as SLIP_RE in mock-service.js
+const LG_SLIP_MAX = 2800000;                                                       // ~2 MB of image as base64 text
+const LG_SLIP_INVALID = 'ไฟล์สลิปไม่ถูกต้อง (รองรับ JPG, PNG, WebP ขนาดไม่เกิน 2 MB)';
+const LG_SLIP_TYPES = [   // detected image type => [extension, mime]
+    IMAGETYPE_JPEG => ['jpg', 'image/jpeg'],
+    IMAGETYPE_PNG  => ['png', 'image/png'],
+    IMAGETYPE_WEBP => ['webp', 'image/webp'],
+];
+const LG_SLIP_MIME = ['jpg' => 'image/jpeg', 'png' => 'image/png', 'webp' => 'image/webp'];
+
+/** Path of the slips folder (not created). */
+function lg_slips_path(): string
+{
+    return dirname(__DIR__) . DIRECTORY_SEPARATOR . 'storage' . DIRECTORY_SEPARATOR . 'slips';
+}
+
+/** Slips folder, created (0750, deny-all .htaccess, empty index.html) when missing. Throws when it is not writable. */
+function lg_slips_dir(): string
+{
+    $dir = lg_slips_path();
+    if (!is_dir($dir)) {
+        if (!@mkdir($dir, 0750, true) && !is_dir($dir)) {
+            throw new RuntimeException('Cannot create the slips folder');
+        }
+        @file_put_contents($dir . DIRECTORY_SEPARATOR . '.htaccess', "Require all denied\n<IfModule !mod_authz_core.c>\nDeny from all\n</IfModule>\n");
+        @file_put_contents($dir . DIRECTORY_SEPARATOR . 'index.html', '');
+    }
+    if (!is_writable($dir)) {
+        throw new RuntimeException('The slips folder is not writable');
+    }
+    return $dir;
+}
+
+/** Decodes a slip data URL and proves it is really a JPEG/PNG/WebP image. Returns ['data', 'ext', 'mime'] or null. */
+function lg_slip_decode(string $slip): ?array
+{
+    if (strlen($slip) > LG_SLIP_MAX || preg_match(LG_SLIP_RE, $slip) !== 1) {
+        return null;
+    }
+    $comma = strpos($slip, ',');
+    if ($comma === false) {
+        return null;
+    }
+    $bin = base64_decode(substr($slip, $comma + 1), true);
+    if ($bin === false || $bin === '') {
+        return null;
+    }
+    try {
+        $info = @getimagesizefromstring($bin);
+    } catch (Throwable $e) {
+        return null;
+    }
+    $types = LG_SLIP_TYPES;
+    if (!is_array($info) || !isset($info[2]) || !array_key_exists($info[2], $types)) {
+        return null;
+    }
+    return ['data' => $bin, 'ext' => $types[$info[2]][0], 'mime' => $types[$info[2]][1]];
+}
+
+/** Writes a decoded slip for a payment (payment id + random token, never guessable). Returns the relative path stored in payments.slip_path. */
+function lg_slip_save(int $paymentId, array $slip): string
+{
+    $name = $paymentId . '-' . bin2hex(random_bytes(16)) . '.' . $slip['ext'];
+    $file = lg_slips_dir() . DIRECTORY_SEPARATOR . $name;
+    if (file_put_contents($file, $slip['data'], LOCK_EX) === false) {
+        throw new RuntimeException('Cannot write the slip file');
+    }
+    return 'storage/slips/' . $name;
+}
+
+/** Removes a slip file written by lg_slip_save (used when the booking transaction fails after the write). Never throws. */
+function lg_slip_delete(?string $path): void
+{
+    if ($path === null || $path === '') {
+        return;
+    }
+    $name = basename(str_replace('\\', '/', $path));
+    if (preg_match('/^\d+-[a-f0-9]{32}\.(jpg|png|webp)$/D', $name) === 1) {
+        @unlink(lg_slips_path() . DIRECTORY_SEPARATOR . $name);
+    }
+}
+
+/** Reads a stored slip as a data URL, or null when there is none / the file is missing. Never leaves storage/slips. */
+function lg_slip_read(?string $path): ?string
+{
+    if ($path === null || $path === '') {
+        return null;
+    }
+    $name = basename(str_replace('\\', '/', $path));
+    if (preg_match('/^\d+-[a-f0-9]{32}\.(jpg|png|webp)$/D', $name, $m) !== 1) {
+        return null;
+    }
+    $file = lg_slips_path() . DIRECTORY_SEPARATOR . $name;
+    if (!is_file($file)) {
+        return null;
+    }
+    $bin = @file_get_contents($file);
+    if ($bin === false || $bin === '') {
+        return null;
+    }
+    return 'data:' . LG_SLIP_MIME[$m[1]] . ';base64,' . base64_encode($bin);
 }
 
 // ---------------------------------------------------------------------------------------------------------------

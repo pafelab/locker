@@ -2,7 +2,7 @@
  * Shared UI for every page (public + admin): helpers (window.LG), theme toggle, toasts, confirm dialog,
  * demo-mode badge, "service unavailable" page, and the public navbar + footer (injected so they are defined once).
  * Page markup contract: <div id="lg-navbar"></div> ... <main id="main"> ... </main> ... <div id="lg-footer"></div>,
- * <body data-page="home|lockers|pricing|contact|..."> (used for the active nav link).
+ * <body data-page="home|lockers|pricing|..."> (used for the active nav link).
  */
 (function () {
   const R = LG_CONFIG.root, BRAND = LG_CONFIG.brand;
@@ -21,6 +21,7 @@
     M: { label: 'กลาง', dim: '35 × 40 × 55 ซม.', fits: 'เป้ กระเป๋าถือ ถุงช้อปปิ้ง' },
     L: { label: 'ใหญ่', dim: '45 × 55 × 70 ซม.', fits: 'กระเป๋าเดินทางขนาดกลาง' },
     XL: { label: 'ใหญ่พิเศษ', dim: '55 × 75 × 90 ซม.', fits: 'กระเป๋าเดินทางใบใหญ่ อุปกรณ์กีฬา' },
+    XXL: { label: 'ใหญ่สุด', dim: '70 × 80 × 100 ซม.', fits: 'อุปกรณ์กีฬา สัมภาระขนาดใหญ่หลายชิ้น' },
   };
   const DURATION = { hour: 'ชั่วโมง', day: 'วัน', month: 'เดือน' };
   const ROLES = { super_admin: 'Super Admin', manager: 'Manager', staff: 'Staff' };
@@ -151,7 +152,7 @@
   });
 
   // ---------- public navbar + footer ----------
-  const NAV = [['home', 'index.html', 'หน้าแรก'], ['lockers', 'lockers.html', 'ล็อกเกอร์'], ['pricing', 'pricing.html', 'ราคา'], ['how', 'index.html#how', 'วิธีใช้งาน'], ['faq', 'index.html#faq', 'คำถามที่พบบ่อย'], ['contact', 'contact.html', 'ติดต่อเรา']];
+  const NAV = [['home', 'index.html', 'หน้าแรก'], ['lockers', 'lockers.html', 'ล็อกเกอร์'], ['pricing', 'pricing.html', 'ราคา'], ['how', 'index.html#how', 'วิธีใช้งาน']];
   async function renderPublicShell() {
     const page = document.body.dataset.page, nav = $('#lg-navbar'), foot = $('#lg-footer');
     if (nav) {
@@ -167,7 +168,7 @@
           <div class="d-flex gap-3 fs-4">${['facebook', 'line', 'instagram', 'youtube'].map((s) => `<a class="text-body-secondary" href="#" aria-label="${s}"><i class="bi bi-${s}"></i></a>`).join('')}</div></div>
         <div class="col-6 col-lg-2"><h2 class="h6">เมนู</h2><ul class="list-unstyled small">${NAV.map(([, href, label]) => `<li class="mb-1"><a class="link-secondary text-decoration-none" href="${R}${href}">${label}</a></li>`).join('')}</ul></div>
         <div class="col-6 col-lg-2"><h2 class="h6">บัญชี</h2><ul class="list-unstyled small">${[['login.html', 'เข้าสู่ระบบ'], ['register.html', 'สมัครสมาชิก'], ['my-bookings.html', 'การจองของฉัน'], ['terms.html', 'ข้อกำหนดและความเป็นส่วนตัว'], ['admin/login.html', 'สำหรับเจ้าหน้าที่']].map(([h, l]) => `<li class="mb-1"><a class="link-secondary text-decoration-none" href="${R}${h}">${l}</a></li>`).join('')}</ul></div>
-        <div class="col-lg-4"><h2 class="h6">ติดต่อเรา</h2><ul class="list-unstyled small text-body-secondary"><li class="mb-1"><i class="bi bi-geo-alt me-2"></i><span id="lg-f-address">99 อาคารตัวอย่าง ถนนพระราม 1 กรุงเทพฯ 10330</span></li><li class="mb-1"><i class="bi bi-telephone me-2"></i><span id="lg-f-phone">02-123-4500</span></li><li class="mb-1"><i class="bi bi-envelope me-2"></i><span id="lg-f-email">hello@lockergo.example</span></li><li><i class="bi bi-clock me-2"></i>ฝ่ายบริการลูกค้า ทุกวัน 08:00 - 20:00</li></ul></div>
+        <div class="col-lg-4"><h2 class="h6">ติดต่อเรา</h2><ul class="list-unstyled small text-body-secondary"><li class="mb-1"><i class="bi bi-geo-alt me-2"></i><span id="lg-f-address">มหาวิทยาลัยเทคโนโลยีราชมงคลสุวรรณภูมิ</span></li><li class="mb-1"><i class="bi bi-telephone me-2"></i><span id="lg-f-phone">035-709-100</span></li><li class="mb-1"><i class="bi bi-envelope me-2"></i><span id="lg-f-email">hello@lockergo.example</span></li><li><i class="bi bi-clock me-2"></i>ฝ่ายบริการลูกค้า ทุกวัน 08:00 - 20:00</li></ul></div>
       </div><hr><p class="text-center text-body-secondary small mb-0">&copy; ${new Date().getFullYear()} ${esc(BRAND)}. สงวนลิขสิทธิ์</p></div></footer>`;
     }
     theme.sync();

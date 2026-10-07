@@ -30,6 +30,10 @@ To start over, go to **Admin → ตั้งค่า → ระบบ → ร�
    mysql -u root -p < database/seed.sql     # demo data (same records as mock mode)
    ```
 4. Edit `api/config.php` and set the DB host, name, user and password. You can also use the environment variables `LG_DB_HOST`, `LG_DB_NAME`, `LG_DB_USER` and `LG_DB_PASS`. PHP sessions are stored in `storage/sessions/`, which is created on first use and blocked from the web by `.htaccess`. On nginx, set `LG_SESSION_PATH` to a folder outside the web root.
+
+   Payment slips (PromptPay transfers) are saved in `storage/slips/` with random file names. They are blocked from the web the same way and are only served to staff through `api/payments.php?id=…&action=slip`. Slips are kept as proof only and are never verified. On nginx, deny access to `/storage/` as well.
+
+   Upgrading a database imported before slips existed? Run `mysql -u root -p lockergo < database/migrate-slip.sql` once. Fresh installs don't need it.
 5. Open `http://localhost/lockergo/`. The demo badge should **not** appear, which means the data is coming from MySQL.
 
 Seed dates are written relative to `CURDATE()`, so the demo data always looks current. If you change `assets/js/mock-data.js`, regenerate the seed so both modes stay identical:
@@ -37,6 +41,12 @@ Seed dates are written relative to `CURDATE()`, so the demo data always looks cu
 ```bash
 node database/make-seed.js
 ```
+
+## Buildings, sizes and daily booking
+
+- Locations are **buildings** (ตึก 1 - ตึก 5). Each building holds exactly one locker size: ตึก 1 = S, ตึก 2 = M, ตึก 3 = L, ตึก 4 = XL, ตึก 5 = XXL (the new, largest size). The pages derive the building-to-size link from the locker data, never from fixed ids.
+- Bookings are **daily only**: `durationType` is always `"day"` and `quantity` is the number of days. The API answers `422` to any other type. The `pricing` table keeps its `hour` and `month` columns, but the UI only shows and edits the per-day price (hour and month values are sent back unchanged when a price is saved).
+- `settings.minDuration` / `maxDuration` are stored in **hours** (default 24 and 720 = 1 to 30 days). The admin UI shows and edits them in days.
 
 ## 3. Demo accounts (same in both modes)
 
@@ -55,7 +65,7 @@ The 14 other demo customers (`customer1` … `customer14`) use the password `dem
 
 ```
 /                      public pages (index, lockers, booking, booking-success, pricing, login, register,
-                       forgot-password, my-bookings, profile, contact, terms, 404)
+                       forgot-password, my-bookings, profile, terms, 404)
 admin/                 back office pages (login, index = dashboard, lockers, bookings, customers, locations,
                        pricing, payments, reports, staff, activity-log, settings)
 api/                   PHP JSON API: config.php, db.php, helpers.php + one file per resource
@@ -146,7 +156,7 @@ Security measures in the API:
 
 ## 8. Notes and limitations
 
-- The contact form and "forgot password" don't send email. Hook up your mailer in `api/auth.php` (`forgot`) or add a contact endpoint.
+- "Forgot password" doesn't send email. Hook up your mailer in `api/auth.php` (`forgot`).
 - Payment is a mock step. The card and PromptPay fields are never sent anywhere. Plug a real gateway into the `POST api/bookings.php` flow before going live.
 - The logo upload in Settings is a preview only. Replace the files in `assets/img/` to change the real logo.
 - `settings.defaultTheme` is saved but not applied yet. Visitors start in light mode until they use the toggle.

@@ -45,7 +45,7 @@ switch (method()) {
         if (qparam('action') === 'promo') {
             ok(map_promo(find_promo((string)qparam('code'))));
         }
-        $prices = array_map('map_price', db_all("SELECT * FROM pricing ORDER BY FIELD(size, 'S', 'M', 'L', 'XL')"));
+        $prices = array_map('map_price', db_all("SELECT * FROM pricing ORDER BY FIELD(size, 'S', 'M', 'L', 'XL', 'XXL')"));
         $u = current_user();
         $promos = ($u && $u['role'] !== 'customer') ? array_map('map_promo', db_all('SELECT * FROM promo_codes ORDER BY id')) : [];
         ok(['prices' => $prices, 'promos' => $promos]);

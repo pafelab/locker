@@ -95,15 +95,15 @@ function bookings_create(array $u): never
     if (!$locker) {
         fail(422, 'validation', 'ไม่พบล็อกเกอร์');
     }
-    if (!is_string($type) || !isset(LG_HOURS[$type]) || !is_int_num($qty) || $qty < 1 || $start === null) {
+    if ($type !== 'day' || !is_int_num($qty) || $qty < 1 || $start === null) {
         fail(422, 'validation', 'ข้อมูลการจองไม่ถูกต้อง');
     }
     $hours = $qty * LG_HOURS[$type];
     $s = settings_all();
-    $min = array_key_exists('minDuration', $s) ? to_num($s['minDuration']) : 1.0;
+    $min = array_key_exists('minDuration', $s) ? to_num($s['minDuration']) : 24.0;
     $max = array_key_exists('maxDuration', $s) ? to_num($s['maxDuration']) : 720.0;
     if ($hours < $min || $hours > $max || $hours > 100000) {
-        fail(422, 'validation', 'ระยะเวลาต้องอยู่ระหว่าง ' . num_text($min) . ' - ' . num_text($max) . ' ชั่วโมง');
+        fail(422, 'validation', 'ระยะเวลาต้องอยู่ระหว่าง ' . num_text($min / 24) . ' - ' . num_text($max / 24) . ' วัน');
     }
 
     // customers book for themselves; staff may book for a customer account or a walk-in (no account)
@@ -134,8 +134,13 @@ function bookings_create(array $u): never
     $method = $b['paymentMethod'] ?? null;
     $payMethod = (is_string($method) && in_array($method, ['card', 'promptpay', 'cash'], true)) ? $method : 'card';
     $promoCode = str($b['promoCode'] ?? null);
+    // transfer slip (image data URL): stored as proof only, never verified; mirrors `b.slip ? String(b.slip) : null`
+    $slipIn = $b['slip'] ?? null;
+    $slipRaw = js_truthy($slipIn) ? (is_scalar($slipIn) ? (string)$slipIn : '[object Object]') : null;
 
-    $newId = db_tx(static function () use ($lockerId, $startAt, $endAt, $type, $qtyInt, $customer, $name, $email, $phone, $payMethod, $promoCode, $locker): int {
+    $savedSlip = null;   // relative path of the slip file written inside the transaction (removed again if the transaction fails)
+    try {
+    $newId = db_tx(static function () use ($lockerId, $startAt, $endAt, $type, $qtyInt, $customer, $name, $email, $phone, $payMethod, $promoCode, $locker, $slipRaw, &$savedSlip): int {
         // serialise concurrent bookings of the same locker, then re-check availability on the latest committed data
         $lk = db_one('SELECT id, status FROM lockers WHERE id = ? FOR UPDATE', [$lockerId]);
         if (!$lk) {
@@ -146,6 +151,16 @@ function bookings_create(array $u): never
         }
         if (has_overlap($lockerId, $startAt, $endAt, 0, true)) {
             fail(409, 'locker_taken', 'ล็อกเกอร์นี้ถูกจองแล้วในช่วงเวลาดังกล่าว');
+        }
+        $slip = null;
+        if ($slipRaw !== null) {
+            $slip = lg_slip_decode($slipRaw);
+            if ($slip === null) {
+                fail(422, 'invalid_slip', LG_SLIP_INVALID);
+            }
+        }
+        if ($payMethod === 'promptpay' && $slip === null) {
+            fail(422, 'slip_required', 'กรุณาแนบสลิปการโอนเงิน');
         }
         $promo = $promoCode !== '' ? find_promo($promoCode) : null;
         $q = quote_price(unit_price((string)$locker['size'], $type), $qtyInt, $promo);
@@ -167,10 +182,20 @@ function bookings_create(array $u): never
             "INSERT INTO payments (booking_id, amount, method, status, created_at) VALUES (?, ?, ?, 'paid', ?)",
             [$id, $q['total'], $payMethod, $now]
         );
+        $payId = (int)db()->lastInsertId();
         sync_locker($lockerId);
         log_activity('สร้างการจอง', $ref);
+        if ($slip !== null) {
+            // a write failure throws -> the transaction rolls back (500)
+            $savedSlip = lg_slip_save($payId, $slip);
+            db_exec('UPDATE payments SET slip_path = ? WHERE id = ?', [$savedSlip, $payId]);
+        }
         return $id;
     });
+    } catch (Throwable $e) {
+        lg_slip_delete($savedSlip);   // no payment row will point to the file (rolled back / commit failed)
+        throw $e;
+    }
     ok(fetch_booking($newId), 201);
 }
 

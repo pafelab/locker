@@ -40,7 +40,7 @@ CREATE TABLE lockers (
   id          INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
   code        VARCHAR(20) NOT NULL,
   location_id INT UNSIGNED NOT NULL,
-  size        ENUM('S','M','L','XL') NOT NULL,
+  size        ENUM('S','M','L','XL','XXL') NOT NULL,
   zone        VARCHAR(20) NOT NULL DEFAULT '',
   status      ENUM('available','booked','in_use','maintenance') NOT NULL DEFAULT 'available',
   UNIQUE KEY uq_lockers_code (code),
@@ -82,6 +82,7 @@ CREATE TABLE payments (
   amount     INT UNSIGNED NOT NULL,
   method     ENUM('card','promptpay','cash') NOT NULL DEFAULT 'card',
   status     ENUM('paid','pending','refunded') NOT NULL DEFAULT 'paid',
+  slip_path  VARCHAR(255) NULL,   -- transfer slip image under storage/slips/ (proof only, not verified)
   created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   KEY idx_payments_booking (booking_id),
   KEY idx_payments_status (status),
@@ -89,7 +90,7 @@ CREATE TABLE payments (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE pricing (
-  size        ENUM('S','M','L','XL') NOT NULL PRIMARY KEY,
+  size        ENUM('S','M','L','XL','XXL') NOT NULL PRIMARY KEY,
   hour_price  INT UNSIGNED NOT NULL,
   day_price   INT UNSIGNED NOT NULL,
   month_price INT UNSIGNED NOT NULL

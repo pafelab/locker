@@ -103,10 +103,15 @@
             </div>
           </div>
 
-          <div class="col-md-6">
-            <label class="form-label" for="bLocation">สาขา <span class="text-danger" aria-hidden="true">*</span></label>
+          <div class="col-6 col-md-4">
+            <label class="form-label" for="bLocation">ตึก <span class="text-danger" aria-hidden="true">*</span></label>
             <select class="form-select" id="bLocation" required></select>
-            <div class="invalid-feedback">กรุณาเลือกสาขา</div>
+            <div class="invalid-feedback">กรุณาเลือกตึก</div>
+          </div>
+          <div class="col-6 col-md-2">
+            <label class="form-label" for="bSize">ขนาด <span class="text-danger" aria-hidden="true">*</span></label>
+            <select class="form-select" id="bSize" required></select>
+            <div class="invalid-feedback">กรุณาเลือกขนาด</div>
           </div>
           <div class="col-6 col-md-3">
             <label class="form-label" for="bDate">วันที่เริ่ม <span class="text-danger" aria-hidden="true">*</span></label>
@@ -119,16 +124,12 @@
             <div class="invalid-feedback">กรุณาเลือกเวลา</div>
           </div>
 
-          <div class="col-6 col-md-4">
-            <label class="form-label" for="bDuration">ประเภทระยะเวลา <span class="text-danger" aria-hidden="true">*</span></label>
-            <select class="form-select" id="bDuration" required></select>
-          </div>
           <div class="col-6 col-md-3">
-            <label class="form-label" for="bQty">จำนวน <span class="text-danger" aria-hidden="true">*</span></label>
+            <label class="form-label" for="bQty">จำนวนวัน <span class="text-danger" aria-hidden="true">*</span></label>
             <input type="number" class="form-control" id="bQty" required min="1" max="999" step="1" value="1" inputmode="numeric">
-            <div class="invalid-feedback">กรุณากรอกจำนวนอย่างน้อย 1</div>
+            <div class="invalid-feedback">กรุณากรอกจำนวนวันอย่างน้อย 1 วัน</div>
           </div>
-          <div class="col-md-5 d-flex align-items-end">
+          <div class="col-md-9 d-flex align-items-end">
             <p class="form-text mb-2" id="durHint"></p>
           </div>
 
@@ -149,6 +150,12 @@
             <label class="form-label" for="bPay">วิธีชำระเงิน <span class="text-danger" aria-hidden="true">*</span></label>
             <select class="form-select" id="bPay" required></select>
           </div>
+          <div class="col-12 d-none" id="slipBox">
+            <label class="form-label" for="bSlip">แนบสลิปการโอนเงิน (พร้อมเพย์) <span class="text-danger" aria-hidden="true">*</span></label>
+            <input type="file" class="form-control" id="bSlip" accept="image/jpeg,image/png,image/webp" aria-describedby="slipHint" disabled>
+            <div class="invalid-feedback" id="slipErr">กรุณาแนบสลิปการโอนเงิน</div>
+            <div class="form-text" id="slipHint">รองรับ JPG, PNG, WebP ระบบจะย่อรูปให้อัตโนมัติ สลิปเก็บไว้เป็นหลักฐานเท่านั้น ไม่มีการตรวจสอบอัตโนมัติ</div>
+          </div>
 
           <div class="col-12">
             <div class="rounded border bg-body-tertiary p-3" id="pricePanel" aria-live="polite"></div>
@@ -160,6 +167,20 @@
         <button type="submit" class="btn btn-primary" id="createSubmit"><i class="bi bi-check-lg me-1" aria-hidden="true"></i>สร้างการจอง</button>
       </div>
     </form>
+  </div>
+</div>
+
+<!-- slip modal -->
+<div class="modal fade" id="slipModal" tabindex="-1" aria-labelledby="slipTitle" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title fs-5" id="slipTitle">สลิปการโอนเงิน</h2>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="ปิด"></button>
+      </div>
+      <div class="modal-body" id="slipBody"></div>
+      <div class="modal-footer"><button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">ปิด</button></div>
+    </div>
   </div>
 </div>
 
@@ -179,7 +200,7 @@
   const $ = (s, el = document) => el.querySelector(s);
   const esc = LG.esc, fmt = LG.fmt;
   const PER_PAGE = 10;
-  const HOURS = { hour: 1, day: 24, month: 720 };
+  const DAY_HOURS = 24;   // daily bookings only; settings.minDuration / maxDuration are stored in hours
   const STATUS_RANK = { pending: 0, confirmed: 1, active: 2, completed: 3, cancelled: 4 };
   const collator = new Intl.Collator('th', { numeric: true });
   const p2 = (n) => String(n).padStart(2, '0');
@@ -211,8 +232,9 @@
     canvasEl: $('#detailCanvas'), dTitle: $('#detailTitle'), dBody: $('#detailBody'), dActions: $('#detailActions'),
     createEl: $('#createModal'), form: $('#createForm'), err: $('#createError'),
     cust: $('#bCustomer'), walkin: $('#walkinBox'), loc: $('#bLocation'), date: $('#bDate'), time: $('#bTime'),
-    dur: $('#bDuration'), qty: $('#bQty'), hint: $('#durHint'), locker: $('#bLocker'), lockerHint: $('#lockerHint'),
+    size: $('#bSize'), qty: $('#bQty'), hint: $('#durHint'), locker: $('#bLocker'), lockerHint: $('#lockerHint'),
     promo: $('#bPromo'), promoMsg: $('#promoMsg'), promoErr: $('#promoErr'), pay: $('#bPay'), price: $('#pricePanel'), submit: $('#createSubmit'),
+    slipBox: $('#slipBox'), slip: $('#bSlip'), slipErr: $('#slipErr'),
   };
   const canvas = new bootstrap.Offcanvas(el.canvasEl);
   const createModal = new bootstrap.Modal(el.createEl);
@@ -330,19 +352,61 @@
     el.dTitle.textContent = `การจอง ${b.ref}`;
     el.dBody.innerHTML = `<div class="d-flex flex-wrap align-items-center gap-2 mb-4">${LG.badge('booking', b.status)}${b.paymentStatus ? LG.badge('payment', b.paymentStatus) : ''}</div>`
       + section('ผู้จอง', 'person', row('ชื่อ', esc(b.customerName)) + row('อีเมล', `<a href="mailto:${esc(b.customerEmail)}" class="text-break">${esc(b.customerEmail)}</a>`) + row('โทรศัพท์', b.customerPhone ? `<a href="tel:${esc(b.customerPhone)}">${esc(b.customerPhone)}</a>` : '-'))
-      + section('ล็อกเกอร์', 'lock', row('รหัส', `<strong>${esc(b.lockerCode || '-')}</strong>`) + row('สาขา', esc(b.locationName || '-')) + row('ขนาด', b.size ? `${esc(b.size)} (${esc((LG.SIZES[b.size] || {}).label || '')})` : '-'))
+      + section('ล็อกเกอร์', 'lock', row('รหัส', `<strong>${esc(b.lockerCode || '-')}</strong>`) + row('ที่ตั้ง', esc(b.locationName || '-')) + row('ขนาด', b.size ? `${esc(b.size)} (${esc((LG.SIZES[b.size] || {}).label || '')})` : '-'))
       + section('ช่วงเวลา', 'clock', row('เริ่ม', fmt.datetime(b.startAt)) + row('สิ้นสุด', fmt.datetime(b.endAt)) + row('ระยะเวลา', esc(fmt.duration(b.durationType, b.quantity))))
       + section('การชำระเงิน', 'credit-card', row('ราคาก่อนส่วนลด', fmt.baht(gross)) + row('ส่วนลด', b.discount ? `-${fmt.baht(b.discount)}` : '-') + row('โปรโมชัน', b.promoCode ? `<span class="badge text-bg-secondary">${esc(b.promoCode)}</span>` : '-')
         + row('ยอดชำระ', `<strong>${fmt.baht(b.amount)}</strong>`) + row('สถานะชำระ', b.paymentStatus ? LG.badge('payment', b.paymentStatus) : '-') + row('วิธีชำระ', esc(LG.PAY_METHODS[b.paymentMethod] || '-')))
       + `<section class="mb-4"><h3 class="h6 mb-2"><i class="bi bi-key text-brand me-1" aria-hidden="true"></i>รหัส PIN เปิดล็อกเกอร์</h3><div class="pin-box text-center bg-body-tertiary rounded py-2">${esc(b.pin || '-')}</div></section>`
       + `<p class="small text-body-secondary mb-0">สร้างเมื่อ ${fmt.datetime(b.createdAt)}</p>`;
     const acts = ACTIONS[b.status] || [];
-    el.dActions.innerHTML = acts.length
+    const slipBtn = +b.hasSlip === 1 && b.paymentId ? '<button type="button" class="btn btn-outline-primary" data-slip><i class="bi bi-image me-1" aria-hidden="true"></i>ดูสลิปการโอน</button>' : '';
+    el.dActions.innerHTML = slipBtn + (acts.length
       ? acts.map(([status, label, icon, cls]) => `<button type="button" class="btn ${cls}" data-status="${status}"><i class="bi bi-${icon} me-1" aria-hidden="true"></i>${label}</button>`).join('')
-      : '<p class="small text-body-secondary mb-0"><i class="bi bi-info-circle me-1" aria-hidden="true"></i>การจองนี้สิ้นสุดแล้ว ไม่สามารถเปลี่ยนสถานะได้</p>';
+      : '<p class="small text-body-secondary mb-0"><i class="bi bi-info-circle me-1" aria-hidden="true"></i>การจองนี้สิ้นสุดแล้ว ไม่สามารถเปลี่ยนสถานะได้</p>');
+  }
+
+  // ---- slip viewer (proof only, never verified) ----
+  const slipEl = $('#slipModal'), slipBody = $('#slipBody'), slipModal = new bootstrap.Modal(slipEl);
+  let slipUrl = null, slipSeq = 0, slipReopen = null;
+  const revokeSlip = () => { if (slipUrl) { URL.revokeObjectURL(slipUrl); slipUrl = null; } };
+  function dataUrlToBlobUrl(d) {
+    const m = /^data:([^;,]+);base64,(.+)$/.exec(d || '');
+    if (!m) return null;
+    const bin = atob(m[2]), bytes = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+    return URL.createObjectURL(new Blob([bytes], { type: m[1] }));
+  }
+  slipEl.addEventListener('hidden.bs.modal', () => {
+    slipSeq++; revokeSlip(); slipBody.innerHTML = '';
+    if (slipReopen) { const id = slipReopen; slipReopen = null; showDetail(id); }
+  });
+  async function showSlip(b) {
+    const seq = ++slipSeq;
+    revokeSlip();
+    // modal over offcanvas: close the offcanvas first so the two focus traps do not fight, reopen it afterwards
+    await hideCanvas();
+    slipReopen = b.id;
+    $('#slipTitle').textContent = `สลิปการโอนเงิน ${b.ref}`;
+    slipBody.innerHTML = LG.skeleton(4);
+    slipModal.show();
+    try {
+      const { slip } = await DS.getPaymentSlip(b.paymentId);
+      if (seq !== slipSeq) return;
+      const url = slip ? dataUrlToBlobUrl(slip) : null;
+      if (!url) { slipBody.innerHTML = LG.empty('ไม่พบสลิปของรายการนี้', 'image'); return; }
+      slipUrl = url;
+      slipBody.innerHTML = `<div class="text-center"><img class="img-fluid rounded border" src="${url}" alt="สลิปการโอนเงินของการจอง ${esc(b.ref)}"></div>
+        <p class="small text-body-secondary text-center mt-3 mb-2">สลิปนี้ไม่ได้ผ่านการตรวจสอบอัตโนมัติ</p>
+        <div class="text-center"><a class="btn btn-outline-primary btn-sm" href="${url}" target="_blank" rel="noopener"><i class="bi bi-box-arrow-up-right me-1" aria-hidden="true"></i>เปิดรูปขนาดเต็มในแท็บใหม่</a></div>`;
+    } catch (e) {
+      if (seq !== slipSeq) return;
+      slipBody.innerHTML = LG.errorBox(e);
+    }
   }
 
   el.dActions.addEventListener('click', (ev) => {
+    const sb = ev.target.closest('[data-slip]');
+    if (sb && state.current) { showSlip(state.current); return; }
     const btn = ev.target.closest('[data-status]');
     if (btn && state.current) changeStatus(state.current, btn.dataset.status, btn);
   });
@@ -380,20 +444,70 @@
     // phone numbers: force text so Excel keeps the leading zero
     const phone = (v) => (v ? `'${v}` : '');
     LG.csv(`bookings-${fmt.isoDate()}.csv`, [
-      ['รหัสการจอง', 'ลูกค้า', 'อีเมล', 'โทรศัพท์', 'ล็อกเกอร์', 'สาขา', 'เริ่มใช้งาน', 'สิ้นสุด', 'ระยะเวลา', 'ยอดชำระ (บาท)', 'ส่วนลด (บาท)', 'โปรโมชัน', 'สถานะการจอง', 'สถานะการชำระเงิน', 'วิธีชำระเงิน', 'สร้างเมื่อ'],
+      ['รหัสการจอง', 'ลูกค้า', 'อีเมล', 'โทรศัพท์', 'ล็อกเกอร์', 'ตึก', 'เริ่มใช้งาน', 'สิ้นสุด', 'ระยะเวลา', 'ยอดชำระ (บาท)', 'ส่วนลด (บาท)', 'โปรโมชัน', 'สถานะการจอง', 'สถานะการชำระเงิน', 'วิธีชำระเงิน', 'สร้างเมื่อ'],
       ...rows.map((b) => [b.ref, b.customerName, b.customerEmail, phone(b.customerPhone), b.lockerCode, b.locationName, fmt.datetime(b.startAt), fmt.datetime(b.endAt), fmt.duration(b.durationType, b.quantity), b.amount, b.discount || 0, b.promoCode || '', label('booking', b.status), label('payment', b.paymentStatus), LG.PAY_METHODS[b.paymentMethod] || '', fmt.datetime(b.createdAt)].map((v, i) => (i === 3 ? v : safe(v)))),
     ]);
     LG.toast(`ส่งออกข้อมูล ${rows.length.toLocaleString('th-TH')} รายการเรียบร้อยแล้ว`);
   }
 
   // ================= create booking modal =================
-  const ref = { promise: null, locations: [], customers: [], pricing: { prices: [] }, settings: {} };
-  const bk = { promo: null, lockers: [], lockerToken: 0, promoToken: 0 };
+  const ref = { promise: null, locations: [], sizeOfLoc: new Map(), locOfSize: new Map(), customers: [], pricing: { prices: [] }, settings: {} };
+  const bk = { promo: null, lockers: [], lockerToken: 0, promoToken: 0, slip: null, slipJob: null };
+  const SLIP_REQUIRED_MSG = 'กรุณาแนบสลิปการโอนเงิน';
+
+  /** downscale an image file to max 1200px JPEG (quality 0.8) and resolve with a data URL */
+  function readSlip(file) {
+    return new Promise((resolve, reject) => {
+      const bad = () => reject(new Error('ไฟล์สลิปไม่ถูกต้อง (รองรับ JPG, PNG, WebP ขนาดไม่เกิน 2 MB)'));
+      if (!/^image\/(jpeg|png|webp)$/.test(file.type)) return bad();
+      const reader = new FileReader();
+      reader.onerror = bad;
+      reader.onload = () => {
+        const img = new Image();
+        img.onerror = bad;
+        img.onload = () => {
+          const k = Math.min(1, 1200 / Math.max(img.naturalWidth, img.naturalHeight));
+          const c = document.createElement('canvas');
+          c.width = Math.max(1, Math.round(img.naturalWidth * k)); c.height = Math.max(1, Math.round(img.naturalHeight * k));
+          const ctx = c.getContext('2d');
+          ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, c.width, c.height);   // flatten transparency for JPEG
+          ctx.drawImage(img, 0, 0, c.width, c.height);
+          resolve(c.toDataURL('image/jpeg', 0.8));
+        };
+        img.src = reader.result;
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  function resetSlip() {
+    bk.slip = null; bk.slipJob = null;
+    el.slip.value = '';
+    el.slip.setCustomValidity('');
+    el.slip.classList.remove('is-invalid');
+    el.slipErr.textContent = SLIP_REQUIRED_MSG;
+  }
+
+  function toggleSlip() {
+    const on = el.pay.value === 'promptpay';
+    el.slipBox.classList.toggle('d-none', !on);
+    el.slip.disabled = !on;
+    el.slip.required = on;
+    if (!on) resetSlip();
+  }
 
   function loadRef() {
     if (!ref.promise) {
-      ref.promise = Promise.all([DS.getLocations(), DS.getCustomers(), DS.getPricing(), DS.getSettings().catch(() => ({}))])
-        .then(([locations, customers, pricing, settings]) => { Object.assign(ref, { locations, customers, pricing, settings: settings || {} }); })
+      ref.promise = Promise.all([DS.getLocations(), DS.getLockers(), DS.getCustomers(), DS.getPricing(), DS.getSettings().catch(() => ({}))])
+        .then(([locations, lockers, customers, pricing, settings]) => {
+          // building <-> size link, derived from the lockers each building holds (one size per building)
+          ref.sizeOfLoc.clear(); ref.locOfSize.clear();
+          lockers.forEach((l) => {
+            if (!ref.sizeOfLoc.has(l.locationId)) ref.sizeOfLoc.set(l.locationId, l.size);
+            if (!ref.locOfSize.has(l.size)) ref.locOfSize.set(l.size, l.locationId);
+          });
+          Object.assign(ref, { locations, customers, pricing, settings: settings || {} });
+        })
         .catch((e) => { ref.promise = null; throw e; });
     }
     return ref.promise;
@@ -413,15 +527,15 @@
     if (!el.date.value || !el.time.value || !Number.isInteger(qty) || qty < 1) return null;
     const s = new Date(`${el.date.value}T${el.time.value}:00`);
     if (isNaN(s)) return null;
-    const hours = qty * HOURS[el.dur.value];
+    const hours = qty * DAY_HOURS;
     return { start: toSql(s), end: toSql(new Date(s.getTime() + hours * 3600000)), hours, qty };
   }
 
   async function loadLockers() {
-    const my = ++bk.lockerToken, w = timeWindow(), loc = el.loc.value, keep = el.locker.value;
+    const my = ++bk.lockerToken, w = timeWindow(), loc = el.loc.value, size = el.size.value, keep = el.locker.value;
     if (!loc || !w) {
       bk.lockers = [];
-      el.locker.innerHTML = '<option value="">เลือกสาขา วันที่ และเวลาก่อน</option>';
+      el.locker.innerHTML = '<option value="">เลือกตึก วันที่ และเวลาก่อน</option>';
       el.lockerHint.textContent = '';
       el.locker.disabled = false;
       updatePrice();
@@ -432,12 +546,12 @@
     try {
       const list = await DS.getLockers({ locationId: loc, status: 'available', start: w.start, end: w.end });
       if (my !== bk.lockerToken) return;
-      bk.lockers = list.sort((a, b) => collator.compare(a.code, b.code));
+      bk.lockers = list.filter((l) => !size || l.size === size).sort((a, b) => collator.compare(a.code, b.code));
       el.locker.innerHTML = bk.lockers.length
         ? '<option value="">เลือกล็อกเกอร์...</option>' + bk.lockers.map((l) => `<option value="${l.id}">${esc(l.code)} · ขนาด ${esc(l.size)} (${esc(LG.SIZES[l.size].label)})${l.zone ? ' · โซน ' + esc(l.zone) : ''}</option>`).join('')
         : '<option value="">ไม่มีล็อกเกอร์ว่างในช่วงเวลานี้</option>';
       if (bk.lockers.some((l) => String(l.id) === keep)) el.locker.value = keep;
-      el.lockerHint.textContent = bk.lockers.length ? `ว่าง ${bk.lockers.length} ช่อง (${fmt.datetime(w.start)} - ${fmt.datetime(w.end)})` : 'ลองเปลี่ยนสาขา วันที่ หรือเวลา';
+      el.lockerHint.textContent = bk.lockers.length ? `ว่าง ${bk.lockers.length} ช่อง (${fmt.datetime(w.start)} - ${fmt.datetime(w.end)})` : 'ลองเปลี่ยนตึก วันที่ หรือเวลา';
     } catch (e) {
       if (my !== bk.lockerToken) return;
       bk.lockers = [];
@@ -449,12 +563,12 @@
   }
 
   function updatePrice() {
-    const l = bk.lockers.find((x) => String(x.id) === el.locker.value), qty = +el.qty.value, type = el.dur.value;
+    const l = bk.lockers.find((x) => String(x.id) === el.locker.value), qty = +el.qty.value;
     const row = l && (ref.pricing.prices || []).find((p) => p.size === l.size);
     if (!l || !row || !(qty >= 1)) { el.price.innerHTML = '<span class="text-body-secondary"><i class="bi bi-calculator me-1" aria-hidden="true"></i>เลือกล็อกเกอร์และระยะเวลาเพื่อดูราคาโดยประมาณ</span>'; return; }
-    const unit = row[type], q = quote(unit, qty, bk.promo);
+    const unit = row.day, q = quote(unit, qty, bk.promo);
     const line = (k, v, cls = '') => `<div class="d-flex justify-content-between ${cls}"><span>${k}</span><span>${v}</span></div>`;
-    el.price.innerHTML = line(`ล็อกเกอร์ ${esc(l.code)} ขนาด ${esc(l.size)} · ${fmt.baht(unit)} / ${LG.DURATION[type]} × ${qty}`, fmt.baht(q.gross))
+    el.price.innerHTML = line(`ล็อกเกอร์ ${esc(l.code)} ขนาด ${esc(l.size)} · ${fmt.baht(unit)} / วัน × ${qty} วัน`, fmt.baht(q.gross))
       + (q.discount ? line(`ส่วนลด (${esc(bk.promo.code)})`, `-${fmt.baht(q.discount)}`, 'text-success') : '')
       + `<hr class="my-2">` + line('ยอดชำระสุทธิ', fmt.baht(q.total), 'fw-bold fs-5');
   }
@@ -487,15 +601,33 @@
 
   let lockerTimer, promoTimer;
   const reloadSoon = () => { clearTimeout(lockerTimer); lockerTimer = setTimeout(loadLockers, 250); };
-  [el.loc, el.date, el.time, el.dur].forEach((c) => c.addEventListener('change', () => { updateHint(); loadLockers(); }));
+  // linked selectors: a building selects the size it holds, a size selects the building that holds it
+  el.loc.addEventListener('change', () => { const s = ref.sizeOfLoc.get(+el.loc.value); if (s) el.size.value = s; });
+  el.size.addEventListener('change', () => { const id = ref.locOfSize.get(el.size.value); if (id !== undefined) el.loc.value = String(id); });
+  [el.loc, el.size, el.date, el.time].forEach((c) => c.addEventListener('change', () => { updateHint(); loadLockers(); }));
   el.qty.addEventListener('input', reloadSoon);
   el.locker.addEventListener('change', updatePrice);
   el.cust.addEventListener('change', toggleWalkin);
+  el.pay.addEventListener('change', toggleSlip);
+  el.slip.addEventListener('change', () => {
+    const file = el.slip.files && el.slip.files[0];
+    bk.slip = null; el.slip.setCustomValidity(''); el.slip.classList.remove('is-invalid'); el.slipErr.textContent = SLIP_REQUIRED_MSG;
+    if (!file) { bk.slipJob = null; return; }
+    const job = readSlip(file).then((d) => {
+      if (bk.slipJob !== job) return;
+      if (d.length > 2800000) throw new Error('ไฟล์สลิปไม่ถูกต้อง (รองรับ JPG, PNG, WebP ขนาดไม่เกิน 2 MB)');
+      bk.slip = d;
+    }).catch((e) => {
+      if (bk.slipJob !== job) return;
+      el.slip.setCustomValidity(e.message); el.slipErr.textContent = e.message; el.slip.classList.add('is-invalid');
+    });
+    bk.slipJob = job;
+  });
   el.promo.addEventListener('input', () => { el.promo.classList.remove('is-invalid'); clearTimeout(promoTimer); promoTimer = setTimeout(checkPromo, 400); });
 
   function updateHint() {
     const s = ref.settings || {};
-    el.hint.textContent = (s.minDuration && s.maxDuration) ? `ระยะเวลาที่อนุญาต ${s.minDuration} - ${s.maxDuration} ชั่วโมง (1 วัน = 24 ชม.)` : '';
+    el.hint.textContent = (s.minDuration && s.maxDuration) ? `ระยะเวลาที่อนุญาต ${s.minDuration / DAY_HOURS} - ${s.maxDuration / DAY_HOURS} วัน` : '';
   }
 
   async function openCreate() {
@@ -506,9 +638,11 @@
     el.promo.classList.remove('is-invalid');
     el.promoMsg.textContent = ''; el.promoMsg.className = 'form-text';
     bk.promo = null; bk.lockers = [];
-    el.locker.innerHTML = '<option value="">เลือกสาขา วันที่ และเวลาก่อน</option>';
+    el.locker.innerHTML = '<option value="">เลือกตึก วันที่ และเวลาก่อน</option>';
     el.lockerHint.textContent = '';
     toggleWalkin();
+    resetSlip();
+    el.slipBox.classList.add('d-none'); el.slip.disabled = true; el.slip.required = false;
     updatePrice();
     el.submit.disabled = true;
     createModal.show();
@@ -518,11 +652,15 @@
     const customers = [...ref.customers].sort((a, b) => collator.compare(a.name, b.name));
     el.cust.innerHTML = '<option value="">เลือกลูกค้า...</option><option value="walkin">ลูกค้า walk-in (ไม่มีบัญชี)</option>'
       + customers.map((c) => `<option value="${c.id}">${esc(c.name)} (${esc(c.email)})${c.status === 'suspended' ? ' - ถูกระงับ' : ''}</option>`).join('');
-    el.loc.innerHTML = '<option value="">เลือกสาขา...</option>' + ref.locations.map((x) => `<option value="${x.id}">${esc(x.name)}</option>`).join('');
-    el.dur.innerHTML = Object.entries(LG.DURATION).map(([k, v]) => `<option value="${k}">${esc(v)}</option>`).join('');
+    el.loc.innerHTML = '<option value="">เลือกตึก...</option>' + ref.locations.map((x) => `<option value="${x.id}">${esc(x.name)}${ref.sizeOfLoc.has(x.id) ? ` · ขนาด ${esc(ref.sizeOfLoc.get(x.id))}` : ''}</option>`).join('');
+    el.size.innerHTML = '<option value="">เลือกขนาด...</option>' + Object.entries(LG.SIZES).map(([k, v]) => `<option value="${k}">${k} - ${esc(v.label)}</option>`).join('');
     el.pay.innerHTML = Object.entries(LG.PAY_METHODS).map(([k, v]) => `<option value="${k}">${esc(v)}</option>`).join('');
     el.pay.value = 'cash';
-    if (ref.locations.length) el.loc.value = String(ref.locations[0].id);
+    toggleSlip();
+    if (ref.locations.length) {
+      el.loc.value = String(ref.locations[0].id);
+      el.size.value = ref.sizeOfLoc.get(ref.locations[0].id) || '';
+    }
     const now = new Date(); now.setMinutes(0, 0, 0); now.setHours(now.getHours() + 1);
     el.date.min = fmt.isoDate(new Date());
     el.date.value = fmt.isoDate(now);
@@ -538,6 +676,7 @@
     el.err.classList.add('d-none');
     await LG.busy(el.submit, async () => {
       await checkPromo();
+      if (bk.slipJob) await bk.slipJob;
       if (!LG.validate(el.form)) {
         const bad = el.form.querySelector(':invalid');
         if (bad) { bad.scrollIntoView({ block: 'center' }); bad.focus(); }
@@ -545,8 +684,12 @@
       }
       const w = timeWindow(), s = ref.settings || {};
       if (!w) return;
-      if ((s.minDuration && w.hours < s.minDuration) || (s.maxDuration && w.hours > s.maxDuration)) { showCreateError(`ระยะเวลาต้องอยู่ระหว่าง ${s.minDuration} - ${s.maxDuration} ชั่วโมง`); return; }
-      const data = { lockerId: +el.locker.value, startAt: w.start, durationType: el.dur.value, quantity: w.qty, promoCode: el.promo.value.trim().toUpperCase(), paymentMethod: el.pay.value };
+      if ((s.minDuration && w.hours < s.minDuration) || (s.maxDuration && w.hours > s.maxDuration)) { showCreateError(`ระยะเวลาต้องอยู่ระหว่าง ${s.minDuration / DAY_HOURS} - ${s.maxDuration / DAY_HOURS} วัน`); return; }
+      const data = { lockerId: +el.locker.value, startAt: w.start, durationType: 'day', quantity: w.qty, promoCode: el.promo.value.trim().toUpperCase(), paymentMethod: el.pay.value };
+      if (el.pay.value === 'promptpay') {
+        if (!bk.slip) { showCreateError(SLIP_REQUIRED_MSG); return; }
+        data.slip = bk.slip;
+      }
       if (el.cust.value === 'walkin') Object.assign(data, { customerName: $('#bName').value.trim(), customerEmail: $('#bEmail').value.trim(), customerPhone: $('#bPhone').value.trim() });
       else {
         const c = ref.customers.find((x) => String(x.id) === el.cust.value);

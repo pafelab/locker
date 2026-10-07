@@ -4,8 +4,9 @@
  * The PHP files in /api must stay behaviourally identical to this file (it is the reference implementation).
  */
 window.MockService = (() => {
-  const DB_KEY = 'lg_mock_db_v2', SESSION_KEY = 'lg_mock_session';
+  const DB_KEY = 'lg_mock_db_v4', SESSION_KEY = 'lg_mock_session';
   const ACTIVE = ['pending', 'confirmed', 'active'];   // booking statuses that occupy a locker
+  const SLIP_RE = /^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/]+=*$/, SLIP_MAX = 2.8e6;   // ~2 MB of image as base64
   const HOURS = MockData.HOURS_PER;
   let db;
 
@@ -41,7 +42,7 @@ window.MockService = (() => {
   const lockerOut = (l) => ({ ...l, locationName: locName(l.locationId) });
   function bookingOut(b) {
     const l = byId(db.lockers, b.lockerId) || {}, p = db.payments.find((x) => x.bookingId === b.id);
-    return { ...b, lockerCode: l.code, locationId: l.locationId, locationName: locName(l.locationId), size: l.size, paymentStatus: p ? p.status : null, paymentMethod: p ? p.method : null };
+    return { ...b, lockerCode: l.code, locationId: l.locationId, locationName: locName(l.locationId), size: l.size, paymentId: p ? p.id : null, paymentStatus: p ? p.status : null, paymentMethod: p ? p.method : null, hasSlip: p && p.slip ? 1 : 0 };
   }
   const overlaps = (lockerId, s, e, ignoreId) => db.bookings.some((b) => b.lockerId === lockerId && b.id !== ignoreId && ACTIVE.includes(b.status) && s < b.endAt && e > b.startAt);
 
@@ -99,24 +100,24 @@ window.MockService = (() => {
     return { id: x.id, name: x.name, address: x.address, zones: x.zones, openHours: x.openHours, phone: x.phone, lockerCount: ls.length, availableCount: ls.filter((l) => l.status === 'available').length };
   }
   function locationBody(b) {
-    if (!str(b.name) || !str(b.address)) fail(422, 'validation', 'กรุณากรอกชื่อและที่อยู่สาขา');
+    if (!str(b.name) || !str(b.address)) fail(422, 'validation', 'กรุณากรอกชื่อและที่อยู่ตึก');
     return { name: str(b.name), address: str(b.address), zones: str(b.zones), openHours: str(b.openHours), phone: str(b.phone) };
   }
   const locations = {
-    'GET': (b, { id }) => id ? locationOut(byId(db.locations, id) || fail(404, 'not_found', 'ไม่พบสาขา')) : db.locations.map(locationOut),
-    'POST': (b) => { needAdmin(); const x = { id: nextId(db.locations), ...locationBody(b) }; db.locations.push(x); log('เพิ่มสาขา', x.name); save(); return locationOut(x); },
-    'PUT': (b, { id }) => { needAdmin(); const x = byId(db.locations, id) || fail(404, 'not_found', 'ไม่พบสาขา'); Object.assign(x, locationBody(b)); log('แก้ไขสาขา', x.name); save(); return locationOut(x); },
+    'GET': (b, { id }) => id ? locationOut(byId(db.locations, id) || fail(404, 'not_found', 'ไม่พบตึก')) : db.locations.map(locationOut),
+    'POST': (b) => { needAdmin(); const x = { id: nextId(db.locations), ...locationBody(b) }; db.locations.push(x); log('เพิ่มตึก', x.name); save(); return locationOut(x); },
+    'PUT': (b, { id }) => { needAdmin(); const x = byId(db.locations, id) || fail(404, 'not_found', 'ไม่พบตึก'); Object.assign(x, locationBody(b)); log('แก้ไขตึก', x.name); save(); return locationOut(x); },
     'DELETE': (b, { id }) => {
-      needAdmin(); const x = byId(db.locations, id) || fail(404, 'not_found', 'ไม่พบสาขา');
-      if (db.lockers.some((l) => l.locationId === x.id)) fail(409, 'has_lockers', 'ไม่สามารถลบสาขาที่ยังมีล็อกเกอร์อยู่');
-      db.locations = db.locations.filter((l) => l.id !== x.id); log('ลบสาขา', x.name); save(); return true;
+      needAdmin(); const x = byId(db.locations, id) || fail(404, 'not_found', 'ไม่พบตึก');
+      if (db.lockers.some((l) => l.locationId === x.id)) fail(409, 'has_lockers', 'ไม่สามารถลบตึกที่ยังมีล็อกเกอร์อยู่');
+      db.locations = db.locations.filter((l) => l.id !== x.id); log('ลบตึก', x.name); save(); return true;
     },
   };
 
   // ---------- lockers ----------
   function lockerBody(b, cur) {
     const o = { code: str(b.code ?? cur?.code), locationId: +(b.locationId ?? cur?.locationId), size: b.size ?? cur?.size, zone: str(b.zone ?? cur?.zone), status: b.status ?? cur?.status ?? 'available' };
-    if (!o.code || !byId(db.locations, o.locationId) || !['S', 'M', 'L', 'XL'].includes(o.size) || !['available', 'booked', 'in_use', 'maintenance'].includes(o.status)) fail(422, 'validation', 'ข้อมูลล็อกเกอร์ไม่ถูกต้อง');
+    if (!o.code || !byId(db.locations, o.locationId) || !['S', 'M', 'L', 'XL', 'XXL'].includes(o.size) || !['available', 'booked', 'in_use', 'maintenance'].includes(o.status)) fail(422, 'validation', 'ข้อมูลล็อกเกอร์ไม่ถูกต้อง');
     if (db.lockers.some((l) => l.code === o.code && l.id !== cur?.id)) fail(409, 'duplicate_code', 'รหัสล็อกเกอร์นี้มีอยู่แล้ว');
     return o;
   }
@@ -202,15 +203,20 @@ window.MockService = (() => {
       const u = needUser(), locker = byId(db.lockers, b.lockerId);
       const type = b.durationType, qty = +b.quantity, startAt = str(b.startAt).replace('T', ' ');
       if (!locker) fail(422, 'validation', 'ไม่พบล็อกเกอร์');
-      if (!HOURS[type] || !Number.isInteger(qty) || qty < 1 || isNaN(parse(startAt))) fail(422, 'validation', 'ข้อมูลการจองไม่ถูกต้อง');
+      if (type !== 'day' || !Number.isInteger(qty) || qty < 1 || isNaN(parse(startAt))) fail(422, 'validation', 'ข้อมูลการจองไม่ถูกต้อง');
       const hours = qty * HOURS[type], s = db.settings;
-      if (hours < s.minDuration || hours > s.maxDuration) fail(422, 'validation', `ระยะเวลาต้องอยู่ระหว่าง ${s.minDuration} - ${s.maxDuration} ชั่วโมง`);
+      if (hours < s.minDuration || hours > s.maxDuration) fail(422, 'validation', `ระยะเวลาต้องอยู่ระหว่าง ${s.minDuration / 24} - ${s.maxDuration / 24} วัน`);
       const customer = u.role === 'customer' ? u : (byId(db.users, b.userId) || null);   // staff may book for a walk-in (no account)
       const name = str(b.customerName) || customer?.name, email = str(b.customerEmail) || customer?.email, phone = str(b.customerPhone) || customer?.phone;
       if (!name || !/^\S+@\S+\.\S+$/.test(email) || !phone) fail(422, 'validation', 'กรุณากรอกข้อมูลผู้จองให้ครบถ้วน');
       if (locker.status === 'maintenance') fail(409, 'locker_unavailable', 'ล็อกเกอร์นี้ปิดซ่อมบำรุง');
       const start = fmt(parse(startAt)), end = addHours(start, hours);
       if (overlaps(locker.id, start, end)) fail(409, 'locker_taken', 'ล็อกเกอร์นี้ถูกจองแล้วในช่วงเวลาดังกล่าว');
+      const method = ['card', 'promptpay', 'cash'].includes(b.paymentMethod) ? b.paymentMethod : 'card';
+      // Transfer slip (data URL). Stored as proof only — never verified.
+      const slip = b.slip ? String(b.slip) : null;
+      if (slip && (!SLIP_RE.test(slip) || slip.length > SLIP_MAX)) fail(422, 'invalid_slip', 'ไฟล์สลิปไม่ถูกต้อง (รองรับ JPG, PNG, WebP ขนาดไม่เกิน 2 MB)');
+      if (method === 'promptpay' && !slip) fail(422, 'slip_required', 'กรุณาแนบสลิปการโอนเงิน');
       const promo = str(b.promoCode) ? findPromo(b.promoCode) : null;
       const q = quote(db.prices.find((p) => p.size === locker.size)[type], qty, promo);
       const x = {
@@ -219,7 +225,7 @@ window.MockService = (() => {
         status: 'confirmed', pin: String(100000 + Math.floor(Math.random() * 900000)), createdAt: fmt(new Date()),
       };
       db.bookings.push(x);
-      db.payments.push({ id: nextId(db.payments), bookingId: x.id, amount: x.amount, method: ['card', 'promptpay', 'cash'].includes(b.paymentMethod) ? b.paymentMethod : 'card', status: 'paid', createdAt: x.createdAt });
+      db.payments.push({ id: nextId(db.payments), bookingId: x.id, amount: x.amount, method, status: 'paid', createdAt: x.createdAt, slip });
       setLockerAfter(x); log('สร้างการจอง', x.ref); save();
       return bookingOut(x);
     },
@@ -265,10 +271,12 @@ window.MockService = (() => {
       u.status = b.status; log(b.status === 'suspended' ? 'ระงับลูกค้า' : 'เปิดใช้งานลูกค้า', u.name); save(); return customerOut(u);
     },
   };
-  const paymentOut = (p) => { const b = byId(db.bookings, p.bookingId) || {}; return { ...p, bookingRef: b.ref, customerName: b.customerName }; };
+  const paymentOut = (p) => { const b = byId(db.bookings, p.bookingId) || {}; const { slip, ...rest } = p; return { ...rest, hasSlip: slip ? 1 : 0, bookingRef: b.ref, customerName: b.customerName }; };
   const payments = {
     'GET': (b, q) => {
-      needAdmin(); const needle = str(q.q).toLowerCase();
+      needAdmin();
+      if (q.action === 'slip') { const p = byId(db.payments, q.id) || fail(404, 'not_found', 'ไม่พบรายการชำระเงิน'); return { slip: p.slip || null }; }
+      const needle = str(q.q).toLowerCase();
       return db.payments.map(paymentOut).filter((p) => (!q.status || p.status === q.status) && (!needle || [p.bookingRef, p.customerName].some((v) => String(v).toLowerCase().includes(needle)))).sort((a, c) => c.createdAt.localeCompare(a.createdAt));
     },
     'PUT': (b, { id }) => {

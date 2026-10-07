@@ -99,6 +99,20 @@
     </main>
   </div>
 </div>
+
+<!-- slip modal -->
+<div class="modal fade" id="slipModal" tabindex="-1" aria-labelledby="slipTitle" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title fs-5" id="slipTitle">สลิปการโอนเงิน</h2>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="ปิด"></button>
+      </div>
+      <div class="modal-body" id="slipBody"></div>
+      <div class="modal-footer"><button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">ปิด</button></div>
+    </div>
+  </div>
+</div>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="../assets/js/mock-data.js"></script>
 <script src="../assets/js/mock-service.js"></script>
@@ -148,7 +162,7 @@
     area.className = '';
     area.innerHTML = `<div class="table-responsive"><table class="table table-hover align-middle">
       <caption class="visually-hidden">รายการชำระเงิน</caption>
-      <thead><tr><th scope="col">รหัสชำระเงิน</th><th scope="col">การจอง</th><th scope="col">ลูกค้า</th><th scope="col" class="text-end">จำนวนเงิน</th><th scope="col">วิธีชำระ</th><th scope="col">สถานะ</th><th scope="col">วันที่</th><th scope="col" class="text-end">จัดการ</th></tr></thead>
+      <thead><tr><th scope="col">รหัสชำระเงิน</th><th scope="col">การจอง</th><th scope="col">ลูกค้า</th><th scope="col" class="text-end">จำนวนเงิน</th><th scope="col">วิธีชำระ</th><th scope="col">สถานะ</th><th scope="col">สลิป</th><th scope="col">วันที่</th><th scope="col" class="text-end">จัดการ</th></tr></thead>
       <tbody>${rows.map((p) => `<tr>
         <td class="text-nowrap fw-semibold">${pid(p.id)}</td>
         <td class="text-nowrap"><a href="bookings.html?q=${encodeURIComponent(p.bookingRef || '')}">${LG.esc(p.bookingRef || '-')}</a></td>
@@ -156,9 +170,11 @@
         <td class="text-end text-nowrap">${LG.fmt.baht(p.amount)}</td>
         <td class="text-nowrap">${LG.esc(LG.PAY_METHODS[p.method] || p.method)}</td>
         <td>${LG.badge('payment', p.status)}</td>
+        <td>${+p.hasSlip === 1 ? `<button type="button" class="btn btn-outline-primary btn-sm text-nowrap" data-slip="${p.id}"><i class="bi bi-image me-1" aria-hidden="true"></i>ดูสลิป<span class="visually-hidden"> รายการ ${pid(p.id)}</span></button>` : '<span class="text-body-secondary" aria-label="ไม่มีสลิป">-</span>'}</td>
         <td class="text-nowrap">${LG.fmt.datetime(p.createdAt)}</td>
         <td class="text-end">${p.status === 'paid' ? `<button type="button" class="btn btn-outline-danger btn-sm text-nowrap" data-refund="${p.id}"><i class="bi bi-arrow-counterclockwise me-1" aria-hidden="true"></i>คืนเงิน<span class="visually-hidden"> รายการ ${pid(p.id)}</span></button>` : '<span class="text-body-secondary" aria-label="ไม่มีการดำเนินการ">-</span>'}</td>
       </tr>`).join('')}</tbody></table></div>`;
+    area.querySelectorAll('[data-slip]').forEach((b) => b.addEventListener('click', () => showSlip(state.rows.find((p) => p.id === +b.dataset.slip))));
     area.querySelectorAll('[data-refund]').forEach((b) => b.addEventListener('click', () => refund(state.rows.find((p) => p.id === +b.dataset.refund), b)));
     LG.pager($('#pager'), { total: items.length, page, per: PER }, (p) => { state.page = p; render(); });
   }
@@ -188,6 +204,40 @@
       area.innerHTML = LG.errorBox(e);
       $('#pager').innerHTML = '';
       $('#result-count').textContent = '';
+    }
+  }
+
+  // ---- slip viewer (proof only, never verified) ----
+  const slipEl = $('#slipModal'), slipBody = $('#slipBody'), slipModal = new bootstrap.Modal(slipEl);
+  let slipUrl = null, slipSeq = 0;
+  const revokeSlip = () => { if (slipUrl) { URL.revokeObjectURL(slipUrl); slipUrl = null; } };
+  function dataUrlToBlobUrl(d) {
+    const m = /^data:([^;,]+);base64,(.+)$/.exec(d || '');
+    if (!m) return null;
+    const bin = atob(m[2]), bytes = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+    return URL.createObjectURL(new Blob([bytes], { type: m[1] }));
+  }
+  slipEl.addEventListener('hidden.bs.modal', () => { slipSeq++; revokeSlip(); slipBody.innerHTML = ''; });
+  async function showSlip(p) {
+    if (!p) return;
+    const seq = ++slipSeq;
+    revokeSlip();
+    $('#slipTitle').textContent = `สลิปการโอนเงิน ${p.bookingRef || pid(p.id)}`;
+    slipBody.innerHTML = LG.skeleton(4);
+    slipModal.show();
+    try {
+      const { slip } = await DS.getPaymentSlip(p.id);
+      if (seq !== slipSeq) return;
+      const url = slip ? dataUrlToBlobUrl(slip) : null;
+      if (!url) { slipBody.innerHTML = LG.empty('ไม่พบสลิปของรายการนี้', 'image'); return; }
+      slipUrl = url;
+      slipBody.innerHTML = `<div class="text-center"><img class="img-fluid rounded border" src="${url}" alt="สลิปการโอนเงินของการจอง ${LG.esc(p.bookingRef || '')}"></div>
+        <p class="small text-body-secondary text-center mt-3 mb-2">สลิปนี้ไม่ได้ผ่านการตรวจสอบอัตโนมัติ</p>
+        <div class="text-center"><a class="btn btn-outline-primary btn-sm" href="${url}" target="_blank" rel="noopener"><i class="bi bi-box-arrow-up-right me-1" aria-hidden="true"></i>เปิดรูปขนาดเต็มในแท็บใหม่</a></div>`;
+    } catch (e) {
+      if (seq !== slipSeq) return;
+      slipBody.innerHTML = LG.errorBox(e);
     }
   }
 
