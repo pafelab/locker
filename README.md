@@ -40,14 +40,16 @@ node database/make-seed.js
 
 ## 3. Demo accounts (same in both modes)
 
-| Role | Email | Password | Login page |
-| --- | --- | --- | --- |
-| Customer | `user@demo.com` | `demo1234` | `login.html` |
-| Super Admin | `admin@demo.com` | `admin1234` | `admin/login.html` |
-| Manager | `manager@demo.com` | `admin1234` | `admin/login.html` |
-| Staff | `staff@demo.com` | `admin1234` | `admin/login.html` |
+Login is by **username** (not email). Usernames are 3-30 characters of `a-z 0-9 . _ -`, stored in lower case. Email is still collected and used for contact.
 
-The 14 other demo customers (`customer1@example.com` …) use the password `demo1234`.
+| Role | Username | Password | Login page |
+| --- | --- | --- | --- |
+| Customer | `user` | `demo1234` | `login.html` |
+| Super Admin | `admin` | `admin1234` | `admin/login.html` |
+| Manager | `manager` | `admin1234` | `admin/login.html` |
+| Staff | `staff` | `admin1234` | `admin/login.html` |
+
+The 14 other demo customers (`customer1` … `customer14`) use the password `demo1234`.
 
 ## 4. Folder structure
 
@@ -110,7 +112,7 @@ Every response uses one envelope, `{ "success": true, "data": … }` or `{ "succ
 | Endpoint | Methods |
 | --- | --- |
 | `api/health.php` | `GET` — succeeds only when the DB connection works |
-| `api/auth.php` | `GET ?action=me` · `POST ?action=login` `{email,password,admin,remember}` · `POST ?action=register` · `POST ?action=logout` · `POST ?action=forgot` · `PUT ?action=profile` · `PUT ?action=password` |
+| `api/auth.php` | `GET ?action=me` · `POST ?action=login` `{username,password,admin,remember}` · `POST ?action=register` `{username,name,email,phone,password}` · `POST ?action=logout` · `POST ?action=forgot` · `PUT ?action=profile` · `PUT ?action=password` |
 | `api/lockers.php` | `GET [?id] [?locationId&size&status&q&start&end]` (public; `start`/`end` → availability for that window) · `POST` · `PUT ?id` · `PUT ?action=bulk {ids,status}` · `DELETE ?id` (admin) |
 | `api/locations.php` | `GET [?id]` (public) · `POST` · `PUT ?id` · `DELETE ?id` (admin) |
 | `api/bookings.php` | `GET [?id\|?ref] [?q&status&from&to&mine]` (customers only see their own) · `POST` (transaction + overlap re-check → `409 locker_taken`) · `PUT ?id&action=status {status}` · `PUT ?id&action=extend {quantity}` |

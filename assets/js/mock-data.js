@@ -51,12 +51,12 @@
       'อนุชา เจริญผล', 'กัญญารัตน์ ทองดี', 'วีระพงษ์ สุขใจ', 'ชลธิชา บุญมา', 'ภานุวัฒน์ รุ่งเรือง', 'ศิริพร จันทร์เพ็ญ',
       'ณัฐพล พรหมมา', 'จิราพร สายสุวรรณ', 'เอกชัย มั่นคง'];
     const users = [
-      { id: 1, name: 'ผู้ดูแลระบบ', email: 'admin@demo.com', phone: '081-000-0001', role: 'super_admin', password: 'admin1234' },
-      { id: 2, name: 'มานี ผู้จัดการ', email: 'manager@demo.com', phone: '081-000-0002', role: 'manager', password: 'admin1234' },
-      { id: 3, name: 'สมศักดิ์ พนักงาน', email: 'staff@demo.com', phone: '081-000-0003', role: 'staff', password: 'admin1234' },
+      { id: 1, username: 'admin', name: 'ผู้ดูแลระบบ', email: 'admin@demo.com', phone: '081-000-0001', role: 'super_admin', password: 'admin1234' },
+      { id: 2, username: 'manager', name: 'มานี ผู้จัดการ', email: 'manager@demo.com', phone: '081-000-0002', role: 'manager', password: 'admin1234' },
+      { id: 3, username: 'staff', name: 'สมศักดิ์ พนักงาน', email: 'staff@demo.com', phone: '081-000-0003', role: 'staff', password: 'admin1234' },
     ];
     names.forEach((name, i) => users.push({
-      id: 4 + i, name, email: i === 0 ? 'user@demo.com' : `customer${i}@example.com`,
+      id: 4 + i, username: i === 0 ? 'user' : `customer${i}`, name, email: i === 0 ? 'user@demo.com' : `customer${i}@example.com`,
       phone: `08${int(1, 9)}-${int(100, 999)}-${int(1000, 9999)}`, role: 'customer', password: 'demo1234',
     }));
     users.forEach((u, i) => {

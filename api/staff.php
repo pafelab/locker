@@ -23,6 +23,7 @@ function staff_body(array $b, ?array $cur): array
     $statusRaw = $b['status'] ?? null;
     $status = js_truthy($statusRaw) ? $statusRaw : 'active';
     $o = [
+        'username' => s_lower(str($b['username'] ?? null)),
         'name'   => str($b['name'] ?? null),
         'email'  => s_lower(str($b['email'] ?? null)),
         'phone'  => str($b['phone'] ?? null),
@@ -36,6 +37,12 @@ function staff_body(array $b, ?array $cur): array
         || ($pwNeeded && !(is_string($pw) && s_len($pw) >= 8 && strlen($pw) <= 72))
         || s_len($o['name']) > 120 || s_len($o['email']) > 190 || s_len($o['phone']) > 30) {
         fail(422, 'validation', STAFF_INVALID);
+    }
+    if (!valid_username($o['username'])) {
+        fail(422, 'validation', USERNAME_INVALID);
+    }
+    if ((int)db_val('SELECT COUNT(*) FROM users WHERE username = ? AND id <> ?', [$o['username'], $cur ? (int)$cur['id'] : 0]) > 0) {
+        fail(409, 'username_taken', 'ชื่อผู้ใช้นี้ถูกใช้งานแล้ว');
     }
     if ((int)db_val('SELECT COUNT(*) FROM users WHERE email = ? AND id <> ?', [$o['email'], $cur ? (int)$cur['id'] : 0]) > 0) {
         fail(409, 'email_taken', 'อีเมลนี้ถูกใช้งานแล้ว');
@@ -54,8 +61,8 @@ switch (method()) {
         $o = staff_body($b, null);
         try {
             db_exec(
-                'INSERT INTO users (name, email, phone, role, status, password_hash, notify_email, notify_sms, created_at, last_login_at) VALUES (?, ?, ?, ?, ?, ?, 1, 0, ?, NULL)',
-                [$o['name'], $o['email'], $o['phone'], $o['role'], $o['status'], password_hash((string)$b['password'], PASSWORD_DEFAULT), now_str()]
+                'INSERT INTO users (username, name, email, phone, role, status, password_hash, notify_email, notify_sms, created_at, last_login_at) VALUES (?, ?, ?, ?, ?, ?, ?, 1, 0, ?, NULL)',
+                [$o['username'], $o['name'], $o['email'], $o['phone'], $o['role'], $o['status'], password_hash((string)$b['password'], PASSWORD_DEFAULT), now_str()]
             );
         } catch (PDOException $e) {
             if (is_duplicate($e)) {
@@ -80,8 +87,8 @@ switch (method()) {
         }
         try {
             db_exec(
-                'UPDATE users SET name = ?, email = ?, phone = ?, role = ?, status = ? WHERE id = ?',
-                [$o['name'], $o['email'], $o['phone'], $o['role'], $o['status'], (int)$cur['id']]
+                'UPDATE users SET username = ?, name = ?, email = ?, phone = ?, role = ?, status = ? WHERE id = ?',
+                [$o['username'], $o['name'], $o['email'], $o['phone'], $o['role'], $o['status'], (int)$cur['id']]
             );
             if (js_truthy($b['password'] ?? null)) {
                 db_exec('UPDATE users SET password_hash = ? WHERE id = ?', [password_hash((string)$b['password'], PASSWORD_DEFAULT), (int)$cur['id']]);

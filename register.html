@@ -31,6 +31,13 @@
         <div id="form-alert" class="alert alert-danger d-none" role="alert"></div>
 
         <div class="mb-3">
+          <label for="username" class="form-label">ชื่อผู้ใช้ (ใช้เข้าสู่ระบบ)</label>
+          <input type="text" class="form-control" id="username" name="username" autocomplete="username" autocapitalize="none" spellcheck="false" placeholder="เช่น somchai.j" pattern="[a-zA-Z0-9._\-]{3,30}" maxlength="30" aria-describedby="username-help" required>
+          <div id="username-help" class="form-text">3-30 ตัวอักษร ใช้ a-z, 0-9, จุด, ขีดล่าง หรือขีดกลาง</div>
+          <div class="invalid-feedback" id="username-feedback">ชื่อผู้ใช้ต้องเป็น a-z, 0-9, จุด, ขีดล่าง หรือขีดกลาง ยาว 3-30 ตัวอักษร</div>
+        </div>
+
+        <div class="mb-3">
           <label for="name" class="form-label">ชื่อ-นามสกุล</label>
           <input type="text" class="form-control" id="name" name="name" autocomplete="name" placeholder="เช่น สมชาย ใจดี" minlength="2" maxlength="100" required>
           <div class="invalid-feedback">กรุณากรอกชื่อ-นามสกุล</div>
@@ -112,11 +119,12 @@
   $('password').addEventListener('input', checkMatch);
   $('confirm').addEventListener('input', checkMatch);
 
-  // Clear the "email taken" state once the user edits the email
-  $('email').addEventListener('input', () => {
-    $('email').setCustomValidity('');
-    $('email-feedback').textContent = 'กรุณากรอกอีเมลให้ถูกต้อง';
-  });
+  // Clear the "already taken" state once the user edits the field
+  const DEFAULT_FEEDBACK = { username: $('username-feedback').textContent, email: 'กรุณากรอกอีเมลให้ถูกต้อง' };
+  ['username', 'email'].forEach((id) => $(id).addEventListener('input', () => {
+    $(id).setCustomValidity('');
+    $(id + '-feedback').textContent = DEFAULT_FEEDBACK[id];
+  }));
 
   form.addEventListener('submit', async (ev) => {
     ev.preventDefault();
@@ -125,16 +133,17 @@
     if (!LG.validate(form)) return;
     await LG.busy($('register-btn'), async () => {
       try {
-        const u = await Auth.register({ name: $('name').value.trim(), email: $('email').value.trim(), phone: $('phone').value.trim(), password: $('password').value });
+        const u = await Auth.register({ username: $('username').value.trim().toLowerCase(), name: $('name').value.trim(), email: $('email').value.trim(), phone: $('phone').value.trim(), password: $('password').value });
         LG.toast(`สมัครสมาชิกสำเร็จ ยินดีต้อนรับ คุณ${u.name}`);
         location.replace(target);
       } catch (e) {
         alertBox.innerHTML = `<i class="bi bi-exclamation-triangle-fill me-2"></i>${LG.esc(e.message || 'สมัครสมาชิกไม่สำเร็จ')}`;
         if (e.status === 409) {
           alertBox.innerHTML += ` <a href="login.html" class="alert-link">เข้าสู่ระบบ</a> หรือ <a href="forgot-password.html" class="alert-link">รีเซ็ตรหัสผ่าน</a>`;
-          $('email').setCustomValidity(e.message || 'อีเมลนี้ถูกใช้งานแล้ว');
-          $('email-feedback').textContent = e.message || 'อีเมลนี้ถูกใช้งานแล้ว';
-          $('email').focus();
+          const id = e.code === 'email_taken' ? 'email' : 'username';
+          $(id).setCustomValidity(e.message || 'ข้อมูลนี้ถูกใช้งานแล้ว');
+          $(id + '-feedback').textContent = e.message || 'ข้อมูลนี้ถูกใช้งานแล้ว';
+          $(id).focus();
         }
         alertBox.classList.remove('d-none');
       }
