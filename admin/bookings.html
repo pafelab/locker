@@ -1,0 +1,583 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>จัดการการจอง | LockerGo</title>
+<meta name="description" content="ค้นหา กรอง อนุมัติ เช็กอิน ยกเลิก และสร้างการจองล็อกเกอร์ให้ลูกค้า พร้อมส่งออกรายการเป็น CSV">
+<link rel="icon" type="image/svg+xml" href="../assets/img/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+<link href="../assets/css/custom.css" rel="stylesheet">
+<link href="../assets/css/admin.css" rel="stylesheet">
+<script src="../assets/js/config.js"></script>
+</head>
+<body data-shell="admin" data-page="bookings">
+<a class="visually-hidden-focusable" href="#main">ข้ามไปยังเนื้อหา</a>
+<div class="admin-wrap"><aside id="admin-sidebar"></aside>
+  <div class="admin-main"><div id="admin-topbar"></div>
+    <main id="main" class="admin-content" data-title="จัดการการจอง">
+
+      <!-- filters -->
+      <section class="card card-soft mb-4" aria-label="ค้นหาและกรองการจอง">
+        <div class="card-body">
+          <form id="filters" class="row g-3 align-items-end" role="search" novalidate>
+            <div class="col-12 col-lg-4">
+              <label class="form-label small mb-1" for="fQuery">ค้นหา</label>
+              <div class="input-group">
+                <span class="input-group-text"><i class="bi bi-search" aria-hidden="true"></i></span>
+                <input type="search" class="form-control" id="fQuery" placeholder="รหัสการจอง / ชื่อลูกค้า / อีเมล / รหัสล็อกเกอร์" autocomplete="off">
+              </div>
+            </div>
+            <div class="col-12 col-md-4 col-lg-2">
+              <label class="form-label small mb-1" for="fStatus">สถานะ</label>
+              <select class="form-select" id="fStatus"></select>
+            </div>
+            <div class="col-6 col-md-4 col-lg-2">
+              <label class="form-label small mb-1" for="fFrom">เริ่มใช้งานตั้งแต่</label>
+              <input type="date" class="form-control" id="fFrom">
+            </div>
+            <div class="col-6 col-md-4 col-lg-2">
+              <label class="form-label small mb-1" for="fTo">ถึงวันที่</label>
+              <input type="date" class="form-control" id="fTo">
+            </div>
+            <div class="col-12 col-lg-2 d-grid">
+              <button type="button" class="btn btn-outline-secondary" id="fReset"><i class="bi bi-x-circle me-1" aria-hidden="true"></i>ล้างตัวกรอง</button>
+            </div>
+          </form>
+          <p class="small text-danger mt-2 mb-0 d-none" id="rangeMsg" role="alert">วันที่เริ่มต้องไม่มากกว่าวันที่สิ้นสุด</p>
+        </div>
+      </section>
+
+      <p class="text-body-secondary mb-3" id="resultCount" role="status" aria-live="polite">กำลังโหลด...</p>
+      <div id="tableWrap"></div>
+
+    </main>
+  </div></div>
+
+<!-- booking detail offcanvas -->
+<div class="offcanvas offcanvas-end" tabindex="-1" id="detailCanvas" aria-labelledby="detailTitle">
+  <div class="offcanvas-header border-bottom">
+    <h2 class="offcanvas-title fs-5" id="detailTitle">รายละเอียดการจอง</h2>
+    <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="ปิด"></button>
+  </div>
+  <div class="offcanvas-body" id="detailBody"></div>
+  <div class="border-top p-3 d-flex flex-wrap gap-2" id="detailActions"></div>
+</div>
+
+<!-- create booking modal -->
+<div class="modal fade" id="createModal" tabindex="-1" aria-labelledby="createTitle" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg">
+    <form class="modal-content" id="createForm" novalidate>
+      <div class="modal-header">
+        <h2 class="modal-title fs-5" id="createTitle">สร้างการจองใหม่</h2>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="ปิด"></button>
+      </div>
+      <div class="modal-body">
+        <div class="alert alert-danger d-none" id="createError" role="alert"></div>
+        <div class="row g-3">
+          <div class="col-12">
+            <label class="form-label" for="bCustomer">ลูกค้า <span class="text-danger" aria-hidden="true">*</span></label>
+            <select class="form-select" id="bCustomer" required><option value="">กำลังโหลด...</option></select>
+            <div class="invalid-feedback">กรุณาเลือกลูกค้า</div>
+          </div>
+          <div class="col-12 d-none" id="walkinBox">
+            <div class="row g-3 p-3 rounded border bg-body-tertiary mx-0">
+              <div class="col-md-4">
+                <label class="form-label" for="bName">ชื่อลูกค้า <span class="text-danger" aria-hidden="true">*</span></label>
+                <input type="text" class="form-control" id="bName" required maxlength="100" autocomplete="off" disabled>
+                <div class="invalid-feedback">กรุณากรอกชื่อลูกค้า</div>
+              </div>
+              <div class="col-md-4">
+                <label class="form-label" for="bEmail">อีเมล <span class="text-danger" aria-hidden="true">*</span></label>
+                <input type="email" class="form-control" id="bEmail" required maxlength="150" autocomplete="off" disabled>
+                <div class="invalid-feedback">กรุณากรอกอีเมลให้ถูกต้อง</div>
+              </div>
+              <div class="col-md-4">
+                <label class="form-label" for="bPhone">โทรศัพท์ <span class="text-danger" aria-hidden="true">*</span></label>
+                <input type="tel" class="form-control" id="bPhone" required pattern="[0-9\-+ ]{9,15}" maxlength="15" autocomplete="off" disabled>
+                <div class="invalid-feedback">กรุณากรอกเบอร์โทรศัพท์ 9-15 หลัก</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label" for="bLocation">สาขา <span class="text-danger" aria-hidden="true">*</span></label>
+            <select class="form-select" id="bLocation" required></select>
+            <div class="invalid-feedback">กรุณาเลือกสาขา</div>
+          </div>
+          <div class="col-6 col-md-3">
+            <label class="form-label" for="bDate">วันที่เริ่ม <span class="text-danger" aria-hidden="true">*</span></label>
+            <input type="date" class="form-control" id="bDate" required>
+            <div class="invalid-feedback">กรุณาเลือกวันที่</div>
+          </div>
+          <div class="col-6 col-md-3">
+            <label class="form-label" for="bTime">เวลาเริ่ม <span class="text-danger" aria-hidden="true">*</span></label>
+            <input type="time" class="form-control" id="bTime" required>
+            <div class="invalid-feedback">กรุณาเลือกเวลา</div>
+          </div>
+
+          <div class="col-6 col-md-4">
+            <label class="form-label" for="bDuration">ประเภทระยะเวลา <span class="text-danger" aria-hidden="true">*</span></label>
+            <select class="form-select" id="bDuration" required></select>
+          </div>
+          <div class="col-6 col-md-3">
+            <label class="form-label" for="bQty">จำนวน <span class="text-danger" aria-hidden="true">*</span></label>
+            <input type="number" class="form-control" id="bQty" required min="1" max="999" step="1" value="1" inputmode="numeric">
+            <div class="invalid-feedback">กรุณากรอกจำนวนอย่างน้อย 1</div>
+          </div>
+          <div class="col-md-5 d-flex align-items-end">
+            <p class="form-text mb-2" id="durHint"></p>
+          </div>
+
+          <div class="col-12">
+            <label class="form-label" for="bLocker">ล็อกเกอร์ที่ว่างในช่วงเวลานี้ <span class="text-danger" aria-hidden="true">*</span></label>
+            <select class="form-select" id="bLocker" required aria-describedby="lockerHint"></select>
+            <div class="invalid-feedback">กรุณาเลือกล็อกเกอร์</div>
+            <div class="form-text" id="lockerHint"></div>
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label" for="bPromo">รหัสโปรโมชัน (ถ้ามี)</label>
+            <input type="text" class="form-control text-uppercase" id="bPromo" maxlength="30" autocomplete="off" placeholder="เช่น WELCOME10" aria-describedby="promoMsg">
+            <div class="invalid-feedback" id="promoErr"></div>
+            <div class="form-text" id="promoMsg"></div>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label" for="bPay">วิธีชำระเงิน <span class="text-danger" aria-hidden="true">*</span></label>
+            <select class="form-select" id="bPay" required></select>
+          </div>
+
+          <div class="col-12">
+            <div class="rounded border bg-body-tertiary p-3" id="pricePanel" aria-live="polite"></div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">ยกเลิก</button>
+        <button type="submit" class="btn btn-primary" id="createSubmit"><i class="bi bi-check-lg me-1" aria-hidden="true"></i>สร้างการจอง</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="../assets/js/mock-data.js"></script>
+<script src="../assets/js/mock-service.js"></script>
+<script src="../assets/js/api-client.js"></script>
+<script src="../assets/js/data-service.js"></script>
+<script src="../assets/js/auth.js"></script>
+<script src="../assets/js/main.js"></script>
+<script src="../assets/js/admin.js"></script>
+<script>
+(async () => {
+  const user = await Admin.ready;
+  if (!user) return;
+
+  const $ = (s, el = document) => el.querySelector(s);
+  const esc = LG.esc, fmt = LG.fmt;
+  const PER_PAGE = 10;
+  const HOURS = { hour: 1, day: 24, month: 720 };
+  const STATUS_RANK = { pending: 0, confirmed: 1, active: 2, completed: 3, cancelled: 4 };
+  const collator = new Intl.Collator('th', { numeric: true });
+  const p2 = (n) => String(n).padStart(2, '0');
+  const toSql = (d) => `${d.getFullYear()}-${p2(d.getMonth() + 1)}-${p2(d.getDate())} ${p2(d.getHours())}:${p2(d.getMinutes())}:00`;
+
+  const COLUMNS = [
+    ['ref', 'รหัสการจอง', ''], ['customer', 'ลูกค้า', ''], ['locker', 'ล็อกเกอร์', ''],
+    ['start', 'เริ่มใช้งาน', ''], ['amount', 'ยอดชำระ', 'text-end'], ['status', 'สถานะ', ''],
+  ];
+  const SORTERS = {
+    ref: (a, b) => collator.compare(a.ref, b.ref),
+    customer: (a, b) => collator.compare(a.customerName || '', b.customerName || ''),
+    locker: (a, b) => collator.compare(a.lockerCode || '', b.lockerCode || ''),
+    start: (a, b) => String(a.startAt).localeCompare(String(b.startAt)),
+    amount: (a, b) => a.amount - b.amount,
+    status: (a, b) => (STATUS_RANK[a.status] ?? 9) - (STATUS_RANK[b.status] ?? 9),
+  };
+  // status -> [next status, button label, icon, button class]
+  const ACTIONS = {
+    pending: [['confirmed', 'อนุมัติ', 'check-lg', 'btn-success'], ['cancelled', 'ยกเลิก', 'x-lg', 'btn-outline-danger']],
+    confirmed: [['active', 'เช็กอิน', 'box-arrow-in-right', 'btn-primary'], ['completed', 'เสร็จสิ้น', 'check2-all', 'btn-success'], ['cancelled', 'ยกเลิก', 'x-lg', 'btn-outline-danger']],
+    active: [['completed', 'เสร็จสิ้น', 'check2-all', 'btn-success'], ['cancelled', 'ยกเลิก', 'x-lg', 'btn-outline-danger']],
+  };
+  const DONE_MSG = { confirmed: 'อนุมัติการจองเรียบร้อยแล้ว', active: 'เช็กอินเรียบร้อยแล้ว', completed: 'ปิดงานการจองเรียบร้อยแล้ว', cancelled: 'ยกเลิกการจองเรียบร้อยแล้ว' };
+
+  const el = {
+    q: $('#fQuery'), status: $('#fStatus'), from: $('#fFrom'), to: $('#fTo'), rangeMsg: $('#rangeMsg'),
+    count: $('#resultCount'), wrap: $('#tableWrap'),
+    canvasEl: $('#detailCanvas'), dTitle: $('#detailTitle'), dBody: $('#detailBody'), dActions: $('#detailActions'),
+    createEl: $('#createModal'), form: $('#createForm'), err: $('#createError'),
+    cust: $('#bCustomer'), walkin: $('#walkinBox'), loc: $('#bLocation'), date: $('#bDate'), time: $('#bTime'),
+    dur: $('#bDuration'), qty: $('#bQty'), hint: $('#durHint'), locker: $('#bLocker'), lockerHint: $('#lockerHint'),
+    promo: $('#bPromo'), promoMsg: $('#promoMsg'), promoErr: $('#promoErr'), pay: $('#bPay'), price: $('#pricePanel'), submit: $('#createSubmit'),
+  };
+  const canvas = new bootstrap.Offcanvas(el.canvasEl);
+  const createModal = new bootstrap.Modal(el.createEl);
+
+  const state = { rows: [], sort: { key: 'start', dir: 'desc' }, page: 1, token: 0, current: null };
+
+  const hideEl = (domEl, Cls, evt) => new Promise((resolve) => {
+    const inst = Cls.getInstance(domEl);
+    if (!inst || !(domEl.classList.contains('show') || domEl.classList.contains('showing'))) return resolve();
+    domEl.addEventListener(evt, () => resolve(), { once: true });
+    inst.hide();
+  });
+  const hideCanvas = () => hideEl(el.canvasEl, bootstrap.Offcanvas, 'hidden.bs.offcanvas');
+  const hideCreate = () => hideEl(el.createEl, bootstrap.Modal, 'hidden.bs.modal');
+
+  // ================= list =================
+  function currentFilters() {
+    const f = {}, q = el.q.value.trim();
+    if (q) f.q = q;
+    if (el.status.value) f.status = el.status.value;
+    if (el.from.value) f.from = el.from.value;
+    if (el.to.value) f.to = el.to.value;
+    return f;
+  }
+
+  async function load({ silent = false, keepPage = false } = {}) {
+    const f = currentFilters(), mine = ++state.token;
+    const badRange = !!(f.from && f.to && f.from > f.to);
+    el.rangeMsg.classList.toggle('d-none', !badRange);
+    if (badRange) return;
+    if (!silent) { el.wrap.innerHTML = LG.skeleton(6); el.count.textContent = 'กำลังโหลด...'; }
+    try {
+      const rows = await DS.getBookings(f);
+      if (mine !== state.token) return;
+      state.rows = rows;
+      if (!keepPage) state.page = 1;
+      render();
+    } catch (e) {
+      if (mine !== state.token) return;
+      el.count.textContent = '';
+      el.wrap.innerHTML = LG.errorBox(e);
+    }
+  }
+
+  const sortedRows = () => {
+    const { key, dir } = state.sort, cmp = SORTERS[key];
+    return [...state.rows].sort((a, b) => (dir === 'asc' ? 1 : -1) * cmp(a, b));
+  };
+
+  function render() {
+    const rows = sortedRows();
+    if (!rows.length) { el.count.textContent = 'ไม่พบรายการ'; el.wrap.innerHTML = LG.empty('ไม่พบการจองตามเงื่อนไขที่เลือก', 'calendar-x'); return; }
+    const pg = LG.paginate(rows, state.page, PER_PAGE);
+    state.page = pg.page;
+    const first = (pg.page - 1) * PER_PAGE + 1;
+    el.count.textContent = `พบ ${rows.length.toLocaleString('th-TH')} รายการ (แสดงรายการที่ ${first}-${first + pg.rows.length - 1})`;
+    const head = COLUMNS.map(([key, label, cls]) => {
+      const on = state.sort.key === key, asc = state.sort.dir === 'asc';
+      const icon = on ? (asc ? 'caret-up-fill' : 'caret-down-fill') : 'arrow-down-up';
+      return `<th scope="col" class="sortable ${cls}" aria-sort="${on ? (asc ? 'ascending' : 'descending') : 'none'}"><button type="button" class="border-0 bg-transparent p-0 text-reset fw-semibold text-nowrap" data-sort="${key}">${label} <i class="bi bi-${icon}${on ? '' : ' opacity-50'}" aria-hidden="true"></i></button></th>`;
+    }).join('');
+    el.wrap.innerHTML = `<div class="card card-soft table-card"><div class="table-responsive"><table class="table table-hover align-middle">
+      <caption class="visually-hidden">รายการการจอง คลิกที่หัวคอลัมน์เพื่อเรียงลำดับ</caption>
+      <thead><tr>${head}<th scope="col" class="text-end"><span class="visually-hidden">การดำเนินการ</span></th></tr></thead>
+      <tbody>${pg.rows.map((b) => `<tr class="cursor-pointer" data-id="${b.id}">
+        <td class="fw-semibold text-nowrap">${esc(b.ref)}</td>
+        <td><div>${esc(b.customerName)}</div><div class="small text-body-secondary">${esc(b.customerEmail)}</div></td>
+        <td class="text-nowrap">${esc(b.lockerCode || '-')}<div class="small text-body-secondary">${esc(b.locationName || '')}</div></td>
+        <td class="text-nowrap">${fmt.datetime(b.startAt)}<div class="small text-body-secondary">${esc(fmt.duration(b.durationType, b.quantity))}</div></td>
+        <td class="text-end text-nowrap">${fmt.baht(b.amount)}</td>
+        <td>${LG.badge('booking', b.status)}</td>
+        <td class="text-end"><button type="button" class="btn btn-sm btn-outline-primary" data-view aria-label="ดูรายละเอียดการจอง ${esc(b.ref)}"><i class="bi bi-eye me-1" aria-hidden="true"></i>ดู</button></td>
+      </tr>`).join('')}</tbody></table></div></div><div class="mt-3" id="pager"></div>`;
+    LG.pager($('#pager', el.wrap), { total: rows.length, page: pg.page, per: PER_PAGE }, (p) => { state.page = p; render(); });
+  }
+
+  el.wrap.addEventListener('click', (ev) => {
+    const s = ev.target.closest('[data-sort]');
+    if (s) {
+      const key = s.dataset.sort;
+      state.sort = state.sort.key === key ? { key, dir: state.sort.dir === 'asc' ? 'desc' : 'asc' } : { key, dir: 'asc' };
+      state.page = 1;
+      render();
+      const again = $(`[data-sort="${key}"]`, el.wrap); if (again) again.focus();
+      return;
+    }
+    const tr = ev.target.closest('tr[data-id]');
+    if (tr) showDetail(+tr.dataset.id);
+  });
+
+  // ---- filters ----
+  let timer;
+  el.q.addEventListener('input', () => { clearTimeout(timer); timer = setTimeout(() => load(), 300); });
+  [el.status, el.from, el.to].forEach((c) => c.addEventListener('change', () => load()));
+  $('#filters').addEventListener('submit', (ev) => { ev.preventDefault(); load(); });
+  $('#fReset').addEventListener('click', () => { el.q.value = ''; el.status.value = ''; el.from.value = ''; el.to.value = ''; load(); });
+
+  // ================= detail offcanvas =================
+  async function showDetail(id) {
+    el.dTitle.textContent = 'รายละเอียดการจอง';
+    el.dBody.innerHTML = LG.skeleton(8);
+    el.dActions.innerHTML = '';
+    canvas.show();
+    try {
+      const b = await DS.getBooking(id);
+      state.current = b;
+      renderDetail(b);
+    } catch (e) { state.current = null; el.dBody.innerHTML = LG.errorBox(e); }
+  }
+
+  function renderDetail(b) {
+    const row = (k, v) => `<dt class="col-5 text-body-secondary fw-normal">${k}</dt><dd class="col-7">${v}</dd>`;
+    const section = (title, icon, inner) => `<section class="mb-4"><h3 class="h6 mb-2"><i class="bi bi-${icon} text-brand me-1" aria-hidden="true"></i>${title}</h3><dl class="row mb-0">${inner}</dl></section>`;
+    const gross = (b.amount || 0) + (b.discount || 0);
+    el.dTitle.textContent = `การจอง ${b.ref}`;
+    el.dBody.innerHTML = `<div class="d-flex flex-wrap align-items-center gap-2 mb-4">${LG.badge('booking', b.status)}${b.paymentStatus ? LG.badge('payment', b.paymentStatus) : ''}</div>`
+      + section('ผู้จอง', 'person', row('ชื่อ', esc(b.customerName)) + row('อีเมล', `<a href="mailto:${esc(b.customerEmail)}" class="text-break">${esc(b.customerEmail)}</a>`) + row('โทรศัพท์', b.customerPhone ? `<a href="tel:${esc(b.customerPhone)}">${esc(b.customerPhone)}</a>` : '-'))
+      + section('ล็อกเกอร์', 'lock', row('รหัส', `<strong>${esc(b.lockerCode || '-')}</strong>`) + row('สาขา', esc(b.locationName || '-')) + row('ขนาด', b.size ? `${esc(b.size)} (${esc((LG.SIZES[b.size] || {}).label || '')})` : '-'))
+      + section('ช่วงเวลา', 'clock', row('เริ่ม', fmt.datetime(b.startAt)) + row('สิ้นสุด', fmt.datetime(b.endAt)) + row('ระยะเวลา', esc(fmt.duration(b.durationType, b.quantity))))
+      + section('การชำระเงิน', 'credit-card', row('ราคาก่อนส่วนลด', fmt.baht(gross)) + row('ส่วนลด', b.discount ? `-${fmt.baht(b.discount)}` : '-') + row('โปรโมชัน', b.promoCode ? `<span class="badge text-bg-secondary">${esc(b.promoCode)}</span>` : '-')
+        + row('ยอดชำระ', `<strong>${fmt.baht(b.amount)}</strong>`) + row('สถานะชำระ', b.paymentStatus ? LG.badge('payment', b.paymentStatus) : '-') + row('วิธีชำระ', esc(LG.PAY_METHODS[b.paymentMethod] || '-')))
+      + `<section class="mb-4"><h3 class="h6 mb-2"><i class="bi bi-key text-brand me-1" aria-hidden="true"></i>รหัส PIN เปิดล็อกเกอร์</h3><div class="pin-box text-center bg-body-tertiary rounded py-2">${esc(b.pin || '-')}</div></section>`
+      + `<p class="small text-body-secondary mb-0">สร้างเมื่อ ${fmt.datetime(b.createdAt)}</p>`;
+    const acts = ACTIONS[b.status] || [];
+    el.dActions.innerHTML = acts.length
+      ? acts.map(([status, label, icon, cls]) => `<button type="button" class="btn ${cls}" data-status="${status}"><i class="bi bi-${icon} me-1" aria-hidden="true"></i>${label}</button>`).join('')
+      : '<p class="small text-body-secondary mb-0"><i class="bi bi-info-circle me-1" aria-hidden="true"></i>การจองนี้สิ้นสุดแล้ว ไม่สามารถเปลี่ยนสถานะได้</p>';
+  }
+
+  el.dActions.addEventListener('click', (ev) => {
+    const btn = ev.target.closest('[data-status]');
+    if (btn && state.current) changeStatus(state.current, btn.dataset.status, btn);
+  });
+
+  async function changeStatus(b, status, btn) {
+    let reopen = false;
+    if (status === 'cancelled') {
+      // the confirm dialog is a modal: close the offcanvas first so the two focus traps do not fight
+      await hideCanvas();
+      const paid = b.paymentStatus === 'paid';
+      const ok = await LG.confirm({ title: 'ยกเลิกการจอง', message: `ต้องการยกเลิกการจอง ${b.ref} ของ ${b.customerName} ใช่หรือไม่?${paid ? ' รายการชำระเงินจะถูกเปลี่ยนเป็นคืนเงินแล้ว' : ''}`, okText: 'ยกเลิกการจอง', danger: true });
+      reopen = true;
+      if (!ok) { showDetail(b.id); return; }
+    }
+    await LG.busy(btn, async () => {
+      try {
+        await DS.updateBookingStatus(b.id, status);
+        LG.toast(DONE_MSG[status] || 'อัปเดตสถานะเรียบร้อยแล้ว');
+      } catch (e) { LG.toastError(e); }
+    });
+    load({ silent: true, keepPage: true });
+    if (reopen) showDetail(b.id);
+    else {
+      try { state.current = await DS.getBooking(b.id); renderDetail(state.current); } catch (e) { el.dBody.innerHTML = LG.errorBox(e); }
+    }
+  }
+
+  // ================= CSV export =================
+  function exportCsv() {
+    const rows = sortedRows();
+    if (!rows.length) { LG.toast('ไม่มีรายการให้ส่งออก', 'warning'); return; }
+    const label = (kind, s) => (s && LG.STATUS[kind][s] ? LG.STATUS[kind][s][0] : (s || ''));
+    // neutralise spreadsheet formula injection: prefix risky text cells with a single quote
+    const safe = (v) => (typeof v === 'string' && /^[=+\-@\t\r]/.test(v) ? `'${v}` : v);
+    // phone numbers: force text so Excel keeps the leading zero
+    const phone = (v) => (v ? `'${v}` : '');
+    LG.csv(`bookings-${fmt.isoDate()}.csv`, [
+      ['รหัสการจอง', 'ลูกค้า', 'อีเมล', 'โทรศัพท์', 'ล็อกเกอร์', 'สาขา', 'เริ่มใช้งาน', 'สิ้นสุด', 'ระยะเวลา', 'ยอดชำระ (บาท)', 'ส่วนลด (บาท)', 'โปรโมชัน', 'สถานะการจอง', 'สถานะการชำระเงิน', 'วิธีชำระเงิน', 'สร้างเมื่อ'],
+      ...rows.map((b) => [b.ref, b.customerName, b.customerEmail, phone(b.customerPhone), b.lockerCode, b.locationName, fmt.datetime(b.startAt), fmt.datetime(b.endAt), fmt.duration(b.durationType, b.quantity), b.amount, b.discount || 0, b.promoCode || '', label('booking', b.status), label('payment', b.paymentStatus), LG.PAY_METHODS[b.paymentMethod] || '', fmt.datetime(b.createdAt)].map((v, i) => (i === 3 ? v : safe(v)))),
+    ]);
+    LG.toast(`ส่งออกข้อมูล ${rows.length.toLocaleString('th-TH')} รายการเรียบร้อยแล้ว`);
+  }
+
+  // ================= create booking modal =================
+  const ref = { promise: null, locations: [], customers: [], pricing: { prices: [] }, settings: {} };
+  const bk = { promo: null, lockers: [], lockerToken: 0, promoToken: 0 };
+
+  function loadRef() {
+    if (!ref.promise) {
+      ref.promise = Promise.all([DS.getLocations(), DS.getCustomers(), DS.getPricing(), DS.getSettings().catch(() => ({}))])
+        .then(([locations, customers, pricing, settings]) => { Object.assign(ref, { locations, customers, pricing, settings: settings || {} }); })
+        .catch((e) => { ref.promise = null; throw e; });
+    }
+    return ref.promise;
+  }
+
+  const showCreateError = (msg) => { el.err.textContent = msg; el.err.classList.remove('d-none'); el.err.scrollIntoView({ block: 'nearest' }); };
+
+  function toggleWalkin() {
+    const on = el.cust.value === 'walkin';
+    el.walkin.classList.toggle('d-none', !on);
+    el.walkin.querySelectorAll('input').forEach((i) => { i.disabled = !on; });
+  }
+
+  /** start/end of the requested window, or null when the inputs are incomplete */
+  function timeWindow() {
+    const qty = +el.qty.value;
+    if (!el.date.value || !el.time.value || !Number.isInteger(qty) || qty < 1) return null;
+    const s = new Date(`${el.date.value}T${el.time.value}:00`);
+    if (isNaN(s)) return null;
+    const hours = qty * HOURS[el.dur.value];
+    return { start: toSql(s), end: toSql(new Date(s.getTime() + hours * 3600000)), hours, qty };
+  }
+
+  async function loadLockers() {
+    const my = ++bk.lockerToken, w = timeWindow(), loc = el.loc.value, keep = el.locker.value;
+    if (!loc || !w) {
+      bk.lockers = [];
+      el.locker.innerHTML = '<option value="">เลือกสาขา วันที่ และเวลาก่อน</option>';
+      el.lockerHint.textContent = '';
+      el.locker.disabled = false;
+      updatePrice();
+      return;
+    }
+    el.locker.disabled = true;
+    el.locker.innerHTML = '<option value="">กำลังโหลดล็อกเกอร์...</option>';
+    try {
+      const list = await DS.getLockers({ locationId: loc, status: 'available', start: w.start, end: w.end });
+      if (my !== bk.lockerToken) return;
+      bk.lockers = list.sort((a, b) => collator.compare(a.code, b.code));
+      el.locker.innerHTML = bk.lockers.length
+        ? '<option value="">เลือกล็อกเกอร์...</option>' + bk.lockers.map((l) => `<option value="${l.id}">${esc(l.code)} · ขนาด ${esc(l.size)} (${esc(LG.SIZES[l.size].label)})${l.zone ? ' · โซน ' + esc(l.zone) : ''}</option>`).join('')
+        : '<option value="">ไม่มีล็อกเกอร์ว่างในช่วงเวลานี้</option>';
+      if (bk.lockers.some((l) => String(l.id) === keep)) el.locker.value = keep;
+      el.lockerHint.textContent = bk.lockers.length ? `ว่าง ${bk.lockers.length} ช่อง (${fmt.datetime(w.start)} - ${fmt.datetime(w.end)})` : 'ลองเปลี่ยนสาขา วันที่ หรือเวลา';
+    } catch (e) {
+      if (my !== bk.lockerToken) return;
+      bk.lockers = [];
+      el.locker.innerHTML = '<option value="">โหลดล็อกเกอร์ไม่สำเร็จ</option>';
+      el.lockerHint.textContent = (e && e.message) || '';
+    } finally {
+      if (my === bk.lockerToken) { el.locker.disabled = false; updatePrice(); }
+    }
+  }
+
+  function updatePrice() {
+    const l = bk.lockers.find((x) => String(x.id) === el.locker.value), qty = +el.qty.value, type = el.dur.value;
+    const row = l && (ref.pricing.prices || []).find((p) => p.size === l.size);
+    if (!l || !row || !(qty >= 1)) { el.price.innerHTML = '<span class="text-body-secondary"><i class="bi bi-calculator me-1" aria-hidden="true"></i>เลือกล็อกเกอร์และระยะเวลาเพื่อดูราคาโดยประมาณ</span>'; return; }
+    const unit = row[type], q = quote(unit, qty, bk.promo);
+    const line = (k, v, cls = '') => `<div class="d-flex justify-content-between ${cls}"><span>${k}</span><span>${v}</span></div>`;
+    el.price.innerHTML = line(`ล็อกเกอร์ ${esc(l.code)} ขนาด ${esc(l.size)} · ${fmt.baht(unit)} / ${LG.DURATION[type]} × ${qty}`, fmt.baht(q.gross))
+      + (q.discount ? line(`ส่วนลด (${esc(bk.promo.code)})`, `-${fmt.baht(q.discount)}`, 'text-success') : '')
+      + `<hr class="my-2">` + line('ยอดชำระสุทธิ', fmt.baht(q.total), 'fw-bold fs-5');
+  }
+
+  async function checkPromo() {
+    const my = ++bk.promoToken, code = el.promo.value.trim().toUpperCase();
+    bk.promo = null;
+    el.promo.setCustomValidity('');
+    el.promoErr.textContent = '';
+    if (!code) { el.promoMsg.textContent = ''; el.promoMsg.className = 'form-text'; updatePrice(); return true; }
+    try {
+      const p = await DS.checkPromo(code);
+      if (my !== bk.promoToken) return false;
+      bk.promo = p;
+      el.promoMsg.className = 'form-text text-success';
+      el.promoMsg.textContent = `ใช้โค้ดได้ ส่วนลด ${p.type === 'percent' ? p.value + '%' : fmt.baht(p.value)}`;
+      updatePrice();
+      return true;
+    } catch (e) {
+      if (my !== bk.promoToken) return false;
+      const msg = (e && e.message) || 'รหัสโปรโมชันไม่ถูกต้อง';
+      el.promoMsg.textContent = '';
+      el.promoErr.textContent = msg;
+      el.promo.setCustomValidity(msg);
+      el.promo.classList.add('is-invalid');
+      updatePrice();
+      return false;
+    }
+  }
+
+  let lockerTimer, promoTimer;
+  const reloadSoon = () => { clearTimeout(lockerTimer); lockerTimer = setTimeout(loadLockers, 250); };
+  [el.loc, el.date, el.time, el.dur].forEach((c) => c.addEventListener('change', () => { updateHint(); loadLockers(); }));
+  el.qty.addEventListener('input', reloadSoon);
+  el.locker.addEventListener('change', updatePrice);
+  el.cust.addEventListener('change', toggleWalkin);
+  el.promo.addEventListener('input', () => { el.promo.classList.remove('is-invalid'); clearTimeout(promoTimer); promoTimer = setTimeout(checkPromo, 400); });
+
+  function updateHint() {
+    const s = ref.settings || {};
+    el.hint.textContent = (s.minDuration && s.maxDuration) ? `ระยะเวลาที่อนุญาต ${s.minDuration} - ${s.maxDuration} ชั่วโมง (1 วัน = 24 ชม.)` : '';
+  }
+
+  async function openCreate() {
+    el.form.reset();
+    el.form.classList.remove('was-validated');
+    el.err.classList.add('d-none');
+    el.promo.setCustomValidity('');
+    el.promo.classList.remove('is-invalid');
+    el.promoMsg.textContent = ''; el.promoMsg.className = 'form-text';
+    bk.promo = null; bk.lockers = [];
+    el.locker.innerHTML = '<option value="">เลือกสาขา วันที่ และเวลาก่อน</option>';
+    el.lockerHint.textContent = '';
+    toggleWalkin();
+    updatePrice();
+    el.submit.disabled = true;
+    createModal.show();
+    try {
+      await loadRef();
+    } catch (e) { showCreateError((e && e.message) || 'โหลดข้อมูลไม่สำเร็จ'); return; }
+    const customers = [...ref.customers].sort((a, b) => collator.compare(a.name, b.name));
+    el.cust.innerHTML = '<option value="">เลือกลูกค้า...</option><option value="walkin">ลูกค้า walk-in (ไม่มีบัญชี)</option>'
+      + customers.map((c) => `<option value="${c.id}">${esc(c.name)} (${esc(c.email)})${c.status === 'suspended' ? ' - ถูกระงับ' : ''}</option>`).join('');
+    el.loc.innerHTML = '<option value="">เลือกสาขา...</option>' + ref.locations.map((x) => `<option value="${x.id}">${esc(x.name)}</option>`).join('');
+    el.dur.innerHTML = Object.entries(LG.DURATION).map(([k, v]) => `<option value="${k}">${esc(v)}</option>`).join('');
+    el.pay.innerHTML = Object.entries(LG.PAY_METHODS).map(([k, v]) => `<option value="${k}">${esc(v)}</option>`).join('');
+    el.pay.value = 'cash';
+    if (ref.locations.length) el.loc.value = String(ref.locations[0].id);
+    const now = new Date(); now.setMinutes(0, 0, 0); now.setHours(now.getHours() + 1);
+    el.date.min = fmt.isoDate(new Date());
+    el.date.value = fmt.isoDate(now);
+    el.time.value = `${p2(now.getHours())}:00`;
+    el.qty.value = 1;
+    updateHint();
+    el.submit.disabled = false;
+    loadLockers();
+  }
+
+  el.form.addEventListener('submit', async (ev) => {
+    ev.preventDefault();
+    el.err.classList.add('d-none');
+    await LG.busy(el.submit, async () => {
+      await checkPromo();
+      if (!LG.validate(el.form)) {
+        const bad = el.form.querySelector(':invalid');
+        if (bad) { bad.scrollIntoView({ block: 'center' }); bad.focus(); }
+        return;
+      }
+      const w = timeWindow(), s = ref.settings || {};
+      if (!w) return;
+      if ((s.minDuration && w.hours < s.minDuration) || (s.maxDuration && w.hours > s.maxDuration)) { showCreateError(`ระยะเวลาต้องอยู่ระหว่าง ${s.minDuration} - ${s.maxDuration} ชั่วโมง`); return; }
+      const data = { lockerId: +el.locker.value, startAt: w.start, durationType: el.dur.value, quantity: w.qty, promoCode: el.promo.value.trim().toUpperCase(), paymentMethod: el.pay.value };
+      if (el.cust.value === 'walkin') Object.assign(data, { customerName: $('#bName').value.trim(), customerEmail: $('#bEmail').value.trim(), customerPhone: $('#bPhone').value.trim() });
+      else {
+        const c = ref.customers.find((x) => String(x.id) === el.cust.value);
+        Object.assign(data, { userId: +el.cust.value, customerName: c.name, customerEmail: c.email, customerPhone: c.phone });
+      }
+      try {
+        const b = await DS.createBooking(data);
+        LG.toast(`สร้างการจอง ${b.ref} เรียบร้อยแล้ว`);
+        await hideCreate();
+        load({ silent: true });
+        showDetail(b.id);
+      } catch (e) {
+        showCreateError((e && e.message) || 'เกิดข้อผิดพลาด');
+        loadLockers();
+      }
+    });
+  });
+
+  // ================= init =================
+  $('#page-actions').innerHTML = '<button type="button" class="btn btn-outline-secondary" id="btnExport"><i class="bi bi-download me-1" aria-hidden="true"></i>ส่งออก CSV</button>'
+    + '<button type="button" class="btn btn-primary" id="btnCreate"><i class="bi bi-plus-lg me-1" aria-hidden="true"></i>สร้างการจอง</button>';
+  $('#btnExport').addEventListener('click', exportCsv);
+  $('#btnCreate').addEventListener('click', openCreate);
+
+  el.status.innerHTML = '<option value="">ทุกสถานะ</option>' + Object.entries(LG.STATUS.booking).map(([k, [label]]) => `<option value="${k}">${esc(label)}</option>`).join('');
+  const qs = LG.qs('q'), qStatus = LG.qs('status');
+  if (qs) el.q.value = qs;
+  if (qStatus && LG.STATUS.booking[qStatus]) el.status.value = qStatus;
+
+  await load();
+})();
+</script>
+</body>
+</html>

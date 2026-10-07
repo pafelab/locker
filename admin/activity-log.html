@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>บันทึกกิจกรรม | LockerGo</title>
+<meta name="description" content="ประวัติการทำงานของเจ้าหน้าที่ในระบบหลังบ้าน LockerGo เรียงตามวันและเวลา ค้นหาและกรองตามผู้ดำเนินการหรือวันที่ได้">
+<meta name="robots" content="noindex">
+<link rel="icon" type="image/svg+xml" href="../assets/img/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+<link href="../assets/css/custom.css" rel="stylesheet">
+<link href="../assets/css/admin.css" rel="stylesheet">
+<script src="../assets/js/config.js"></script>
+</head>
+<body data-shell="admin" data-page="activity-log">
+<a class="visually-hidden-focusable" href="#main">ข้ามไปยังเนื้อหา</a>
+<div class="admin-wrap"><aside id="admin-sidebar"></aside>
+  <div class="admin-main"><div id="admin-topbar"></div>
+    <main id="main" class="admin-content" data-title="บันทึกกิจกรรม">
+
+      <section class="card card-soft mb-4" aria-labelledby="filter-title">
+        <div class="card-body">
+          <h2 class="visually-hidden" id="filter-title">ค้นหาและกรองบันทึก</h2>
+          <form id="filter-form" class="row g-3 align-items-end" role="search" novalidate>
+            <div class="col-12 col-lg-5">
+              <label for="f-q" class="form-label">ค้นหา</label>
+              <div class="input-group">
+                <span class="input-group-text" aria-hidden="true"><i class="bi bi-search"></i></span>
+                <input type="search" class="form-control" id="f-q" placeholder="ค้นหาจากผู้ดำเนินการ กิจกรรม หรือรายการ">
+              </div>
+            </div>
+            <div class="col-6 col-lg-3">
+              <label for="f-actor" class="form-label">ผู้ดำเนินการ</label>
+              <select class="form-select" id="f-actor"><option value="">ทั้งหมด</option></select>
+            </div>
+            <div class="col-6 col-lg-2">
+              <label for="f-date" class="form-label">วันที่</label>
+              <input type="date" class="form-control" id="f-date">
+            </div>
+            <div class="col-12 col-lg-2">
+              <button type="reset" class="btn btn-outline-secondary w-100" id="f-reset"><i class="bi bi-x-circle me-1" aria-hidden="true"></i>ล้างตัวกรอง</button>
+            </div>
+          </form>
+        </div>
+      </section>
+
+      <p class="text-body-secondary small mb-3" id="result-note" aria-live="polite"></p>
+
+      <section class="card card-soft" aria-labelledby="timeline-title">
+        <div class="card-body">
+          <h2 class="visually-hidden" id="timeline-title">ไทม์ไลน์กิจกรรม</h2>
+          <div id="log-box"></div>
+          <div class="text-center mt-3" id="more-box"></div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="../assets/js/mock-data.js"></script>
+<script src="../assets/js/mock-service.js"></script>
+<script src="../assets/js/api-client.js"></script>
+<script src="../assets/js/data-service.js"></script>
+<script src="../assets/js/auth.js"></script>
+<script src="../assets/js/main.js"></script>
+<script src="../assets/js/admin.js"></script>
+<script>
+(async () => {
+  const user = await Admin.ready;
+  const $ = (id) => document.getElementById(id);
+  const esc = LG.esc;
+  const PER = 20;
+  let all = [], shown = PER;
+
+  const filtered = () => {
+    const q = $('f-q').value.trim().toLowerCase(), actor = $('f-actor').value, date = $('f-date').value;
+    return all.filter((a) =>
+      (!actor || a.actor === actor) &&
+      (!date || String(a.createdAt).slice(0, 10) === date) &&
+      (!q || [a.actor, a.action, a.target].some((v) => String(v ?? '').toLowerCase().includes(q))));
+  };
+
+  function render() {
+    const list = filtered(), part = list.slice(0, shown);
+    $('result-note').textContent = all.length ? `แสดง ${part.length.toLocaleString('th-TH')} จาก ${list.length.toLocaleString('th-TH')} รายการ` + (list.length !== all.length ? ` (ทั้งหมด ${all.length.toLocaleString('th-TH')})` : '') : '';
+    if (!list.length) {
+      $('log-box').innerHTML = LG.empty(all.length ? 'ไม่พบกิจกรรมที่ตรงกับตัวกรอง' : 'ยังไม่มีบันทึกกิจกรรม', 'clock-history');
+      $('more-box').innerHTML = '';
+      return;
+    }
+    // group by calendar day (list is already newest first)
+    const groups = [];
+    part.forEach((a) => {
+      const day = String(a.createdAt).slice(0, 10);
+      const g = groups[groups.length - 1];
+      if (g && g.day === day) g.items.push(a); else groups.push({ day, items: [a] });
+    });
+    $('log-box').innerHTML = groups.map((g) => `
+      <div class="mb-4">
+        <h3 class="h6 text-body-secondary mb-3"><i class="bi bi-calendar3 me-2" aria-hidden="true"></i><time datetime="${esc(g.day)}">${esc(LG.fmt.date(g.day + 'T00:00:00'))}</time></h3>
+        <ul class="timeline mb-0">${g.items.map((a) => `
+          <li tabindex="-1">
+            <div class="d-flex flex-wrap align-items-baseline gap-2">
+              <span class="fw-semibold">${esc(a.actor)}</span>
+              <span>${esc(a.action)}</span>
+              <span class="badge bg-body-secondary text-body fw-normal border text-break">${esc(a.target)}</span>
+              <time class="ms-auto small text-body-secondary text-nowrap" datetime="${esc(String(a.createdAt).replace(' ', 'T'))}"><i class="bi bi-clock me-1" aria-hidden="true"></i>${esc(LG.fmt.time(a.createdAt))} น.</time>
+            </div>
+          </li>`).join('')}
+        </ul>
+      </div>`).join('');
+    const rest = list.length - part.length;
+    $('more-box').innerHTML = rest > 0
+      ? `<button type="button" class="btn btn-outline-primary" id="btn-more"><i class="bi bi-plus-circle me-1" aria-hidden="true"></i>โหลดเพิ่ม (เหลืออีก ${rest.toLocaleString('th-TH')} รายการ)</button>`
+      : '<span class="small text-body-secondary">แสดงครบทุกรายการแล้ว</span>';
+    const more = $('btn-more');
+    if (more) more.addEventListener('click', () => {
+      shown += PER; render();
+      // the clicked button was replaced: move focus to the first newly added entry
+      const first = $('log-box').querySelectorAll('.timeline li')[shown - PER];
+      if (first) { first.focus({ preventScroll: true }); first.scrollIntoView({ block: 'center', behavior: 'smooth' }); }
+    });
+  }
+
+  async function load() {
+    $('log-box').innerHTML = LG.skeleton(8);
+    $('more-box').innerHTML = ''; $('result-note').textContent = '';
+    try {
+      all = await DS.getActivity(500);
+      // sort newest first regardless of source order
+      all.sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)) || b.id - a.id);
+      const actors = [...new Set(all.map((a) => a.actor))].sort((a, b) => a.localeCompare(b, 'th'));
+      const sel = $('f-actor'), cur = sel.value;
+      sel.innerHTML = '<option value="">ทั้งหมด</option>' + actors.map((n) => `<option value="${esc(n)}">${esc(n)}</option>`).join('');
+      sel.value = actors.includes(cur) ? cur : '';
+      shown = PER; render();
+    } catch (e) {
+      all = [];
+      $('log-box').innerHTML = LG.errorBox(e);
+      LG.toastError(e);
+    }
+  }
+
+  // ---------- events ----------
+  const refilter = () => { shown = PER; render(); };
+  $('f-q').addEventListener('input', refilter);
+  $('f-actor').addEventListener('change', refilter);
+  $('f-date').addEventListener('change', refilter);
+  $('filter-form').addEventListener('submit', (e) => e.preventDefault());
+  $('filter-form').addEventListener('reset', () => setTimeout(refilter));   // after the browser clears the fields
+
+  $('page-actions').innerHTML = '<button type="button" class="btn btn-outline-primary" id="btn-refresh"><i class="bi bi-arrow-clockwise me-1" aria-hidden="true"></i>รีเฟรช</button>';
+  $('btn-refresh').addEventListener('click', (ev) => LG.busy(ev.currentTarget, async () => { await load(); if (all.length) LG.toast('อัปเดตบันทึกกิจกรรมแล้ว'); }));
+
+  await load();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,294 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>รายงาน | LockerGo</title>
+<meta name="description" content="รายงานรายได้ การจอง และอัตราการใช้งานล็อกเกอร์ของ LockerGo ตามช่วงวันที่ที่เลือก พร้อมส่งออก CSV และพิมพ์">
+<meta name="robots" content="noindex">
+<link rel="icon" type="image/svg+xml" href="../assets/img/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+<link href="../assets/css/custom.css" rel="stylesheet">
+<link href="../assets/css/admin.css" rel="stylesheet">
+<script src="../assets/js/config.js"></script>
+</head>
+<body data-shell="admin" data-page="reports">
+<a class="visually-hidden-focusable" href="#main">ข้ามไปยังเนื้อหา</a>
+<div class="admin-wrap"><aside id="admin-sidebar"></aside>
+  <div class="admin-main"><div id="admin-topbar"></div>
+    <main id="main" class="admin-content" data-title="รายงาน">
+
+      <section class="card card-soft mb-4 no-print" aria-labelledby="filter-title">
+        <div class="card-body">
+          <h2 class="h6 mb-3" id="filter-title">เลือกช่วงเวลา</h2>
+          <form id="range-form" novalidate class="row g-3 align-items-end">
+            <div class="col-6 col-md-3 col-xl-2">
+              <label for="from" class="form-label">ตั้งแต่วันที่</label>
+              <input type="date" class="form-control" id="from" name="from" required aria-describedby="from-feedback">
+              <div class="invalid-feedback" id="from-feedback">กรุณาเลือกวันที่เริ่มต้น</div>
+            </div>
+            <div class="col-6 col-md-3 col-xl-2">
+              <label for="to" class="form-label">ถึงวันที่</label>
+              <input type="date" class="form-control" id="to" name="to" required aria-describedby="to-feedback">
+              <div class="invalid-feedback" id="to-feedback">กรุณาเลือกวันที่สิ้นสุด</div>
+            </div>
+            <div class="col-12 col-md-auto">
+              <button type="submit" class="btn btn-primary w-100" id="apply-btn"><i class="bi bi-funnel me-1" aria-hidden="true"></i>แสดงรายงาน</button>
+            </div>
+            <div class="col-12 col-xl">
+              <div class="small text-body-secondary mb-1" id="preset-label">ช่วงเวลาด่วน</div>
+              <div class="btn-group flex-wrap" role="group" aria-labelledby="preset-label" id="presets">
+                <button type="button" class="btn btn-outline-secondary btn-sm" data-preset="7">7 วัน</button>
+                <button type="button" class="btn btn-outline-secondary btn-sm" data-preset="30">30 วัน</button>
+                <button type="button" class="btn btn-outline-secondary btn-sm" data-preset="90">90 วัน</button>
+                <button type="button" class="btn btn-outline-secondary btn-sm" data-preset="month">เดือนนี้</button>
+              </div>
+            </div>
+          </form>
+        </div>
+      </section>
+
+      <p class="text-body-secondary mb-3" id="range-note" aria-live="polite"></p>
+
+      <section aria-label="สรุปตัวเลข" class="mb-4">
+        <div class="row g-3" id="summary-row"></div>
+      </section>
+
+      <section aria-label="กราฟรายงาน" class="mb-4">
+        <div class="row g-3">
+          <div class="col-12 col-xl-6">
+            <div class="card card-soft h-100"><div class="card-body">
+              <h2 class="h6 mb-3">รายได้รายวัน</h2>
+              <div id="chart-revenue"></div>
+            </div></div>
+          </div>
+          <div class="col-12 col-xl-6">
+            <div class="card card-soft h-100"><div class="card-body">
+              <h2 class="h6 mb-3">จำนวนการจองรายวัน</h2>
+              <div id="chart-bookings"></div>
+            </div></div>
+          </div>
+          <div class="col-12">
+            <div class="card card-soft"><div class="card-body">
+              <h2 class="h6 mb-1">อัตราการใช้งานแยกตามสาขา</h2>
+              <p class="small text-body-secondary">คำนวณจากสถานะล็อกเกอร์ ณ ปัจจุบัน (จองแล้ว + ใช้งานอยู่)</p>
+              <div id="chart-occupancy"></div>
+            </div></div>
+          </div>
+        </div>
+      </section>
+
+      <section aria-labelledby="top-title">
+        <div class="card card-soft">
+          <div class="card-header bg-transparent py-3"><h2 class="h6 mb-0" id="top-title">สาขายอดนิยม</h2></div>
+          <div class="card-body p-0 table-card" id="top-box"></div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<script src="../assets/js/mock-data.js"></script>
+<script src="../assets/js/mock-service.js"></script>
+<script src="../assets/js/api-client.js"></script>
+<script src="../assets/js/data-service.js"></script>
+<script src="../assets/js/auth.js"></script>
+<script src="../assets/js/main.js"></script>
+<script src="../assets/js/admin.js"></script>
+<script>
+(async () => {
+  const user = await Admin.ready;
+  const $ = (id) => document.getElementById(id);
+  const esc = LG.esc;
+  const form = $('range-form'), fromEl = $('from'), toEl = $('to');
+
+  // ---------- helpers ----------
+  const css = (name) => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+  const hexA = (hex, a) => {
+    const m = /^#?([\da-f]{2})([\da-f]{2})([\da-f]{2})$/i.exec(hex);
+    return m ? `rgba(${parseInt(m[1], 16)}, ${parseInt(m[2], 16)}, ${parseInt(m[3], 16)}, ${a})` : hex;
+  };
+  const shortDate = (iso) => `${iso.slice(8, 10)}/${iso.slice(5, 7)}`;
+  const addDays = (d, n) => { const x = new Date(d.getFullYear(), d.getMonth(), d.getDate()); x.setDate(x.getDate() + n); return x; };
+  const iso = LG.fmt.isoDate;
+  const charts = {};
+  let report = null;
+
+  function applyDefaults() {
+    Chart.defaults.font.family = 'Prompt, system-ui, sans-serif';
+    Chart.defaults.color = css('--bs-secondary-color') || css('--bs-body-color');
+    Chart.defaults.borderColor = css('--bs-border-color');
+    Chart.defaults.maintainAspectRatio = false;
+  }
+  function mount(key, boxId, label, heightClass = '') {
+    if (charts[key]) { charts[key].destroy(); delete charts[key]; }
+    $(boxId).innerHTML = `<div class="chart-box ${heightClass}"><canvas aria-label="${esc(label)}" role="img"></canvas></div>`;
+    return $(boxId).querySelector('canvas');
+  }
+
+  // ---------- date range ----------
+  // Local-time parse of 'YYYY-MM-DD' (new Date('YYYY-MM-DD') would be UTC midnight and can show the previous day).
+  const dayLabel = (d) => LG.fmt.date(String(d).length === 10 ? d + 'T00:00:00' : d);
+
+  function setRange(from, to) { fromEl.value = from; toEl.value = to; checkRange(); }
+  function presetRange(p) {
+    const now = new Date();
+    if (p === 'month') return [iso(new Date(now.getFullYear(), now.getMonth(), 1)), iso(now)];
+    return [iso(addDays(now, -(Number(p) - 1))), iso(now)];
+  }
+  /** from <= to; sets custom validity so Bootstrap shows the Thai message. */
+  function checkRange() {
+    const bad = fromEl.value && toEl.value && fromEl.value > toEl.value;
+    toEl.setCustomValidity(bad ? 'x' : '');
+    $('to-feedback').textContent = bad ? 'วันที่สิ้นสุดต้องไม่ก่อนวันที่เริ่มต้น' : 'กรุณาเลือกวันที่สิ้นสุด';
+    return !bad;
+  }
+  function markPreset() {
+    document.querySelectorAll('[data-preset]').forEach((b) => {
+      const [f, t] = presetRange(b.dataset.preset), on = f === fromEl.value && t === toEl.value;
+      b.classList.toggle('active', on); b.setAttribute('aria-pressed', String(on));
+    });
+  }
+
+  // ---------- renderers ----------
+  function summarySkeleton() {
+    $('summary-row').innerHTML = Array.from({ length: 4 }, () => `<div class="col-6 col-xl-3"><div class="card kpi-card h-100"><div class="card-body">${LG.skeleton(2)}</div></div></div>`).join('');
+  }
+  function renderSummary(r) {
+    const k = r.kpis, avg = k.rangeBookings ? Math.round(k.rangeRevenue / k.rangeBookings) : 0;
+    const cards = [
+      ['รายได้รวมในช่วงเวลา', LG.fmt.baht(k.rangeRevenue), 'cash-coin', 'เฉพาะรายการที่ชำระแล้ว'],
+      ['จำนวนการจอง', k.rangeBookings.toLocaleString('th-TH') + ' รายการ', 'calendar-check', 'นับตามวันเริ่มใช้งาน'],
+      ['อัตราการใช้งาน', k.occupancyRate + '%', 'pie-chart', 'ณ ปัจจุบัน'],
+      ['เฉลี่ยต่อการจอง', LG.fmt.baht(avg), 'receipt', 'รายได้ ÷ จำนวนการจอง'],
+    ];
+    $('summary-row').innerHTML = cards.map(([label, value, icon, sub]) => `
+      <div class="col-6 col-xl-3"><div class="card kpi-card h-100"><div class="card-body d-flex align-items-start gap-3">
+        <span class="icon-circle" aria-hidden="true"><i class="bi bi-${icon}"></i></span>
+        <div><div class="text-body-secondary small">${label}</div><div class="kpi-value">${esc(value)}</div><div class="text-body-secondary small mt-1">${sub}</div></div>
+      </div></div></div>`).join('');
+  }
+
+  function renderTop(rows) {
+    const box = $('top-box');
+    if (!rows.length) { box.innerHTML = LG.empty('ยังไม่มีข้อมูลสาขา', 'geo-alt'); return; }
+    box.innerHTML = `<div class="table-responsive"><table class="table table-hover">
+      <caption class="visually-hidden">สรุปผลการดำเนินงานแยกตามสาขา</caption>
+      <thead><tr><th scope="col">#</th><th scope="col">สาขา</th><th scope="col" class="text-end">การจอง</th><th scope="col" class="text-end">รายได้</th><th scope="col" class="text-end">อัตราการใช้งาน</th></tr></thead>
+      <tbody>${rows.map((l, i) => `<tr>
+        <td>${i + 1}</td><td class="fw-medium">${esc(l.name)}</td>
+        <td class="text-end">${l.bookings.toLocaleString('th-TH')}</td>
+        <td class="text-end text-nowrap">${esc(LG.fmt.baht(l.revenue))}</td>
+        <td class="text-end">${l.occupancy}%</td>
+      </tr>`).join('')}</tbody></table></div>`;
+  }
+
+  function buildCharts() {
+    if (!report) return;
+    applyDefaults();
+    const primary = css('--lg-primary'), accent = css('--lg-accent'), green = css('--st-green');
+    const rev = report.revenueByDay, bk = report.bookingsByDay, top = report.topLocations;
+    const totalRev = rev.reduce((s, d) => s + d.amount, 0), totalBk = bk.reduce((s, d) => s + d.count, 0);
+    const xScale = { grid: { display: false }, ticks: { maxTicksLimit: 12, maxRotation: 0 } };
+
+    if (!rev.length) { ['chart-revenue', 'chart-bookings'].forEach((id) => { $(id).innerHTML = LG.empty('ไม่มีข้อมูลในช่วงเวลานี้', 'graph-up'); }); }
+    else {
+      charts.revenue = new Chart(mount('revenue', 'chart-revenue', `กราฟเส้นรายได้รายวัน รวม ${LG.fmt.baht(totalRev)}`), {
+        type: 'line',
+        data: { labels: rev.map((d) => shortDate(d.date)), datasets: [{ label: 'รายได้', data: rev.map((d) => d.amount), borderColor: primary, backgroundColor: hexA(primary, 0.15), fill: true, tension: 0.3, pointRadius: rev.length > 45 ? 0 : 2, pointHoverRadius: 5 }] },
+        options: {
+          interaction: { mode: 'index', intersect: false },
+          plugins: { legend: { display: false }, tooltip: { callbacks: { title: (i) => dayLabel(rev[i[0].dataIndex].date), label: (c) => ` ${LG.fmt.baht(c.parsed.y)}` } } },
+          scales: { y: { beginAtZero: true, ticks: { callback: (v) => LG.fmt.baht(v) } }, x: xScale },
+        },
+      });
+      charts.bookings = new Chart(mount('bookings', 'chart-bookings', `กราฟแท่งจำนวนการจองรายวัน รวม ${totalBk} รายการ`), {
+        type: 'bar',
+        data: { labels: bk.map((d) => shortDate(d.date)), datasets: [{ label: 'การจอง', data: bk.map((d) => d.count), backgroundColor: hexA(accent, 0.85), borderRadius: 4, maxBarThickness: 28 }] },
+        options: {
+          plugins: { legend: { display: false }, tooltip: { callbacks: { title: (i) => dayLabel(bk[i[0].dataIndex].date), label: (c) => ` ${c.parsed.y} การจอง` } } },
+          scales: { y: { beginAtZero: true, ticks: { precision: 0 } }, x: xScale },
+        },
+      });
+    }
+
+    if (!top.length) { $('chart-occupancy').innerHTML = LG.empty('ยังไม่มีข้อมูลสาขา', 'geo-alt'); return; }
+    charts.occupancy = new Chart(mount('occupancy', 'chart-occupancy', `กราฟแท่งแนวนอนอัตราการใช้งานแยกตามสาขา ${top.length} สาขา`), {
+      type: 'bar',
+      data: { labels: top.map((l) => l.name), datasets: [{ label: 'อัตราการใช้งาน', data: top.map((l) => l.occupancy), backgroundColor: hexA(green, 0.85), borderRadius: 4, maxBarThickness: 26 }] },
+      options: {
+        indexAxis: 'y',
+        plugins: { legend: { display: false }, tooltip: { callbacks: { label: (c) => ` ${c.parsed.x}%` } } },
+        scales: { x: { beginAtZero: true, max: 100, ticks: { callback: (v) => v + '%' } }, y: { grid: { display: false } } },
+      },
+    });
+  }
+
+  // ---------- load ----------
+  async function load() {
+    summarySkeleton();
+    ['chart-revenue', 'chart-bookings', 'chart-occupancy', 'top-box'].forEach((id) => { $(id).innerHTML = LG.skeleton(id === 'top-box' ? 5 : 4); });
+    try {
+      report = await DS.getReport({ from: fromEl.value, to: toEl.value });
+      $('range-note').innerHTML = `<i class="bi bi-calendar-range me-1" aria-hidden="true"></i>รายงานช่วง <strong>${esc(dayLabel(report.from))} - ${esc(dayLabel(report.to))}</strong> (${report.revenueByDay.length} วัน)`;
+      renderSummary(report); buildCharts(); renderTop(report.topLocations || []);
+    } catch (e) {
+      report = null;
+      $('summary-row').innerHTML = `<div class="col-12">${LG.errorBox(e)}</div>`;
+      ['chart-revenue', 'chart-bookings', 'chart-occupancy', 'top-box'].forEach((id) => { $(id).innerHTML = LG.errorBox(e); });
+      LG.toastError(e);
+    }
+  }
+
+  // ---------- export / print ----------
+  $('page-actions').innerHTML = `
+    <button type="button" class="btn btn-outline-secondary" id="btn-csv"><i class="bi bi-filetype-csv me-1" aria-hidden="true"></i>ส่งออก CSV</button>
+    <button type="button" class="btn btn-outline-primary" id="btn-print"><i class="bi bi-printer me-1" aria-hidden="true"></i>พิมพ์รายงาน</button>`;
+
+  $('btn-csv').addEventListener('click', () => {
+    if (!report) { LG.toast('ยังไม่มีข้อมูลรายงานให้ส่งออก', 'warning'); return; }
+    try {
+      const amountBy = new Map(report.revenueByDay.map((d) => [d.date, d.amount]));
+      const rows = [
+        ['รายงาน LockerGo', `${dayLabel(report.from)} - ${dayLabel(report.to)}`],
+        ['รายได้รวม (บาท)', report.kpis.rangeRevenue], ['จำนวนการจองรวม', report.kpis.rangeBookings], [],
+        ['วันที่', 'จำนวนการจอง', 'รายได้ (บาท)'],
+        ...report.bookingsByDay.map((d) => [dayLabel(d.date), d.count, amountBy.get(d.date) || 0]),
+        [],
+        ['สาขา', 'จำนวนการจอง', 'รายได้ (บาท)', 'อัตราการใช้งาน (%)'],
+        ...report.topLocations.map((l) => [l.name, l.bookings, l.revenue, l.occupancy]),
+      ];
+      LG.csv(`lockergo-report-${report.from}_${report.to}.csv`, rows);
+      LG.toast('ส่งออกไฟล์ CSV แล้ว');
+    } catch (e) { LG.toastError(e); }
+  });
+  $('btn-print').addEventListener('click', () => window.print());
+
+  // ---------- events ----------
+  document.querySelectorAll('[data-preset]').forEach((b) => b.addEventListener('click', async () => {
+    setRange(...presetRange(b.dataset.preset));
+    form.classList.remove('was-validated'); markPreset();
+    await LG.busy($('apply-btn'), load);
+  }));
+  [fromEl, toEl].forEach((el) => el.addEventListener('input', () => { checkRange(); markPreset(); }));
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    checkRange();
+    if (!LG.validate(form)) { const bad = form.querySelector(':invalid'); if (bad) bad.focus(); return; }
+    await LG.busy($('apply-btn'), load);
+  });
+  window.addEventListener('lg:theme', () => buildCharts());
+
+  // default: last 30 days
+  setRange(...presetRange('30')); markPreset();
+  await load();
+})();
+</script>
+</body>
+</html>

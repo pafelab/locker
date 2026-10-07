@@ -1,0 +1,309 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>การจองของฉัน | LockerGo</title>
+<meta name="description" content="ดูการจองล็อกเกอร์ทั้งหมดของคุณ ตรวจสอบรหัส PIN ต่อเวลา และยกเลิกการจองได้ในที่เดียว">
+<link rel="icon" type="image/svg+xml" href="assets/img/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+<link href="assets/css/custom.css" rel="stylesheet">
+<script src="assets/js/config.js"></script>
+</head>
+<body data-page="account">
+<a class="visually-hidden-focusable" href="#main">ข้ามไปยังเนื้อหา</a>
+<div id="lg-navbar"></div>
+
+<main id="main" class="container py-4 py-lg-5">
+  <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+    <div>
+      <h1 class="h2 mb-1">การจองของฉัน</h1>
+      <p class="text-body-secondary mb-0" id="greeting">จัดการการจองล็อกเกอร์ทั้งหมดของคุณในที่เดียว</p>
+    </div>
+    <div class="d-flex flex-wrap gap-2">
+      <a class="btn btn-outline-secondary" href="profile.html"><i class="bi bi-person me-1"></i>โปรไฟล์</a>
+      <a class="btn btn-primary" href="lockers.html"><i class="bi bi-plus-lg me-1"></i>จองล็อกเกอร์ใหม่</a>
+    </div>
+  </div>
+
+  <ul class="nav nav-tabs mb-4 flex-nowrap overflow-x-auto overflow-y-hidden" id="booking-tabs" role="tablist">
+    <li class="nav-item" role="presentation">
+      <button class="nav-link active text-nowrap" id="tab-upcoming" data-bs-toggle="tab" data-bs-target="#pane-upcoming" type="button" role="tab" aria-controls="pane-upcoming" aria-selected="true">
+        <i class="bi bi-calendar-event me-1"></i>กำลังจะมาถึง <span class="badge text-bg-secondary ms-1" id="count-upcoming">0</span>
+      </button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link text-nowrap" id="tab-active" data-bs-toggle="tab" data-bs-target="#pane-active" type="button" role="tab" aria-controls="pane-active" aria-selected="false" tabindex="-1">
+        <i class="bi bi-unlock me-1"></i>กำลังใช้งาน <span class="badge text-bg-secondary ms-1" id="count-active">0</span>
+      </button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link text-nowrap" id="tab-past" data-bs-toggle="tab" data-bs-target="#pane-past" type="button" role="tab" aria-controls="pane-past" aria-selected="false" tabindex="-1">
+        <i class="bi bi-clock-history me-1"></i>ที่ผ่านมา <span class="badge text-bg-secondary ms-1" id="count-past">0</span>
+      </button>
+    </li>
+  </ul>
+
+  <div class="tab-content" id="booking-panes">
+    <div class="tab-pane fade show active" id="pane-upcoming" role="tabpanel" aria-labelledby="tab-upcoming" tabindex="0"></div>
+    <div class="tab-pane fade" id="pane-active" role="tabpanel" aria-labelledby="tab-active" tabindex="0"></div>
+    <div class="tab-pane fade" id="pane-past" role="tabpanel" aria-labelledby="tab-past" tabindex="0"></div>
+  </div>
+</main>
+
+<!-- Booking detail modal -->
+<div class="modal fade" id="detail-modal" tabindex="-1" aria-labelledby="detail-title" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title fs-5" id="detail-title">รายละเอียดการจอง</h2>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="ปิด"></button>
+      </div>
+      <div class="modal-body" id="detail-body"></div>
+      <div class="modal-footer">
+        <a class="btn btn-outline-primary" id="detail-link" href="booking-success.html"><i class="bi bi-receipt me-1"></i>ดูใบยืนยันการจอง</a>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ปิด</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Extend modal -->
+<div class="modal fade" id="extend-modal" tabindex="-1" aria-labelledby="extend-title" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <form class="modal-content" id="extend-form" novalidate>
+      <div class="modal-header">
+        <h2 class="modal-title fs-5" id="extend-title">ต่อเวลาการจอง</h2>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="ปิด"></button>
+      </div>
+      <div class="modal-body">
+        <div id="extend-alert" class="alert alert-danger d-none" role="alert"></div>
+        <p class="mb-3" id="extend-summary"></p>
+        <div class="mb-3">
+          <label for="extend-qty" class="form-label">ต้องการต่อเวลาเพิ่ม (<span id="extend-unit">ชั่วโมง</span>)</label>
+          <input type="number" class="form-control" id="extend-qty" name="quantity" min="1" max="72" step="1" value="1" inputmode="numeric" required>
+          <div class="invalid-feedback" id="extend-feedback">กรุณากรอกจำนวนเต็มตั้งแต่ 1 ขึ้นไป</div>
+        </div>
+        <dl class="row mb-0 small bg-body-tertiary rounded p-3 mx-0" aria-live="polite">
+          <dt class="col-7 fw-normal text-body-secondary">ราคาต่อหน่วย</dt><dd class="col-5 text-end mb-1" id="extend-unit-price">-</dd>
+          <dt class="col-7 fw-normal text-body-secondary">เวลาสิ้นสุดใหม่</dt><dd class="col-5 text-end mb-1" id="extend-new-end">-</dd>
+          <dt class="col-7 fw-semibold">ค่าบริการส่วนที่เพิ่ม</dt><dd class="col-5 text-end mb-0 fw-semibold text-brand fs-5" id="extend-total">-</dd>
+        </dl>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">ปิด</button>
+        <button type="submit" class="btn btn-primary" id="extend-btn"><i class="bi bi-clock-history me-1"></i>ยืนยันต่อเวลา</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div id="lg-footer"></div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="assets/js/mock-data.js"></script>
+<script src="assets/js/mock-service.js"></script>
+<script src="assets/js/api-client.js"></script>
+<script src="assets/js/data-service.js"></script>
+<script src="assets/js/auth.js"></script>
+<script src="assets/js/main.js"></script>
+<script>
+(async () => {
+  const user = await Auth.require('customer');
+  const $ = (id) => document.getElementById(id);
+  const HOURS = { hour: 1, day: 24, month: 720 };               // hours per duration unit (same as the API)
+  const MAX_QTY = { hour: 72, day: 30, month: 12 };            // sensible limit for one extension
+  const TABS = {
+    upcoming: { statuses: ['pending', 'confirmed'], empty: 'ยังไม่มีการจองที่กำลังจะมาถึง', icon: 'calendar-event' },
+    active: { statuses: ['active'], empty: 'ไม่มีล็อกเกอร์ที่กำลังใช้งานในขณะนี้', icon: 'unlock' },
+    past: { statuses: ['completed', 'cancelled'], empty: 'ยังไม่มีประวัติการจอง', icon: 'clock-history' },
+  };
+  const EXTENDABLE = ['pending', 'confirmed', 'active'];
+  const CANCELLABLE = ['pending', 'confirmed'];
+
+  let bookings = [];
+  let prices = null;
+  let firstLoad = true;
+  let extending = null;   // booking currently shown in the extend modal
+
+  $('greeting').textContent = `สวัสดี คุณ${user.name} จัดการการจองล็อกเกอร์ทั้งหมดของคุณในที่เดียว`;
+
+  const detailModal = new bootstrap.Modal($('detail-modal'));
+  const extendModal = new bootstrap.Modal($('extend-modal'));
+  const unitPrice = (b) => {
+    const row = prices && prices.prices.find((p) => p.size === b.size);
+    return row ? Number(row[b.durationType]) : 0;
+  };
+
+  // ---------- rendering ----------
+  function cardHtml(b) {
+    const actions = [
+      `<button type="button" class="btn btn-outline-secondary btn-sm" data-act="detail" data-id="${b.id}"><i class="bi bi-eye me-1"></i>ดูรายละเอียด</button>`,
+      EXTENDABLE.includes(b.status) ? `<button type="button" class="btn btn-outline-primary btn-sm" data-act="extend" data-id="${b.id}"><i class="bi bi-clock-history me-1"></i>ต่อเวลา</button>` : '',
+      CANCELLABLE.includes(b.status) ? `<button type="button" class="btn btn-outline-danger btn-sm" data-act="cancel" data-id="${b.id}"><i class="bi bi-x-circle me-1"></i>ยกเลิก</button>` : '',
+    ].join('');
+    return `<article class="card card-soft mb-3" aria-label="การจอง ${LG.esc(b.ref)}"><div class="card-body">
+      <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+        <div><span class="text-body-secondary small me-1">รหัสการจอง</span><span class="fw-semibold font-monospace">${LG.esc(b.ref)}</span></div>
+        ${LG.badge('booking', b.status)}
+      </div>
+      <div class="row g-3 align-items-center">
+        <div class="col-md-7">
+          <h2 class="h6 mb-2"><i class="bi bi-lock-fill text-brand me-2"></i>ล็อกเกอร์ ${LG.esc(b.lockerCode)} <span class="badge bg-body-tertiary text-body-secondary border ms-1">${LG.esc(b.size)}</span></h2>
+          <ul class="list-unstyled small text-body-secondary mb-0">
+            <li class="mb-1"><i class="bi bi-geo-alt me-2"></i>${LG.esc(b.locationName)}</li>
+            <li class="mb-1"><i class="bi bi-calendar-event me-2"></i>${LG.fmt.datetime(b.startAt)} - ${LG.fmt.datetime(b.endAt)}</li>
+            <li><i class="bi bi-hourglass-split me-2"></i>ระยะเวลา ${LG.esc(LG.fmt.duration(b.durationType, b.quantity))}</li>
+          </ul>
+        </div>
+        <div class="col-md-5 text-md-end">
+          <div class="text-body-secondary small">ยอดชำระ</div>
+          <div class="fs-4 fw-bold text-brand mb-2">${LG.fmt.baht(b.amount)}</div>
+          <div class="d-flex flex-wrap gap-2 justify-content-md-end">${actions}</div>
+        </div>
+      </div>
+    </div></article>`;
+  }
+
+  function render() {
+    Object.entries(TABS).forEach(([key, t]) => {
+      const list = bookings.filter((b) => t.statuses.includes(b.status));
+      $(`count-${key}`).textContent = list.length;
+      $(`pane-${key}`).innerHTML = list.length
+        ? list.map(cardHtml).join('')
+        : `${LG.empty(t.empty, t.icon)}<div class="text-center pb-4"><a class="btn btn-primary" href="lockers.html"><i class="bi bi-search me-1"></i>ค้นหาล็อกเกอร์ว่าง</a></div>`;
+    });
+    if (firstLoad) {   // open the most relevant tab once
+      firstLoad = false;
+      const key = ['upcoming', 'active', 'past'].find((k) => bookings.some((b) => TABS[k].statuses.includes(b.status)));
+      if (key && key !== 'upcoming') bootstrap.Tab.getOrCreateInstance($(`tab-${key}`)).show();
+    }
+  }
+
+  async function load() {
+    try { bookings = await DS.getBookings({ mine: 1 }); render(); }
+    catch (e) { Object.keys(TABS).forEach((k) => { $(`pane-${k}`).innerHTML = LG.errorBox(e); }); }
+  }
+
+  // ---------- detail ----------
+  function openDetail(b) {
+    const showPin = EXTENDABLE.includes(b.status) && b.pin;
+    const row = (k, v) => `<dt class="col-5 fw-normal text-body-secondary">${k}</dt><dd class="col-7 mb-2">${v}</dd>`;
+    $('detail-title').textContent = `การจอง ${b.ref}`;
+    $('detail-link').href = `booking-success.html?ref=${encodeURIComponent(b.ref)}`;
+    $('detail-body').innerHTML = `
+      ${showPin ? `<div class="text-center mb-4"><div class="qr-placeholder mx-auto mb-3" role="img" aria-label="คิวอาร์โค้ดสำหรับเปิดล็อกเกอร์"></div>
+        <div class="text-body-secondary small">รหัส PIN สำหรับเปิดล็อกเกอร์</div><div class="pin-box text-brand" aria-label="รหัส PIN ${LG.esc(b.pin)}">${LG.esc(b.pin)}</div></div>`
+        : `<div class="alert alert-secondary small" role="note"><i class="bi bi-info-circle me-1"></i>การจองนี้สิ้นสุดแล้ว รหัส PIN ไม่สามารถใช้งานได้อีก</div>`}
+      <dl class="row mb-0">
+        ${row('สถานะ', LG.badge('booking', b.status))}
+        ${row('ล็อกเกอร์', `${LG.esc(b.lockerCode)} (ขนาด ${LG.esc(b.size)} - ${LG.esc((LG.SIZES[b.size] || {}).label || '')})`)}
+        ${row('สาขา', LG.esc(b.locationName))}
+        ${row('เริ่มต้น', LG.fmt.datetime(b.startAt))}
+        ${row('สิ้นสุด', LG.fmt.datetime(b.endAt))}
+        ${row('ระยะเวลา', LG.esc(LG.fmt.duration(b.durationType, b.quantity)))}
+        ${b.promoCode ? row('โปรโมชัน', `${LG.esc(b.promoCode)} (ลด ${LG.fmt.baht(b.discount)})`) : ''}
+        ${row('ยอดรวม', `<strong>${LG.fmt.baht(b.amount)}</strong>`)}
+        ${row('วิธีชำระเงิน', LG.esc(LG.PAY_METHODS[b.paymentMethod] || '-'))}
+        ${row('สถานะชำระเงิน', b.paymentStatus ? LG.badge('payment', b.paymentStatus) : '-')}
+        ${row('จองเมื่อ', LG.fmt.datetime(b.createdAt))}
+      </dl>`;
+    detailModal.show();
+  }
+
+  // ---------- extend ----------
+  function updatePreview() {
+    const b = extending, input = $('extend-qty'), qty = Number(input.value);
+    const ok = b && Number.isInteger(qty) && qty >= 1 && qty <= MAX_QTY[b.durationType];
+    $('extend-alert').classList.add('d-none');
+    if (!ok) { $('extend-new-end').textContent = '-'; $('extend-total').textContent = '-'; return; }
+    const end = new Date(LG.toDate(b.endAt).getTime() + qty * HOURS[b.durationType] * 3600000);
+    $('extend-new-end').textContent = LG.fmt.datetime(end);
+    $('extend-total').textContent = LG.fmt.baht(quote(unitPrice(b), qty, null).total);
+  }
+
+  async function openExtend(b) {
+    try { prices = prices || await DS.getPricing(); } catch (e) { LG.toastError(e); return; }
+    extending = b;
+    const unit = LG.DURATION[b.durationType] || b.durationType;
+    const input = $('extend-qty');
+    $('extend-form').classList.remove('was-validated');
+    input.max = MAX_QTY[b.durationType]; input.value = 1;
+    $('extend-feedback').textContent = `กรุณากรอกจำนวนเต็มระหว่าง 1 - ${MAX_QTY[b.durationType]}`;
+    $('extend-unit').textContent = unit;
+    $('extend-summary').innerHTML = `ล็อกเกอร์ <strong>${LG.esc(b.lockerCode)}</strong> (${LG.esc(b.locationName)}) สิ้นสุดเวลา <strong>${LG.fmt.datetime(b.endAt)}</strong>`;
+    $('extend-unit-price').textContent = `${LG.fmt.baht(unitPrice(b))} / ${unit}`;
+    updatePreview();
+    extendModal.show();
+  }
+
+  $('extend-qty').addEventListener('input', updatePreview);
+  $('extend-form').addEventListener('submit', async (ev) => {
+    ev.preventDefault();
+    if (!LG.validate(ev.target)) return;
+    const b = extending;
+    await LG.busy($('extend-btn'), async () => {
+      try {
+        const updated = await DS.extendBooking(b.id, Number($('extend-qty').value));
+        extendModal.hide();
+        LG.toast(`ต่อเวลาสำเร็จ สิ้นสุดใหม่ ${LG.fmt.datetime(updated.endAt)}`);
+        await load();
+      } catch (e) {
+        const box = $('extend-alert');
+        box.innerHTML = `<i class="bi bi-exclamation-triangle-fill me-2"></i>${LG.esc(e.message || 'ไม่สามารถต่อเวลาได้')}`;
+        box.classList.remove('d-none');
+        LG.toastError(e);
+      }
+    });
+  });
+
+  // ---------- cancel ----------
+  async function cancelBooking(b) {
+    const paid = b.paymentStatus === 'paid';
+    const ok = await LG.confirm({
+      title: 'ยกเลิกการจอง',
+      message: `ต้องการยกเลิกการจอง ${b.ref} (ล็อกเกอร์ ${b.lockerCode}) ใช่หรือไม่?${paid ? ' ระบบจะดำเนินการคืนเงินให้ตามวิธีชำระเงินเดิม' : ''}`,
+      okText: 'ยืนยันยกเลิกการจอง', danger: true,
+    });
+    if (!ok) return;
+    try {
+      await DS.updateBookingStatus(b.id, 'cancelled');
+      LG.toast(`ยกเลิกการจอง ${b.ref} เรียบร้อยแล้ว`);
+      await load();
+    } catch (e) { LG.toastError(e); }
+  }
+
+  // ---------- events ----------
+  $('booking-panes').addEventListener('click', (ev) => {
+    const btn = ev.target.closest('[data-act]');
+    if (!btn) return;
+    const b = bookings.find((x) => x.id === +btn.dataset.id);
+    if (!b) return;
+    if (btn.dataset.act === 'detail') openDetail(b);
+    else if (btn.dataset.act === 'extend') LG.busy(btn, () => openExtend(b));
+    else if (btn.dataset.act === 'cancel') LG.busy(btn, () => cancelBooking(b));
+  });
+
+  // Arrow-key navigation between tabs (WAI-ARIA tabs pattern)
+  $('booking-tabs').addEventListener('keydown', (ev) => {
+    if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(ev.key)) return;
+    const tabs = [...document.querySelectorAll('#booking-tabs [role="tab"]')];
+    const i = tabs.indexOf(document.activeElement);
+    if (i < 0) return;
+    ev.preventDefault();
+    const n = ev.key === 'Home' ? 0 : ev.key === 'End' ? tabs.length - 1 : (i + (ev.key === 'ArrowRight' ? 1 : -1) + tabs.length) % tabs.length;
+    tabs[n].focus(); bootstrap.Tab.getOrCreateInstance(tabs[n]).show();
+  });
+  document.querySelectorAll('#booking-tabs [role="tab"]').forEach((t) => t.addEventListener('shown.bs.tab', () => {
+    document.querySelectorAll('#booking-tabs [role="tab"]').forEach((x) => { x.tabIndex = x === t ? 0 : -1; });
+  }));
+
+  // ---------- init ----------
+  Object.keys(TABS).forEach((k) => { $(`pane-${k}`).innerHTML = LG.skeleton(4); });
+  await load();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,349 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>พนักงานและสิทธิ์ | LockerGo</title>
+<meta name="description" content="จัดการบัญชีพนักงาน บทบาท และสิทธิ์การเข้าถึงระบบหลังบ้าน LockerGo">
+<link rel="icon" type="image/svg+xml" href="../assets/img/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+<link href="../assets/css/custom.css" rel="stylesheet">
+<link href="../assets/css/admin.css" rel="stylesheet">
+<script src="../assets/js/config.js"></script>
+</head>
+<body data-shell="admin" data-page="staff">
+<a class="visually-hidden-focusable" href="#main">ข้ามไปยังเนื้อหา</a>
+<div class="admin-wrap"><aside id="admin-sidebar"></aside>
+  <div class="admin-main"><div id="admin-topbar"></div>
+    <main id="main" class="admin-content" data-title="พนักงานและสิทธิ์">
+
+      <div id="readonly-alert" class="alert alert-info d-none" role="status">
+        <div class="d-flex gap-2 align-items-start">
+          <i class="bi bi-info-circle-fill mt-1" aria-hidden="true"></i>
+          <div><strong>โหมดดูอย่างเดียว</strong> — การเพิ่ม แก้ไข หรือลบบัญชีพนักงานทำได้เฉพาะ <strong>Super Admin</strong> เท่านั้น หากต้องการเปลี่ยนแปลงข้อมูล กรุณาติดต่อผู้ดูแลระบบ</div>
+        </div>
+      </div>
+
+      <!-- role summary -->
+      <section aria-labelledby="roles-heading" class="mb-4">
+        <h2 id="roles-heading" class="visually-hidden">บทบาทในระบบ</h2>
+        <div class="row g-3" id="role-cards">
+          <div class="col-md-4">
+            <div class="card kpi-card h-100"><div class="card-body d-flex gap-3">
+              <span class="icon-circle"><i class="bi bi-shield-lock-fill"></i></span>
+              <div>
+                <div class="d-flex align-items-center gap-2"><h3 class="h6 mb-0">Super Admin</h3><span class="badge text-bg-secondary rounded-pill" data-count="super_admin" aria-label="จำนวนบัญชี">-</span></div>
+                <p class="small text-body-secondary mb-0 mt-1">เจ้าของระบบ เข้าถึงได้ทุกเมนู จัดการบัญชีพนักงาน กำหนดบทบาท และตั้งค่าระบบทั้งหมด</p>
+              </div>
+            </div></div>
+          </div>
+          <div class="col-md-4">
+            <div class="card kpi-card h-100"><div class="card-body d-flex gap-3">
+              <span class="icon-circle"><i class="bi bi-briefcase-fill"></i></span>
+              <div>
+                <div class="d-flex align-items-center gap-2"><h3 class="h6 mb-0">Manager</h3><span class="badge text-bg-secondary rounded-pill" data-count="manager" aria-label="จำนวนบัญชี">-</span></div>
+                <p class="small text-body-secondary mb-0 mt-1">ผู้จัดการสาขา ดูแลการจอง ล็อกเกอร์ ราคา โปรโมชัน คืนเงิน และดูรายงาน แต่จัดการบัญชีพนักงานไม่ได้</p>
+              </div>
+            </div></div>
+          </div>
+          <div class="col-md-4">
+            <div class="card kpi-card h-100"><div class="card-body d-flex gap-3">
+              <span class="icon-circle"><i class="bi bi-person-workspace"></i></span>
+              <div>
+                <div class="d-flex align-items-center gap-2"><h3 class="h6 mb-0">Staff</h3><span class="badge text-bg-secondary rounded-pill" data-count="staff" aria-label="จำนวนบัญชี">-</span></div>
+                <p class="small text-body-secondary mb-0 mt-1">พนักงานหน้าร้าน ดูแดชบอร์ด รับ-คืนล็อกเกอร์ อัปเดตสถานะการจอง และดูข้อมูลลูกค้าได้อย่างเดียว</p>
+              </div>
+            </div></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- staff table -->
+      <section class="card card-soft table-card mb-4" aria-labelledby="staff-heading">
+        <div class="card-header bg-body border-0 pt-3 d-flex flex-wrap align-items-center gap-2">
+          <h2 id="staff-heading" class="h5 mb-0 me-auto">บัญชีพนักงาน <span class="text-body-secondary fw-normal small" id="staff-total"></span></h2>
+          <div class="d-flex flex-wrap gap-2">
+            <label class="visually-hidden" for="staff-q">ค้นหาพนักงาน</label>
+            <div class="input-group input-group-sm">
+              <span class="input-group-text"><i class="bi bi-search" aria-hidden="true"></i></span>
+              <input type="search" class="form-control" id="staff-q" placeholder="ค้นหาชื่อ / อีเมล / เบอร์โทร">
+            </div>
+            <label class="visually-hidden" for="staff-role">กรองตามบทบาท</label>
+            <select class="form-select form-select-sm w-auto" id="staff-role">
+              <option value="">ทุกบทบาท</option>
+              <option value="super_admin">Super Admin</option>
+              <option value="manager">Manager</option>
+              <option value="staff">Staff</option>
+            </select>
+          </div>
+        </div>
+        <div id="staff-list" class="p-3"></div>
+        <div id="staff-pager" class="pb-3"></div>
+      </section>
+
+      <!-- permissions matrix -->
+      <section class="card card-soft table-card" aria-labelledby="matrix-heading">
+        <div class="card-header bg-body border-0 pt-3">
+          <h2 id="matrix-heading" class="h5 mb-1">ตารางสิทธิ์การใช้งาน</h2>
+          <p class="small text-body-secondary mb-0">สิทธิ์ของแต่ละบทบาทในระบบหลังบ้าน</p>
+        </div>
+        <div class="table-responsive">
+          <table class="table table-hover matrix align-middle">
+            <caption class="visually-hidden">ตารางสิทธิ์การใช้งานของบทบาท Super Admin, Manager และ Staff</caption>
+            <thead>
+              <tr><th scope="col">สิทธิ์</th><th scope="col">Super Admin</th><th scope="col">Manager</th><th scope="col">Staff</th></tr>
+            </thead>
+            <tbody id="matrix-body"></tbody>
+          </table>
+        </div>
+        <div class="card-footer bg-body border-0 small text-body-secondary d-flex flex-wrap gap-3 py-3">
+          <span><i class="bi bi-check-circle-fill text-success me-1" aria-hidden="true"></i>ทำได้เต็มสิทธิ์</span>
+          <span><i class="bi bi-eye-fill text-info me-1" aria-hidden="true"></i>ดูได้อย่างเดียว</span>
+          <span><i class="bi bi-x-circle text-body-secondary me-1" aria-hidden="true"></i>ไม่มีสิทธิ์</span>
+          <span class="w-100"><i class="bi bi-info-circle me-1" aria-hidden="true"></i>ในเทมเพลตนี้ API บังคับสิทธิ์ "จัดการพนักงาน" ให้เฉพาะ Super Admin ส่วนสิทธิ์อื่นเป็นแนวทางสำหรับนำไปปรับใช้ใน api/*.php</span>
+        </div>
+      </section>
+
+    </main>
+  </div></div>
+
+<!-- add / edit modal -->
+<div class="modal fade" id="staff-modal" tabindex="-1" aria-labelledby="staff-modal-title" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+    <form class="modal-content" id="staff-form" novalidate>
+      <div class="modal-header">
+        <h2 class="modal-title fs-5" id="staff-modal-title">เพิ่มพนักงาน</h2>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="ปิด"></button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" name="id">
+        <div class="mb-3">
+          <label class="form-label" for="f-name">ชื่อ-นามสกุล <span class="text-danger" aria-hidden="true">*</span></label>
+          <input class="form-control" id="f-name" name="name" required maxlength="100" autocomplete="name" placeholder="เช่น ปิยะพงษ์ ศรีสุข">
+          <div class="invalid-feedback">กรุณากรอกชื่อ-นามสกุล</div>
+        </div>
+        <div class="mb-3">
+          <label class="form-label" for="f-email">อีเมล <span class="text-danger" aria-hidden="true">*</span></label>
+          <input type="email" class="form-control" id="f-email" name="email" required maxlength="150" autocomplete="email" placeholder="name@lockergo.example">
+          <div class="invalid-feedback">กรุณากรอกอีเมลให้ถูกต้อง</div>
+        </div>
+        <div class="mb-3">
+          <label class="form-label" for="f-phone">เบอร์โทรศัพท์ <span class="text-danger" aria-hidden="true">*</span></label>
+          <input type="tel" class="form-control" id="f-phone" name="phone" required pattern="[0-9\-+ ]{9,15}" autocomplete="tel" placeholder="081-234-5678">
+          <div class="invalid-feedback">กรุณากรอกเบอร์โทรศัพท์ 9-15 หลัก</div>
+        </div>
+        <div class="row g-3 mb-3">
+          <div class="col-sm-6">
+            <label class="form-label" for="f-role">บทบาท</label>
+            <select class="form-select" id="f-role" name="role" required>
+              <option value="staff">Staff</option>
+              <option value="manager">Manager</option>
+              <option value="super_admin">Super Admin</option>
+            </select>
+            <div class="invalid-feedback">กรุณาเลือกบทบาท</div>
+          </div>
+          <div class="col-sm-6">
+            <label class="form-label" for="f-status">สถานะ</label>
+            <select class="form-select" id="f-status" name="status" required>
+              <option value="active">ใช้งานอยู่</option>
+              <option value="suspended">ถูกระงับ</option>
+            </select>
+            <div class="invalid-feedback">กรุณาเลือกสถานะ</div>
+          </div>
+        </div>
+        <div class="mb-1">
+          <label class="form-label" for="f-password">รหัสผ่าน <span class="text-danger" aria-hidden="true" id="pw-star">*</span></label>
+          <div class="input-group has-validation">
+            <input type="password" class="form-control" id="f-password" name="password" minlength="8" autocomplete="new-password" aria-describedby="pw-help">
+            <button class="btn btn-outline-secondary" type="button" id="pw-toggle" aria-label="แสดงรหัสผ่าน" aria-pressed="false"><i class="bi bi-eye"></i></button>
+            <div class="invalid-feedback">รหัสผ่านต้องมีอย่างน้อย 8 ตัวอักษร</div>
+          </div>
+          <div class="form-text" id="pw-help">อย่างน้อย 8 ตัวอักษร</div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">ยกเลิก</button>
+        <button type="submit" class="btn btn-primary" id="staff-save"><i class="bi bi-check-lg me-1"></i>บันทึก</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="../assets/js/mock-data.js"></script>
+<script src="../assets/js/mock-service.js"></script>
+<script src="../assets/js/api-client.js"></script>
+<script src="../assets/js/data-service.js"></script>
+<script src="../assets/js/auth.js"></script>
+<script src="../assets/js/main.js"></script>
+<script src="../assets/js/admin.js"></script>
+<script>
+(async () => {
+  const user = await Admin.ready;
+  const { esc } = LG;
+  const canEdit = user.role === 'super_admin';
+  const PER = 10;
+  const ROLE_STYLE = { super_admin: ['st-red', 'shield-lock-fill'], manager: ['st-blue', 'briefcase-fill'], staff: ['st-gray', 'person-workspace'] };
+
+  const listEl = document.getElementById('staff-list');
+  const pagerEl = document.getElementById('staff-pager');
+  const qEl = document.getElementById('staff-q');
+  const roleEl = document.getElementById('staff-role');
+  const form = document.getElementById('staff-form');
+  const modalEl = document.getElementById('staff-modal');
+  const modal = new bootstrap.Modal(modalEl);
+  const pwInput = document.getElementById('f-password');
+  const fld = (n) => form.elements.namedItem(n);
+  let staff = [], page = 1;
+
+  // ---------- page actions ----------
+  document.getElementById('page-actions').innerHTML =
+    `<button type="button" class="btn btn-primary" id="add-staff" ${canEdit ? '' : 'disabled'}><i class="bi bi-person-plus me-1"></i>เพิ่มพนักงาน</button>`;
+  document.getElementById('add-staff').addEventListener('click', () => openForm(null));
+  if (!canEdit) document.getElementById('readonly-alert').classList.remove('d-none');
+
+  // ---------- permissions matrix ----------
+  // true = full, 'view' = view only, false = none. Columns: super_admin, manager, staff
+  const MATRIX = [
+    ['ดูแดชบอร์ด', true, true, true],
+    ['จัดการการจอง', true, true, true],
+    ['จัดการล็อกเกอร์', true, true, true],
+    ['จัดการลูกค้า', true, true, 'view'],
+    ['จัดการสาขา', true, true, false],
+    ['จัดการราคาและโปรโมชัน', true, true, false],
+    ['คืนเงิน', true, true, false],
+    ['ดูรายงาน', true, true, false],
+    ['จัดการพนักงาน', true, false, false],
+    ['ตั้งค่าระบบ', true, true, false],
+  ];
+  const cell = (v) => v === true
+    ? '<td><i class="bi bi-check-circle-fill text-success fs-5" aria-hidden="true"></i><span class="visually-hidden">มีสิทธิ์</span></td>'
+    : v === 'view'
+      ? '<td><i class="bi bi-eye-fill text-info fs-5" aria-hidden="true"></i><span class="visually-hidden">ดูได้อย่างเดียว</span></td>'
+      : '<td><i class="bi bi-x-circle text-body-secondary fs-5" aria-hidden="true"></i><span class="visually-hidden">ไม่มีสิทธิ์</span></td>';
+  document.getElementById('matrix-body').innerHTML = MATRIX.map(([label, ...vals]) => `<tr><th scope="row" class="fw-normal">${esc(label)}</th>${vals.map(cell).join('')}</tr>`).join('');
+
+  // ---------- list ----------
+  const roleBadge = (role) => {
+    const [c, icon] = ROLE_STYLE[role] || ['st-gray', 'person'];
+    return `<span class="badge status-badge ${c}"><i class="bi bi-${icon} me-1" aria-hidden="true"></i>${esc(LG.ROLES[role] || role)}</span>`;
+  };
+
+  async function load() {
+    listEl.innerHTML = LG.skeleton(4); pagerEl.innerHTML = '';
+    try {
+      staff = await DS.getStaff();
+      document.querySelectorAll('[data-count]').forEach((el) => {
+        const n = staff.filter((s) => s.role === el.dataset.count).length;
+        el.textContent = n; el.setAttribute('aria-label', `${n} บัญชี`);
+      });
+      render();
+    } catch (e) {
+      listEl.innerHTML = LG.errorBox(e);
+    }
+  }
+
+  function filtered() {
+    const needle = qEl.value.trim().toLowerCase(), role = roleEl.value;
+    return staff
+      .filter((s) => (!role || s.role === role) && (!needle || [s.name, s.email, s.phone].some((v) => String(v || '').toLowerCase().includes(needle))))
+      .sort((a, b) => ['super_admin', 'manager', 'staff'].indexOf(a.role) - ['super_admin', 'manager', 'staff'].indexOf(b.role) || a.name.localeCompare(b.name, 'th'));
+  }
+
+  function render() {
+    const items = filtered();
+    document.getElementById('staff-total').textContent = `(${items.length} บัญชี)`;
+    if (!items.length) { listEl.innerHTML = LG.empty(staff.length ? 'ไม่พบพนักงานตามเงื่อนไขที่ค้นหา' : 'ยังไม่มีบัญชีพนักงาน', 'person-badge'); pagerEl.innerHTML = ''; return; }
+    const pg = LG.paginate(items, page, PER); page = pg.page;
+    const dis = canEdit ? '' : 'disabled';
+    listEl.innerHTML = `<div class="table-responsive"><table class="table table-hover">
+      <thead><tr><th scope="col">พนักงาน</th><th scope="col">อีเมล</th><th scope="col">เบอร์โทร</th><th scope="col">บทบาท</th><th scope="col">สถานะ</th><th scope="col">เข้าสู่ระบบล่าสุด</th><th scope="col" class="text-end">จัดการ</th></tr></thead>
+      <tbody>${pg.rows.map((s) => {
+        const self = s.id === user.id;
+        return `<tr>
+          <td><div class="d-flex align-items-center gap-2"><span class="avatar flex-shrink-0" aria-hidden="true">${esc(s.name.charAt(0))}</span><span class="fw-medium text-nowrap">${esc(s.name)}${self ? ' <span class="badge bg-body-secondary text-body border">คุณ</span>' : ''}</span></div></td>
+          <td class="text-nowrap">${esc(s.email)}</td>
+          <td class="text-nowrap">${esc(s.phone || '-')}</td>
+          <td class="text-nowrap">${roleBadge(s.role)}</td>
+          <td>${LG.badge('user', s.status)}</td>
+          <td class="text-nowrap">${s.lastLoginAt ? esc(LG.fmt.datetime(s.lastLoginAt)) : '<span class="text-body-secondary">ยังไม่เคยเข้าสู่ระบบ</span>'}</td>
+          <td class="text-end text-nowrap">
+            <button type="button" class="btn btn-sm btn-outline-secondary" data-edit="${s.id}" ${dis} aria-label="แก้ไข ${esc(s.name)}"><i class="bi bi-pencil-square"></i></button>
+            <button type="button" class="btn btn-sm btn-outline-danger" data-del="${s.id}" ${canEdit && !self ? '' : 'disabled'} aria-label="ลบ ${esc(s.name)}"><i class="bi bi-trash"></i></button>
+          </td></tr>`;
+      }).join('')}</tbody></table></div>`;
+    listEl.querySelectorAll('[data-edit]').forEach((b) => b.addEventListener('click', () => openForm(staff.find((s) => s.id === +b.dataset.edit))));
+    listEl.querySelectorAll('[data-del]').forEach((b) => b.addEventListener('click', () => remove(staff.find((s) => s.id === +b.dataset.del), b)));
+    LG.pager(pagerEl, { total: items.length, page, per: PER }, (p) => { page = p; render(); });
+  }
+
+  qEl.addEventListener('input', () => { page = 1; render(); });
+  roleEl.addEventListener('change', () => { page = 1; render(); });
+
+  // ---------- add / edit ----------
+  function openForm(s) {
+    form.reset(); form.classList.remove('was-validated');
+    const isNew = !s;
+    document.getElementById('staff-modal-title').textContent = isNew ? 'เพิ่มพนักงาน' : `แก้ไขพนักงาน: ${s.name}`;
+    fld('id').value = isNew ? '' : s.id;
+    fld('name').value = isNew ? '' : s.name;
+    fld('email').value = isNew ? '' : s.email;
+    fld('phone').value = isNew ? '' : (s.phone || '');
+    fld('role').value = isNew ? 'staff' : s.role;
+    fld('status').value = isNew ? 'active' : s.status;
+    pwInput.required = isNew;
+    document.getElementById('pw-star').classList.toggle('d-none', !isNew);
+    document.getElementById('pw-help').textContent = isNew ? 'อย่างน้อย 8 ตัวอักษร' : 'เว้นว่างไว้หากไม่ต้องการเปลี่ยนรหัสผ่าน (หากเปลี่ยน ต้องมีอย่างน้อย 8 ตัวอักษร)';
+    setPwVisible(false);
+    modal.show();
+  }
+  modalEl.addEventListener('shown.bs.modal', () => fld('name').focus());
+
+  function setPwVisible(show) {
+    const t = document.getElementById('pw-toggle');
+    pwInput.type = show ? 'text' : 'password';
+    t.setAttribute('aria-pressed', String(show));
+    t.setAttribute('aria-label', show ? 'ซ่อนรหัสผ่าน' : 'แสดงรหัสผ่าน');
+    t.innerHTML = `<i class="bi bi-eye${show ? '-slash' : ''}"></i>`;
+  }
+  document.getElementById('pw-toggle').addEventListener('click', () => setPwVisible(pwInput.type === 'password'));
+
+  form.addEventListener('submit', (ev) => {
+    ev.preventDefault();
+    if (!LG.validate(form)) return;
+    const btn = document.getElementById('staff-save');
+    LG.busy(btn, async () => {
+      const obj = { name: fld('name').value.trim(), email: fld('email').value.trim(), phone: fld('phone').value.trim(), role: fld('role').value, status: fld('status').value };
+      if (fld('id').value) obj.id = +fld('id').value;
+      if (pwInput.value) obj.password = pwInput.value;
+      try {
+        await DS.saveStaff(obj);
+        modal.hide();
+        LG.toast(obj.id ? 'บันทึกข้อมูลพนักงานแล้ว' : 'เพิ่มพนักงานใหม่แล้ว');
+        await load();
+      } catch (e) { LG.toastError(e); }
+    });
+  });
+
+  // ---------- delete ----------
+  async function remove(s, btn) {
+    if (!s) return;
+    const ok = await LG.confirm({ title: 'ลบบัญชีพนักงาน', message: `ต้องการลบบัญชี "${s.name}" (${s.email}) ใช่หรือไม่? พนักงานคนนี้จะไม่สามารถเข้าสู่ระบบหลังบ้านได้อีก`, okText: 'ลบบัญชี', danger: true });
+    if (!ok) return;
+    await LG.busy(btn, async () => {
+      try {
+        await DS.deleteStaff(s.id);
+        LG.toast(`ลบบัญชี ${s.name} แล้ว`);
+        await load();
+      } catch (e) { LG.toastError(e); }
+    });
+  }
+
+  load();
+})();
+</script>
+</body>
+</html>

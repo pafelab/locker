@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 190 40" width="190" height="40" role="img" aria-label="LockerGo">
+  <rect width="40" height="40" rx="10" fill="#6d4aff"/>
+  <rect x="8" y="8" width="10" height="24" rx="2.5" fill="none" stroke="#fff" stroke-width="2.4"/>
+  <rect x="22" y="8" width="10" height="24" rx="2.5" fill="none" stroke="#fff" stroke-width="2.4"/>
+  <circle cx="15" cy="21" r="1.8" fill="#fff"/>
+  <circle cx="25" cy="21" r="1.8" fill="#ff6b57"/>
+  <text x="50" y="28" font-family="Prompt, 'Noto Sans Thai', system-ui, sans-serif" font-size="22" font-weight="700" fill="#1f1b3a">LockerGo</text>
+</svg>

@@ -1,0 +1,245 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>จองสำเร็จ | LockerGo</title>
+<meta name="description" content="สรุปการจองล็อกเกอร์ของคุณ พร้อมหมายเลขการจอง รหัส PIN และ QR Code สำหรับเปิดล็อกเกอร์">
+<link rel="icon" type="image/svg+xml" href="assets/img/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+<link href="assets/css/custom.css" rel="stylesheet">
+<script src="assets/js/config.js"></script>
+</head>
+<body data-page="booking">
+<a class="visually-hidden-focusable" href="#main">ข้ามไปยังเนื้อหา</a>
+<div id="lg-navbar"></div>
+
+<main id="main">
+  <div class="container py-4 py-lg-5">
+    <div class="row justify-content-center">
+      <div class="col-lg-10 col-xl-9">
+        <div class="text-center mb-4">
+          <i id="head-icon" class="bi bi-hourglass-split display-1 text-body-secondary" aria-hidden="true"></i>
+          <h1 id="head-title" class="h2 mt-2">กำลังโหลดข้อมูลการจอง...</h1>
+          <p id="head-sub" class="text-body-secondary mb-0"></p>
+        </div>
+        <div id="content"></div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<div id="lg-footer"></div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="assets/js/mock-data.js"></script>
+<script src="assets/js/mock-service.js"></script>
+<script src="assets/js/api-client.js"></script>
+<script src="assets/js/data-service.js"></script>
+<script src="assets/js/auth.js"></script>
+<script src="assets/js/main.js"></script>
+<script>
+(async () => {
+  await Auth.require('customer');
+  const $ = (id) => document.getElementById(id);
+  const esc = LG.esc, content = $('content');
+  const ref = (LG.qs('ref') || '').trim().toUpperCase();
+
+  function setHead(icon, cls, title, sub) {
+    $('head-icon').className = `bi bi-${icon} display-1 ${cls}`;
+    $('head-title').textContent = title;
+    $('head-sub').textContent = sub || '';
+  }
+  function problem(title, message) {
+    setHead('exclamation-triangle-fill', 'text-warning', title, '');
+    content.innerHTML = `<div class="card card-soft"><div class="card-body text-center p-4 p-md-5">
+      <p class="mb-4">${esc(message)}</p>
+      <div class="d-flex flex-wrap justify-content-center gap-2"><a class="btn btn-primary" href="my-bookings.html"><i class="bi bi-calendar-check me-1"></i>ไปที่การจองของฉัน</a><a class="btn btn-outline-secondary" href="lockers.html"><i class="bi bi-grid-3x3-gap me-1"></i>ค้นหาล็อกเกอร์</a></div></div></div>`;
+  }
+
+  if (!/^[A-Z0-9-]{3,24}$/.test(ref)) { problem('ไม่พบข้อมูลการจอง', 'ไม่ระบุหมายเลขการจอง หรือหมายเลขการจองไม่ถูกต้อง กรุณาตรวจสอบลิงก์อีกครั้ง หรือเปิดดูจากรายการการจองของคุณ'); return; }
+
+  content.innerHTML = LG.skeleton(8);
+  let b, loc = null;
+  try {
+    b = await DS.getBooking(ref);
+  } catch (e) {
+    if (e.status === 404 || e.status === 403) problem('ไม่พบการจองนี้', `ไม่พบการจองหมายเลข ${ref} ในบัญชีของคุณ`);
+    else { setHead('exclamation-triangle-fill', 'text-danger', 'โหลดข้อมูลไม่สำเร็จ', ''); content.innerHTML = LG.errorBox(e) + '<button type="button" class="btn btn-outline-primary" onclick="location.reload()"><i class="bi bi-arrow-clockwise me-1"></i>ลองใหม่</button>'; }
+    return;
+  }
+  try { loc = (await DS.getLocations()).find((x) => x.id === b.locationId) || null; } catch (e) { /* location details are optional */ }
+
+  const sz = LG.SIZES[b.size] || { label: b.size || '' };
+  const method = LG.PAY_METHODS[b.paymentMethod] || '-';
+  const gross = Number(b.amount) + Number(b.discount || 0);
+  const live = !['cancelled', 'completed'].includes(b.status);
+  const row = (label, value) => `<div class="d-flex justify-content-between gap-3 py-2 border-bottom"><dt class="fw-normal text-body-secondary">${label}</dt><dd class="mb-0 text-end fw-semibold">${value}</dd></div>`;
+
+  if (b.status === 'cancelled') setHead('x-circle-fill', 'text-danger', 'การจองนี้ถูกยกเลิกแล้ว', `หมายเลขการจอง ${b.ref}`);
+  else if (b.status === 'completed') setHead('check2-circle', 'text-success', 'การจองนี้เสร็จสิ้นแล้ว', `หมายเลขการจอง ${b.ref}`);
+  else setHead('check-circle-fill', 'text-success', 'จองล็อกเกอร์สำเร็จ', 'ขอบคุณที่ใช้บริการ LockerGo เก็บหมายเลขการจองและรหัส PIN ไว้สำหรับเปิดล็อกเกอร์');
+  document.title = `${b.status === 'cancelled' ? 'การจองถูกยกเลิก' : 'จองสำเร็จ'} ${b.ref} | LockerGo`;
+
+  content.innerHTML = `
+    <div class="card card-soft mb-4">
+      <div class="card-body d-flex flex-wrap justify-content-between align-items-center gap-3">
+        <div>
+          <div class="small text-body-secondary">หมายเลขการจอง</div>
+          <div class="fs-3 fw-bold text-brand" id="ref-text">${esc(b.ref)}</div>
+        </div>
+        <div class="d-flex align-items-center gap-2">${LG.badge('booking', b.status)}
+          <button type="button" class="btn btn-outline-secondary btn-sm no-print" id="copy-ref" aria-label="คัดลอกหมายเลขการจอง"><i class="bi bi-clipboard me-1"></i>คัดลอก</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="row g-4 mb-4">
+      <div class="col-md-7">
+        <section class="card card-soft h-100" aria-labelledby="sec-detail">
+          <div class="card-body">
+            <h2 class="h5 mb-3" id="sec-detail"><i class="bi bi-info-circle me-2 text-brand"></i>รายละเอียดการจอง</h2>
+            <dl class="mb-0">
+              ${row('ล็อกเกอร์', `${esc(b.lockerCode)} · ขนาด ${esc(b.size)} (${esc(sz.label)})`)}
+              ${row('สาขา', esc(b.locationName))}
+              ${loc ? row('ที่อยู่', `<span class="fw-normal small">${esc(loc.address)}</span>`) : ''}
+              ${loc && loc.openHours ? row('เวลาทำการ', esc(loc.openHours)) : ''}
+              ${row('เริ่มใช้งาน', LG.fmt.datetime(b.startAt))}
+              ${row('สิ้นสุด', LG.fmt.datetime(b.endAt))}
+              ${row('ระยะเวลา', LG.fmt.duration(b.durationType, b.quantity))}
+              ${row('ผู้จอง', esc(b.customerName))}
+              ${row('ติดต่อ', `<span class="fw-normal small">${esc(b.customerEmail)}<br>${esc(b.customerPhone)}</span>`)}
+            </dl>
+          </div>
+        </section>
+      </div>
+
+      <div class="col-md-5">
+        ${live ? `
+        <section class="card card-soft h-100" aria-labelledby="sec-access">
+          <div class="card-body text-center">
+            <h2 class="h5 mb-3" id="sec-access"><i class="bi bi-key-fill me-2 text-brand"></i>เปิดล็อกเกอร์</h2>
+            <div class="qr-placeholder mx-auto mb-2" role="img" aria-label="คิวอาร์โค้ดสำหรับเปิดล็อกเกอร์ ${esc(b.lockerCode)} (ตัวอย่าง)"></div>
+            <p class="small text-body-secondary mb-3">QR Code สำหรับเปิดล็อกเกอร์ ${esc(b.lockerCode)}</p>
+            <div class="small text-body-secondary">หรือกรอกรหัส PIN</div>
+            <div class="pin-box my-1" id="pin-text" aria-live="polite">${'&bull;'.repeat(String(b.pin || '------').length)}</div>
+            <button type="button" class="btn btn-outline-primary btn-sm no-print" id="pin-toggle" aria-pressed="false" aria-label="แสดงรหัส PIN"><i class="bi bi-eye me-1"></i><span>แสดง PIN</span></button>
+            <p class="small text-body-secondary mt-3 mb-0"><i class="bi bi-shield-exclamation me-1"></i>อย่าเปิดเผยรหัส PIN ให้ผู้อื่น</p>
+            <p class="small text-body-secondary mt-2 mb-0 d-none d-print-block">เพื่อความปลอดภัย ใบพิมพ์นี้ไม่แสดงรหัส PIN กรุณาดูรหัสในหน้าเว็บหรืออีเมลยืนยัน</p>
+          </div>
+        </section>` : `
+        <section class="card card-soft h-100" aria-labelledby="sec-access">
+          <div class="card-body text-center">
+            <h2 class="h5 mb-3" id="sec-access"><i class="bi bi-lock-fill me-2 text-body-secondary"></i>เปิดล็อกเกอร์</h2>
+            <p class="text-body-secondary mb-0">การจองนี้สิ้นสุดแล้ว รหัส PIN และ QR Code ไม่สามารถใช้งานได้</p>
+          </div>
+        </section>`}
+      </div>
+    </div>
+
+    <section class="card card-soft mb-4" aria-labelledby="sec-pay">
+      <div class="card-body">
+        <h2 class="h5 mb-3" id="sec-pay"><i class="bi bi-credit-card me-2 text-brand"></i>การชำระเงิน</h2>
+        <div class="row g-3">
+          <div class="col-md-6">
+            <dl class="mb-0">
+              ${row('ค่าบริการ', LG.fmt.baht(gross))}
+              ${row(`ส่วนลด${b.promoCode ? ` (${esc(b.promoCode)})` : ''}`, `${b.discount ? '-' : ''}${LG.fmt.baht(b.discount || 0)}`)}
+              <div class="d-flex justify-content-between align-items-baseline py-2"><dt class="fw-semibold">ยอดชำระสุทธิ</dt><dd class="mb-0 fs-4 fw-bold text-brand">${LG.fmt.baht(b.amount)}</dd></div>
+            </dl>
+          </div>
+          <div class="col-md-6">
+            <dl class="mb-0">
+              ${row('วิธีชำระเงิน', esc(method))}
+              ${row('สถานะการชำระ', b.paymentStatus ? LG.badge('payment', b.paymentStatus) : '-')}
+              ${row('วันที่ทำรายการ', LG.fmt.datetime(b.createdAt))}
+            </dl>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    ${live ? `
+    <section class="card card-soft mb-4" aria-labelledby="sec-how">
+      <div class="card-body">
+        <h2 class="h5 mb-3" id="sec-how"><i class="bi bi-list-check me-2 text-brand"></i>วิธีเปิดล็อกเกอร์</h2>
+        <ol class="mb-0 ps-3">
+          <li class="mb-2">เดินทางไปที่ <strong>${esc(b.locationName)}</strong>${loc && loc.openHours ? ` (เปิด ${esc(loc.openHours)})` : ''} แล้วมองหาตู้ล็อกเกอร์หมายเลข <strong>${esc(b.lockerCode)}</strong></li>
+          <li class="mb-2">แตะหน้าจอที่ตู้ แล้วสแกน QR Code ด้านบน หรือกรอกรหัส PIN 6 หลักเพื่อปลดล็อก</li>
+          <li class="mb-2">เมื่อประตูเปิด ใส่สัมภาระ ปิดประตูให้สนิท และตรวจสอบว่าล็อกเรียบร้อยแล้ว</li>
+          <li class="mb-2">กลับมารับของได้ตลอดช่วงเวลาที่จองไว้ โดยใช้ QR Code หรือรหัส PIN เดิม</li>
+          <li>หากเกินเวลาที่จอง อาจมีค่าบริการเพิ่มเติม ต่อเวลาได้ที่หน้า "การจองของฉัน" ก่อนหมดเวลา</li>
+        </ol>
+      </div>
+    </section>` : ''}
+
+    <div class="d-flex flex-wrap justify-content-center gap-2 no-print">
+      <button type="button" class="btn btn-primary" id="btn-print"><i class="bi bi-printer me-1"></i>พิมพ์</button>
+      <button type="button" class="btn btn-outline-primary" id="btn-download"><i class="bi bi-download me-1"></i>ดาวน์โหลดใบเสร็จ</button>
+      <a class="btn btn-outline-secondary" href="my-bookings.html"><i class="bi bi-calendar-check me-1"></i>การจองของฉัน</a>
+      <a class="btn btn-outline-secondary" href="index.html"><i class="bi bi-house me-1"></i>กลับหน้าแรก</a>
+    </div>`;
+
+  // ---------- interactions ----------
+  const pinBtn = $('pin-toggle');
+  if (pinBtn) {
+    let shown = false;
+    const pinText = $('pin-text'), mask = '•'.repeat(String(b.pin || '------').length);
+    pinBtn.addEventListener('click', () => {
+      shown = !shown;
+      pinText.textContent = shown ? (b.pin || '-') : mask;
+      pinBtn.setAttribute('aria-pressed', String(shown));
+      pinBtn.setAttribute('aria-label', shown ? 'ซ่อนรหัส PIN' : 'แสดงรหัส PIN');
+      pinBtn.querySelector('i').className = `bi bi-eye${shown ? '-slash' : ''} me-1`;
+      pinBtn.querySelector('span').textContent = shown ? 'ซ่อน PIN' : 'แสดง PIN';
+    });
+  }
+
+  $('copy-ref').addEventListener('click', async () => {
+    try {
+      await navigator.clipboard.writeText(b.ref);
+      LG.toast('คัดลอกหมายเลขการจองแล้ว');
+    } catch (e) {
+      LG.toast('ไม่สามารถคัดลอกอัตโนมัติได้ กรุณาคัดลอกด้วยตนเอง', 'warning');
+    }
+  });
+
+  $('btn-print').addEventListener('click', () => window.print());
+
+  $('btn-download').addEventListener('click', () => {
+    const line = '-'.repeat(44);
+    const lines = [
+      'LockerGo - ใบเสร็จรับเงิน / สรุปการจอง', line,
+      `หมายเลขการจอง : ${b.ref}`,
+      `วันที่ทำรายการ : ${LG.fmt.datetime(b.createdAt)}`,
+      `สถานะการจอง   : ${(LG.STATUS.booking[b.status] || [b.status])[0]}`, line,
+      `ล็อกเกอร์      : ${b.lockerCode} (ขนาด ${b.size} ${sz.label})`,
+      `สาขา          : ${b.locationName}`,
+      ...(loc ? [`ที่อยู่        : ${loc.address}`] : []),
+      `เริ่มใช้งาน    : ${LG.fmt.datetime(b.startAt)}`,
+      `สิ้นสุด        : ${LG.fmt.datetime(b.endAt)}`,
+      `ระยะเวลา      : ${LG.fmt.duration(b.durationType, b.quantity)}`, line,
+      `ผู้จอง         : ${b.customerName}`,
+      `อีเมล          : ${b.customerEmail}`,
+      `โทรศัพท์       : ${b.customerPhone}`, line,
+      `ค่าบริการ      : ${LG.fmt.baht(gross)}`,
+      `ส่วนลด         : ${LG.fmt.baht(b.discount || 0)}${b.promoCode ? ` (${b.promoCode})` : ''}`,
+      `ยอดชำระสุทธิ   : ${LG.fmt.baht(b.amount)}`,
+      `วิธีชำระเงิน   : ${method}`,
+      `สถานะการชำระ  : ${b.paymentStatus ? (LG.STATUS.payment[b.paymentStatus] || [b.paymentStatus])[0] : '-'}`, line,
+      'เอกสารนี้ออกจากระบบตัวอย่างของ LockerGo เพื่อการสาธิตเท่านั้น',
+      'เพื่อความปลอดภัย ใบเสร็จนี้ไม่แสดงรหัส PIN',
+    ];
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob(['﻿' + lines.join('\r\n')], { type: 'text/plain;charset=utf-8' }));
+    a.download = `LockerGo-${b.ref}.txt`;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+    LG.toast('ดาวน์โหลดใบเสร็จแล้ว');
+  });
+})();
+</script>
+</body>
+</html>

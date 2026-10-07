@@ -1,0 +1,261 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>แดชบอร์ด | LockerGo</title>
+<meta name="description" content="ภาพรวมการดำเนินงาน LockerGo: จำนวนล็อกเกอร์ การจอง รายได้ และอัตราการใช้งานล่าสุด">
+<meta name="robots" content="noindex">
+<link rel="icon" type="image/svg+xml" href="../assets/img/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+<link href="../assets/css/custom.css" rel="stylesheet">
+<link href="../assets/css/admin.css" rel="stylesheet">
+<script src="../assets/js/config.js"></script>
+</head>
+<body data-shell="admin" data-page="dashboard">
+<a class="visually-hidden-focusable" href="#main">ข้ามไปยังเนื้อหา</a>
+<div class="admin-wrap"><aside id="admin-sidebar"></aside>
+  <div class="admin-main"><div id="admin-topbar"></div>
+    <main id="main" class="admin-content" data-title="แดชบอร์ด">
+
+      <p class="text-body-secondary small mb-3" id="range-note" aria-live="polite"></p>
+
+      <section aria-label="ตัวชี้วัดหลัก" class="mb-4">
+        <div class="row g-3" id="kpi-row"></div>
+      </section>
+
+      <section aria-label="กราฟสรุป" class="mb-4">
+        <div class="row g-3">
+          <div class="col-12 col-xl-8">
+            <div class="card card-soft h-100">
+              <div class="card-body">
+                <h2 class="h6 mb-3">แนวโน้มการจอง (30 วันล่าสุด)</h2>
+                <div id="chart-bookings"></div>
+              </div>
+            </div>
+          </div>
+          <div class="col-12 col-md-6 col-xl-4">
+            <div class="card card-soft h-100">
+              <div class="card-body">
+                <h2 class="h6 mb-3">สถานะล็อกเกอร์ตอนนี้</h2>
+                <div id="chart-status"></div>
+              </div>
+            </div>
+          </div>
+          <div class="col-12 col-md-6 col-xl-12">
+            <div class="card card-soft h-100">
+              <div class="card-body">
+                <h2 class="h6 mb-3">รายได้รายวัน (30 วันล่าสุด)</h2>
+                <div id="chart-revenue"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <div class="row g-3">
+        <section class="col-12 col-xl-8" aria-labelledby="recent-title">
+          <div class="card card-soft h-100">
+            <div class="card-header bg-transparent d-flex flex-wrap align-items-center gap-2 py-3">
+              <h2 class="h6 mb-0" id="recent-title">การจองล่าสุด</h2>
+              <a class="btn btn-sm btn-outline-primary ms-auto" href="bookings.html">ดูทั้งหมด <i class="bi bi-arrow-right" aria-hidden="true"></i></a>
+            </div>
+            <div class="card-body p-0 table-card" id="recent-box"></div>
+          </div>
+        </section>
+
+        <section class="col-12 col-xl-4" aria-labelledby="attention-title">
+          <div class="card card-soft h-100">
+            <div class="card-header bg-transparent d-flex flex-wrap align-items-center gap-2 py-3">
+              <h2 class="h6 mb-0" id="attention-title">ล็อกเกอร์ที่ต้องดูแล</h2>
+              <a class="btn btn-sm btn-outline-secondary ms-auto" href="lockers.html?status=maintenance">ดูทั้งหมด</a>
+            </div>
+            <div class="card-body" id="attention-box"></div>
+          </div>
+        </section>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<script src="../assets/js/mock-data.js"></script>
+<script src="../assets/js/mock-service.js"></script>
+<script src="../assets/js/api-client.js"></script>
+<script src="../assets/js/data-service.js"></script>
+<script src="../assets/js/auth.js"></script>
+<script src="../assets/js/main.js"></script>
+<script src="../assets/js/admin.js"></script>
+<script>
+(async () => {
+  const user = await Admin.ready;
+  const $ = (id) => document.getElementById(id);
+  const esc = LG.esc;
+
+  // ---------- theme-aware chart helpers ----------
+  const css = (name) => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+  const hexA = (hex, a) => {
+    const m = /^#?([\da-f]{2})([\da-f]{2})([\da-f]{2})$/i.exec(hex);
+    return m ? `rgba(${parseInt(m[1], 16)}, ${parseInt(m[2], 16)}, ${parseInt(m[3], 16)}, ${a})` : hex;
+  };
+  const shortDate = (iso) => `${iso.slice(8, 10)}/${iso.slice(5, 7)}`;
+  const charts = {};
+  let report = null;
+
+  function applyDefaults() {
+    Chart.defaults.font.family = 'Prompt, system-ui, sans-serif';
+    Chart.defaults.color = css('--bs-secondary-color') || css('--bs-body-color');
+    Chart.defaults.borderColor = css('--bs-border-color');
+    Chart.defaults.maintainAspectRatio = false;
+  }
+  function mount(key, boxId, label) {
+    if (charts[key]) { charts[key].destroy(); delete charts[key]; }
+    $(boxId).innerHTML = `<div class="chart-box"><canvas aria-label="${esc(label)}" role="img"></canvas></div>`;
+    return $(boxId).querySelector('canvas');
+  }
+
+  function buildCharts() {
+    if (!report) return;
+    applyDefaults();
+    const primary = css('--lg-primary'), accent = css('--lg-accent');
+    const bookingDays = report.bookingsByDay, revenueDays = report.revenueByDay;
+    const totalBookings = bookingDays.reduce((s, d) => s + d.count, 0);
+    const totalRevenue = revenueDays.reduce((s, d) => s + d.amount, 0);
+
+    // booking trend (line)
+    charts.bookings = new Chart(mount('bookings', 'chart-bookings', `กราฟเส้นแนวโน้มการจองรายวัน รวม ${totalBookings} รายการ`), {
+      type: 'line',
+      data: {
+        labels: bookingDays.map((d) => shortDate(d.date)),
+        datasets: [{ label: 'จำนวนการจอง', data: bookingDays.map((d) => d.count), borderColor: primary, backgroundColor: hexA(primary, 0.15), fill: true, tension: 0.35, pointRadius: 2, pointHoverRadius: 5 }],
+      },
+      options: {
+        interaction: { mode: 'index', intersect: false },
+        plugins: { legend: { display: false }, tooltip: { callbacks: { title: (i) => LG.fmt.date(bookingDays[i[0].dataIndex].date + 'T00:00:00'), label: (c) => ` ${c.parsed.y} การจอง` } } },
+        scales: { y: { beginAtZero: true, ticks: { precision: 0 } }, x: { grid: { display: false }, ticks: { maxTicksLimit: 10, maxRotation: 0 } } },
+      },
+    });
+
+    // revenue (bar)
+    charts.revenue = new Chart(mount('revenue', 'chart-revenue', `กราฟแท่งรายได้รายวัน รวม ${LG.fmt.baht(totalRevenue)}`), {
+      type: 'bar',
+      data: {
+        labels: revenueDays.map((d) => shortDate(d.date)),
+        datasets: [{ label: 'รายได้', data: revenueDays.map((d) => d.amount), backgroundColor: hexA(accent, 0.85), borderRadius: 4, maxBarThickness: 28 }],
+      },
+      options: {
+        plugins: { legend: { display: false }, tooltip: { callbacks: { title: (i) => LG.fmt.date(revenueDays[i[0].dataIndex].date + 'T00:00:00'), label: (c) => ` ${LG.fmt.baht(c.parsed.y)}` } } },
+        scales: { y: { beginAtZero: true, ticks: { callback: (v) => LG.fmt.baht(v) } }, x: { grid: { display: false }, ticks: { maxTicksLimit: 10, maxRotation: 0 } } },
+      },
+    });
+
+    // locker status (doughnut)
+    const keys = ['available', 'booked', 'in_use', 'maintenance'], colors = ['--st-green', '--st-amber', '--st-blue', '--st-gray'];
+    const counts = keys.map((k) => report.statusCounts[k] || 0), total = counts.reduce((a, b) => a + b, 0);
+    charts.status = new Chart(mount('status', 'chart-status', `กราฟโดนัทสถานะล็อกเกอร์ ทั้งหมด ${total} ช่อง`), {
+      type: 'doughnut',
+      data: {
+        labels: keys.map((k) => LG.STATUS.locker[k][0]),
+        datasets: [{ data: counts, backgroundColor: colors.map(css), borderColor: css('--bs-body-bg'), borderWidth: 2 }],
+      },
+      options: {
+        cutout: '62%',
+        plugins: {
+          legend: { position: 'bottom', labels: { usePointStyle: true, boxWidth: 8 } },
+          tooltip: { callbacks: { label: (c) => ` ${c.label}: ${c.parsed} ช่อง (${total ? Math.round(c.parsed / total * 100) : 0}%)` } },
+        },
+      },
+    });
+  }
+
+  // ---------- renderers ----------
+  const kpiSkeleton = () => {
+    $('kpi-row').innerHTML = Array.from({ length: 5 }, () => `<div class="col-6 col-lg-4 col-xxl"><div class="card kpi-card h-100"><div class="card-body">${LG.skeleton(2)}</div></div></div>`).join('');
+  };
+
+  function renderKpis(k) {
+    const cards = [
+      { label: 'ล็อกเกอร์ทั้งหมด', value: k.totalLockers.toLocaleString('th-TH'), icon: 'grid-3x3-gap', sub: 'ช่องทั้งหมดในระบบ' },
+      { label: 'ว่างตอนนี้', value: k.availableNow.toLocaleString('th-TH'), icon: 'unlock', sub: k.totalLockers ? `${Math.round(k.availableNow / k.totalLockers * 100)}% ของทั้งหมด` : '-' },
+      { label: 'การจองวันนี้', value: k.bookingsToday.toLocaleString('th-TH'), icon: 'calendar-check', sub: 'เริ่มใช้งานวันนี้' },
+      { label: 'รายได้เดือนนี้', value: LG.fmt.baht(k.revenueMonth), icon: 'cash-coin', sub: 'เฉพาะรายการที่ชำระแล้ว' },
+    ];
+    const occ = Math.max(0, Math.min(100, k.occupancyRate));
+    $('kpi-row').innerHTML = cards.map((c) => `
+      <div class="col-6 col-lg-4 col-xxl"><div class="card kpi-card h-100"><div class="card-body d-flex align-items-start gap-3">
+        <span class="icon-circle" aria-hidden="true"><i class="bi bi-${c.icon}"></i></span>
+        <div><div class="text-body-secondary small">${c.label}</div><div class="kpi-value">${esc(c.value)}</div><div class="text-body-secondary small mt-1">${esc(c.sub)}</div></div>
+      </div></div></div>`).join('') + `
+      <div class="col-12 col-lg-8 col-xxl"><div class="card kpi-card h-100"><div class="card-body">
+        <div class="d-flex align-items-start gap-3">
+          <span class="icon-circle" aria-hidden="true"><i class="bi bi-pie-chart"></i></span>
+          <div class="flex-grow-1"><div class="text-body-secondary small">อัตราการใช้งาน</div><div class="kpi-value">${occ}%</div></div>
+        </div>
+        <div class="progress mt-3" role="progressbar" aria-label="อัตราการใช้งานล็อกเกอร์" aria-valuenow="${occ}" aria-valuemin="0" aria-valuemax="100"><div class="progress-bar bg-primary" id="occ-bar"></div></div>
+        <div class="text-body-secondary small mt-2">ล็อกเกอร์ที่จองหรือใช้งานอยู่</div>
+      </div></div></div>`;
+    $('occ-bar').style.width = occ + '%';   // runtime width of the progress bar (same as Bootstrap's own JS)
+  }
+
+  function renderRecent(rows) {
+    const box = $('recent-box');
+    if (!rows.length) { box.innerHTML = LG.empty('ยังไม่มีรายการจอง', 'calendar-x'); return; }
+    box.innerHTML = `<div class="table-responsive"><table class="table table-hover">
+      <caption class="visually-hidden">การจองล่าสุด</caption>
+      <thead><tr><th scope="col">รหัส</th><th scope="col">ลูกค้า</th><th scope="col">ล็อกเกอร์</th><th scope="col">เริ่มใช้งาน</th><th scope="col" class="text-end">ยอดเงิน</th><th scope="col">สถานะ</th></tr></thead>
+      <tbody>${rows.map((b) => `<tr>
+        <td><a class="fw-medium text-decoration-none" href="bookings.html?q=${encodeURIComponent(b.ref)}">${esc(b.ref)}</a></td>
+        <td>${esc(b.customerName)}</td>
+        <td><span class="fw-medium">${esc(b.lockerCode)}</span><div class="small text-body-secondary">${esc(b.locationName)}</div></td>
+        <td class="text-nowrap">${esc(LG.fmt.datetime(b.startAt))}</td>
+        <td class="text-end text-nowrap">${esc(LG.fmt.baht(b.amount))}</td>
+        <td>${LG.badge('booking', b.status)}</td>
+      </tr>`).join('')}</tbody></table></div>`;
+  }
+
+  function renderAttention(list) {
+    const box = $('attention-box');
+    if (!list.length) { box.innerHTML = LG.empty('ไม่มีล็อกเกอร์ที่ต้องซ่อมบำรุง', 'check-circle'); return; }
+    box.innerHTML = `<ul class="list-group list-group-flush">${list.map((l) => `
+      <li class="list-group-item px-0 d-flex align-items-center gap-3">
+        <span class="icon-circle" aria-hidden="true"><i class="bi bi-tools"></i></span>
+        <div class="flex-grow-1 lh-sm"><div class="fw-medium">ล็อกเกอร์ ${esc(l.code)}</div><div class="small text-body-secondary">${esc(l.locationName)}${l.zone ? ' · โซน ' + esc(l.zone) : ''} · ขนาด ${esc(l.size)}</div></div>
+        ${LG.badge('locker', l.status)}
+      </li>`).join('')}</ul>
+      <a class="btn btn-outline-secondary btn-sm w-100 mt-3" href="lockers.html?status=maintenance"><i class="bi bi-wrench-adjustable me-1" aria-hidden="true"></i>จัดการล็อกเกอร์ซ่อมบำรุง (${list.length})</a>`;
+  }
+
+  // ---------- load ----------
+  async function load() {
+    kpiSkeleton();
+    ['chart-bookings', 'chart-status', 'chart-revenue', 'recent-box', 'attention-box'].forEach((id) => { $(id).innerHTML = LG.skeleton(id === 'recent-box' ? 6 : 4); });
+    try {
+      report = await DS.getReport();
+      $('range-note').innerHTML = `<i class="bi bi-clock-history me-1" aria-hidden="true"></i>สวัสดี ${esc(user.name)} · ข้อมูลช่วง ${esc(LG.fmt.date(report.from + 'T00:00:00'))} - ${esc(LG.fmt.date(report.to + 'T00:00:00'))} · อัปเดตล่าสุด ${esc(LG.fmt.time(new Date()))} น.`;
+      renderKpis(report.kpis);
+      buildCharts();
+      renderRecent(report.recent || []);
+      renderAttention(report.attention || []);
+    } catch (e) {
+      report = null;
+      ['kpi-row', 'chart-bookings', 'chart-status', 'chart-revenue', 'recent-box', 'attention-box'].forEach((id) => { $(id).innerHTML = id === 'kpi-row' ? `<div class="col-12">${LG.errorBox(e)}</div>` : LG.errorBox(e); });
+      LG.toastError(e);
+    }
+  }
+
+  // ---------- page action: refresh ----------
+  $('page-actions').innerHTML = '<button type="button" class="btn btn-outline-primary" id="btn-refresh"><i class="bi bi-arrow-clockwise me-1" aria-hidden="true"></i>รีเฟรชข้อมูล</button>';
+  $('btn-refresh').addEventListener('click', (ev) => LG.busy(ev.currentTarget, async () => { await load(); if (report) LG.toast('อัปเดตข้อมูลแล้ว'); }));
+
+  window.addEventListener('lg:theme', () => buildCharts());   // rebuild with the other theme's colors
+
+  await load();
+})();
+</script>
+</body>
+</html>

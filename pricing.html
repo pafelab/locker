@@ -1,0 +1,222 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ราคา | LockerGo</title>
+<meta name="description" content="ตารางราคาล็อกเกอร์ LockerGo ทุกขนาด S M L XL เลือกได้ทั้งรายชั่วโมง รายวัน และรายเดือน พร้อมตรวจสอบรหัสโปรโมชันและเงื่อนไขการยกเลิก">
+<link rel="icon" type="image/svg+xml" href="assets/img/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+<link href="assets/css/custom.css" rel="stylesheet">
+<script src="assets/js/config.js"></script>
+</head>
+<body data-page="pricing">
+<a class="visually-hidden-focusable" href="#main">ข้ามไปยังเนื้อหา</a>
+<div id="lg-navbar"></div>
+
+<main id="main">
+
+  <section class="bg-body-tertiary border-bottom py-5" aria-labelledby="page-title">
+    <div class="container text-center">
+      <nav aria-label="breadcrumb" class="d-flex justify-content-center">
+        <ol class="breadcrumb small mb-2">
+          <li class="breadcrumb-item"><a href="index.html">หน้าแรก</a></li>
+          <li class="breadcrumb-item active" aria-current="page">ราคา</li>
+        </ol>
+      </nav>
+      <h1 id="page-title" class="fw-bold">ราคาที่โปร่งใส เลือกได้ตามการใช้งาน</h1>
+      <p class="text-body-secondary mb-0">ทุกราคารวมภาษีมูลค่าเพิ่มแล้ว ไม่มีค่าธรรมเนียมแอบแฝง</p>
+    </div>
+  </section>
+
+  <!-- Price cards -->
+  <section class="section pb-4" aria-labelledby="cards-title">
+    <div class="container">
+      <h2 id="cards-title" class="visually-hidden">ราคาตามขนาดล็อกเกอร์</h2>
+      <div class="d-flex justify-content-center mb-4">
+        <div class="btn-group" role="group" aria-label="เลือกหน่วยระยะเวลา">
+          <input type="radio" class="btn-check" name="duration" id="dur-hour" value="hour" autocomplete="off" checked>
+          <label class="btn btn-outline-primary px-4" for="dur-hour"><i class="bi bi-clock me-1" aria-hidden="true"></i>รายชั่วโมง</label>
+          <input type="radio" class="btn-check" name="duration" id="dur-day" value="day" autocomplete="off">
+          <label class="btn btn-outline-primary px-4" for="dur-day"><i class="bi bi-sun me-1" aria-hidden="true"></i>รายวัน</label>
+          <input type="radio" class="btn-check" name="duration" id="dur-month" value="month" autocomplete="off">
+          <label class="btn btn-outline-primary px-4" for="dur-month"><i class="bi bi-calendar-month me-1" aria-hidden="true"></i>รายเดือน</label>
+        </div>
+      </div>
+      <div id="price-cards" class="row g-4" aria-live="polite"></div>
+    </div>
+  </section>
+
+  <!-- Comparison table -->
+  <section class="section pt-4 pb-4" aria-labelledby="compare-title">
+    <div class="container">
+      <h2 id="compare-title" class="h3 fw-bold mb-3">เปรียบเทียบราคาทุกขนาด</h2>
+      <div id="compare-box"></div>
+    </div>
+  </section>
+
+  <!-- Promo + notes -->
+  <section class="section pt-4" aria-labelledby="promo-title">
+    <div class="container">
+      <div class="row g-4">
+        <div class="col-lg-6">
+          <div class="card card-soft h-100">
+            <div class="card-body p-4">
+              <h2 id="promo-title" class="h4 fw-bold"><i class="bi bi-ticket-perforated text-accent me-2" aria-hidden="true"></i>ตรวจสอบรหัสโปรโมชัน</h2>
+              <p class="text-body-secondary">มีรหัสส่วนลดอยู่ใช่ไหม ลองกรอกเพื่อดูส่วนลดก่อนจองได้เลย</p>
+              <form id="promo-form" novalidate>
+                <label for="promo-code" class="form-label">รหัสโปรโมชัน</label>
+                <div class="input-group has-validation">
+                  <input type="text" class="form-control text-uppercase" id="promo-code" name="code" placeholder="เช่น WELCOME10" autocomplete="off" required minlength="3" maxlength="30" pattern="[A-Za-z0-9_]+" aria-describedby="promo-result">
+                  <button type="submit" class="btn btn-primary" id="promo-btn"><i class="bi bi-check2-circle me-1" aria-hidden="true"></i>ตรวจสอบ</button>
+                  <div class="invalid-feedback">กรุณากรอกรหัสโปรโมชัน (ตัวอักษรภาษาอังกฤษหรือตัวเลข อย่างน้อย 3 ตัว)</div>
+                </div>
+              </form>
+              <div id="promo-result" class="mt-3" aria-live="polite"></div>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-6">
+          <div class="card card-soft h-100">
+            <div class="card-body p-4">
+              <h2 class="h4 fw-bold"><i class="bi bi-info-circle text-brand me-2" aria-hidden="true"></i>หมายเหตุสำคัญ</h2>
+              <ul class="list-unstyled mb-0" id="notes-list">
+                <li class="mb-3">กำลังโหลด...</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+      <p class="text-center mt-5 mb-0"><a href="lockers.html" class="btn btn-primary btn-lg">ค้นหาล็อกเกอร์ว่าง <i class="bi bi-arrow-right ms-1" aria-hidden="true"></i></a></p>
+    </div>
+  </section>
+
+</main>
+
+<div id="lg-footer"></div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="assets/js/mock-data.js"></script>
+<script src="assets/js/mock-service.js"></script>
+<script src="assets/js/api-client.js"></script>
+<script src="assets/js/data-service.js"></script>
+<script src="assets/js/auth.js"></script>
+<script src="assets/js/main.js"></script>
+<script>
+(async () => {
+  const $ = (id) => document.getElementById(id);
+  const cardsBox = $('price-cards'), compareBox = $('compare-box'), notes = $('notes-list');
+  const UNIT = { hour: 'ชั่วโมง', day: 'วัน', month: 'เดือน' };
+  const ART = { S: 'fs-5', M: 'fs-3', L: 'fs-1', XL: 'display-4' };
+  const SALE = {
+    hour: 'เหมาะสำหรับฝากสั้น ๆ ระหว่างวัน',
+    day: 'คุ้มกว่าเมื่อฝากข้ามวัน',
+    month: 'คุ้มที่สุดสำหรับการเก็บของระยะยาว',
+  };
+  let prices = [];
+  let current = ['hour', 'day', 'month'].includes(LG.qs('type')) ? LG.qs('type') : 'hour';
+  document.querySelector(`input[name="duration"][value="${current}"]`).checked = true;
+
+  cardsBox.innerHTML = [1, 2, 3, 4].map(() => `<div class="col-sm-6 col-lg-3"><div class="card card-soft h-100"><div class="card-body">${LG.skeleton(5)}</div></div></div>`).join('');
+  compareBox.innerHTML = LG.skeleton(5);
+
+  // Saving of the chosen unit vs. buying the shorter unit repeatedly (null when there is none)
+  const saving = (p, type) => {
+    const base = type === 'day' ? p.hour * 24 : type === 'month' ? p.day * 30 : 0;
+    return base > 0 && p[type] < base ? Math.round((1 - p[type] / base) * 100) : null;
+  };
+
+  function renderCards() {
+    cardsBox.innerHTML = prices.map((p) => {
+      const s = LG.SIZES[p.size] || { label: '', dim: '', fits: '' }, featured = p.size === 'M', sv = saving(p, current);
+      return `<div class="col-sm-6 col-lg-3"><div class="card price-card h-100${featured ? ' featured' : ' card-soft'}">
+        ${featured ? '<span class="badge text-bg-primary position-absolute top-0 start-50 translate-middle px-3 py-2">ยอดนิยม</span>' : ''}
+        <div class="card-body p-4 text-center d-flex flex-column">
+          <div class="d-flex align-items-end justify-content-center mb-3 pt-2"><div class="size-art p-3" role="img" aria-label="ภาพเปรียบเทียบขนาด ${LG.esc(p.size)}"><i class="bi bi-box-seam ${ART[p.size] || 'fs-3'}" aria-hidden="true"></i></div></div>
+          <h3 class="h4 mb-0">ขนาด ${LG.esc(p.size)}</h3>
+          <p class="text-body-secondary small mb-3">${LG.esc(s.label)} &middot; ${LG.esc(s.dim)}</p>
+          <p class="mb-0"><span class="display-6 fw-bold text-brand">${LG.fmt.baht(p[current])}</span></p>
+          <p class="text-body-secondary mb-2">ต่อ${UNIT[current]}</p>
+          <p class="mb-3">${sv ? `<span class="badge status-badge st-green">ประหยัด ${sv}%</span>` : '<span class="badge bg-body-secondary text-body-secondary border">&nbsp;ราคามาตรฐาน&nbsp;</span>'}</p>
+          <p class="small mb-1"><i class="bi bi-check2-circle text-brand me-1" aria-hidden="true"></i>${LG.esc(s.fits)}</p>
+          <p class="small text-body-secondary mb-4">${SALE[current]}</p>
+          <a href="booking.html?size=${encodeURIComponent(p.size)}&amp;type=${current}" class="btn ${featured ? 'btn-primary' : 'btn-outline-primary'} w-100 mt-auto" aria-label="จองล็อกเกอร์ขนาด ${LG.esc(p.size)} แบบราย${UNIT[current]}">จองขนาด ${LG.esc(p.size)}</a>
+        </div>
+      </div></div>`;
+    }).join('');
+  }
+
+  function renderCompare() {
+    compareBox.innerHTML = `<div class="card card-soft table-card"><div class="table-responsive">
+      <table class="table table-hover align-middle text-center mb-0">
+        <caption class="visually-hidden">ตารางเปรียบเทียบราคาล็อกเกอร์ตามขนาดและระยะเวลา</caption>
+<thead><tr>
+          <th scope="col" class="text-start bg-body-tertiary">ขนาด</th><th scope="col" class="text-start bg-body-tertiary">ขนาดภายใน</th>
+          <th scope="col" class="bg-body-tertiary">รายชั่วโมง</th><th scope="col" class="bg-body-tertiary">รายวัน</th><th scope="col" class="bg-body-tertiary">รายเดือน</th><th scope="col" class="bg-body-tertiary"><span class="visually-hidden">จอง</span></th>
+        </tr></thead>
+        <tbody>${prices.map((p) => {
+          const s = LG.SIZES[p.size] || { label: '', dim: '' };
+          return `<tr>
+            <th scope="row" class="text-start">${LG.esc(p.size)} <span class="fw-normal text-body-secondary">${LG.esc(s.label)}</span>${p.size === 'M' ? ' <span class="badge text-bg-primary">ยอดนิยม</span>' : ''}</th>
+            <td class="text-start small text-body-secondary text-nowrap">${LG.esc(s.dim)}</td>
+            <td>${LG.fmt.baht(p.hour)}</td><td>${LG.fmt.baht(p.day)}</td><td>${LG.fmt.baht(p.month)}</td>
+            <td><a class="btn btn-sm btn-outline-primary" href="booking.html?size=${encodeURIComponent(p.size)}" aria-label="จองขนาด ${LG.esc(p.size)}">จอง</a></td>
+          </tr>`;
+        }).join('')}</tbody>
+      </table></div></div>`;
+  }
+
+  // Duration switch
+  document.querySelectorAll('input[name="duration"]').forEach((r) => r.addEventListener('change', () => { current = r.value; if (prices.length) renderCards(); }));
+
+  // Notes (from settings)
+  const fmtHours = (h) => (h % 720 === 0 && h >= 720 ? `${h / 720} เดือน` : h % 24 === 0 && h >= 24 ? `${h / 24} วัน` : `${h} ชั่วโมง`);
+  function renderNotes(s) {
+    const items = [
+      ['clock-history', `ระยะเวลาการจองขั้นต่ำ <strong>${LG.esc(fmtHours(s.minDuration ?? 1))}</strong> และสูงสุด <strong>${LG.esc(fmtHours(s.maxDuration ?? 720))}</strong> ต่อหนึ่งการจอง`],
+      ['hourglass-split', `หลังหมดเวลา มีเวลาผ่อนผัน <strong>${LG.esc(s.gracePeriod ?? 15)} นาที</strong> หลังจากนั้นกรุณาต่อเวลาหรือนำของออกจากล็อกเกอร์`],
+      ['arrow-counterclockwise', `<strong>นโยบายการยกเลิก:</strong> ${LG.esc(s.cancelPolicy || 'ยกเลิกฟรีก่อนเวลาเริ่มใช้งาน 24 ชั่วโมง')} <a href="terms.html#refund">อ่านเพิ่มเติม</a>`],
+      ['receipt', 'ราคาทั้งหมดรวมภาษีมูลค่าเพิ่ม 7% แล้ว และสามารถใช้รหัสโปรโมชันได้ครั้งละ 1 รหัสต่อการจอง'],
+    ];
+    notes.innerHTML = items.map(([icon, html]) => `<li class="d-flex gap-3 mb-3"><i class="bi bi-${icon} text-brand fs-5" aria-hidden="true"></i><span>${html}</span></li>`).join('');
+  }
+
+  // Promo checker
+  const promoForm = $('promo-form'), promoInput = $('promo-code'), promoOut = $('promo-result');
+  promoForm.addEventListener('submit', async (ev) => {
+    ev.preventDefault();
+    promoOut.innerHTML = '';
+    if (!LG.validate(promoForm)) return;
+    await LG.busy($('promo-btn'), async () => {
+      try {
+        const p = await DS.checkPromo(promoInput.value.trim().toUpperCase());
+        const value = p.type === 'percent' ? `ลด ${p.value}%` : `ลด ${LG.fmt.baht(p.value)}`;
+        let example = '';
+        const m = prices.find((x) => x.size === 'M');
+        if (m) { const q = quote(m.day, 1, p); example = `<div class="small mt-1">ตัวอย่าง: ล็อกเกอร์ขนาด M แบบ 1 วัน ราคา ${LG.fmt.baht(q.gross)} ลด ${LG.fmt.baht(q.discount)} เหลือ <strong>${LG.fmt.baht(q.total)}</strong></div>`; }
+        promoOut.innerHTML = `<div class="alert alert-success mb-0" role="status"><i class="bi bi-check-circle-fill me-2" aria-hidden="true"></i>รหัส <strong>${LG.esc(p.code)}</strong> ใช้งานได้: ${LG.esc(value)}${example}</div>`;
+        LG.toast('รหัสโปรโมชันใช้งานได้');
+      } catch (e) {
+        promoOut.innerHTML = `<div class="alert alert-danger mb-0" role="alert"><i class="bi bi-x-circle-fill me-2" aria-hidden="true"></i>${LG.esc(e.message || 'ไม่สามารถตรวจสอบรหัสได้')}</div>`;
+      }
+    });
+  });
+
+  // Load data
+  const [pr, st] = await Promise.allSettled([DS.getPricing(), DS.getSettings()]);
+  if (pr.status === 'fulfilled') {
+    prices = pr.value.prices;
+    if (!prices.length) { cardsBox.innerHTML = `<div class="col-12">${LG.empty('ยังไม่มีข้อมูลราคา', 'tag')}</div>`; compareBox.innerHTML = ''; }
+    else { renderCards(); renderCompare(); }
+  } else {
+    cardsBox.innerHTML = `<div class="col-12">${LG.errorBox(pr.reason)}</div>`;
+    compareBox.innerHTML = '';
+  }
+  if (st.status === 'fulfilled') renderNotes(st.value);
+  else notes.innerHTML = `<li>${LG.errorBox(st.reason)}</li>`;
+})();
+</script>
+</body>
+</html>

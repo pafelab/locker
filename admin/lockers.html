@@ -1,0 +1,498 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>จัดการล็อกเกอร์ | LockerGo</title>
+<meta name="description" content="เพิ่ม แก้ไข ลบ และเปลี่ยนสถานะล็อกเกอร์ทุกสาขา ดูภาพรวมแบบตารางผังและแบบรายการ">
+<link rel="icon" type="image/svg+xml" href="../assets/img/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+<link href="../assets/css/custom.css" rel="stylesheet">
+<link href="../assets/css/admin.css" rel="stylesheet">
+<script src="../assets/js/config.js"></script>
+</head>
+<body data-shell="admin" data-page="lockers">
+<a class="visually-hidden-focusable" href="#main">ข้ามไปยังเนื้อหา</a>
+<div class="admin-wrap"><aside id="admin-sidebar"></aside>
+  <div class="admin-main"><div id="admin-topbar"></div>
+    <main id="main" class="admin-content" data-title="จัดการล็อกเกอร์">
+
+      <!-- status summary -->
+      <section aria-label="สรุปจำนวนล็อกเกอร์ตามสถานะ" class="mb-4">
+        <div class="row row-cols-2 row-cols-md-3 row-cols-xl-5 g-3" id="stats"></div>
+      </section>
+
+      <!-- filters -->
+      <section class="card card-soft mb-4" aria-label="ตัวกรองล็อกเกอร์">
+        <div class="card-body">
+          <form id="filters" class="row g-3 align-items-end" role="search" novalidate>
+            <div class="col-12 col-md-6 col-xl-3">
+              <label class="form-label small mb-1" for="fLocation">สาขา</label>
+              <select class="form-select" id="fLocation"><option value="">ทุกสาขา</option></select>
+            </div>
+            <div class="col-6 col-md-3 col-xl-2">
+              <label class="form-label small mb-1" for="fSize">ขนาด</label>
+              <select class="form-select" id="fSize"></select>
+            </div>
+            <div class="col-6 col-md-3 col-xl-2">
+              <label class="form-label small mb-1" for="fStatus">สถานะ</label>
+              <select class="form-select" id="fStatus"></select>
+            </div>
+            <div class="col-12 col-md-8 col-xl-3">
+              <label class="form-label small mb-1" for="fQuery">ค้นหารหัสล็อกเกอร์</label>
+              <div class="input-group">
+                <span class="input-group-text"><i class="bi bi-search" aria-hidden="true"></i></span>
+                <input type="search" class="form-control" id="fQuery" placeholder="เช่น SI-A01" autocomplete="off">
+              </div>
+            </div>
+            <div class="col-12 col-md-4 col-xl-2 d-grid">
+              <button type="button" class="btn btn-outline-secondary" id="fReset"><i class="bi bi-x-circle me-1" aria-hidden="true"></i>ล้างตัวกรอง</button>
+            </div>
+          </form>
+        </div>
+      </section>
+
+      <!-- result header + view switch -->
+      <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+        <p class="mb-0 text-body-secondary" id="resultCount" role="status" aria-live="polite">กำลังโหลด...</p>
+        <div class="btn-group ms-auto" role="group" aria-label="เลือกมุมมอง">
+          <button type="button" class="btn btn-outline-primary active" data-view="grid" aria-pressed="true"><i class="bi bi-grid-3x3-gap-fill me-1" aria-hidden="true"></i>ผังล็อกเกอร์</button>
+          <button type="button" class="btn btn-outline-primary" data-view="table" aria-pressed="false"><i class="bi bi-list-ul me-1" aria-hidden="true"></i>ตาราง</button>
+        </div>
+      </div>
+
+      <!-- bulk actions (table view only) -->
+      <div id="bulkBar" class="card card-soft mb-3 d-none" role="region" aria-label="การดำเนินการกับรายการที่เลือก">
+        <div class="card-body py-2 d-flex flex-wrap align-items-center gap-2">
+          <span class="fw-semibold me-2"><i class="bi bi-check2-square me-1" aria-hidden="true"></i>เลือกแล้ว <span id="bulkCount">0</span> รายการ</span>
+          <label class="visually-hidden" for="bulkStatus">เปลี่ยนสถานะที่เลือกเป็น</label>
+          <select class="form-select form-select-sm w-auto" id="bulkStatus"></select>
+          <button type="button" class="btn btn-sm btn-primary" id="bulkApply"><i class="bi bi-arrow-repeat me-1" aria-hidden="true"></i>เปลี่ยนสถานะ</button>
+          <button type="button" class="btn btn-sm btn-outline-danger" id="bulkDelete"><i class="bi bi-trash3 me-1" aria-hidden="true"></i>ลบที่เลือก</button>
+          <button type="button" class="btn btn-sm btn-link ms-auto" id="bulkClear">ล้างการเลือก</button>
+        </div>
+      </div>
+      <div id="bulkResult" class="alert alert-warning alert-dismissible d-none" role="alert"></div>
+
+      <!-- list / grid -->
+      <div id="content"></div>
+
+    </main>
+  </div></div>
+
+<!-- add / edit modal -->
+<div class="modal fade" id="lockerModal" tabindex="-1" aria-labelledby="lockerModalTitle" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <form class="modal-content" id="lockerForm" novalidate>
+      <div class="modal-header">
+        <h2 class="modal-title fs-5" id="lockerModalTitle">เพิ่มล็อกเกอร์</h2>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="ปิด"></button>
+      </div>
+      <div class="modal-body">
+        <div class="alert alert-danger d-none" id="formError" role="alert"></div>
+        <div class="mb-3">
+          <label class="form-label" for="lCode">รหัสล็อกเกอร์ <span class="text-danger" aria-hidden="true">*</span></label>
+          <input type="text" class="form-control" id="lCode" required maxlength="20" pattern="[A-Za-z0-9_\-]+" placeholder="เช่น SI-A21" autocomplete="off">
+          <div class="invalid-feedback">กรุณากรอกรหัสล็อกเกอร์ (ภาษาอังกฤษ ตัวเลข หรือเครื่องหมาย - _ เท่านั้น)</div>
+        </div>
+        <div class="mb-3">
+          <label class="form-label" for="lLocation">สาขา <span class="text-danger" aria-hidden="true">*</span></label>
+          <select class="form-select" id="lLocation" required></select>
+          <div class="invalid-feedback">กรุณาเลือกสาขา</div>
+        </div>
+        <div class="row g-3 mb-3">
+          <div class="col-sm-6">
+            <label class="form-label" for="lSize">ขนาด <span class="text-danger" aria-hidden="true">*</span></label>
+            <select class="form-select" id="lSize" required></select>
+            <div class="invalid-feedback">กรุณาเลือกขนาด</div>
+          </div>
+          <div class="col-sm-6">
+            <label class="form-label" for="lZone">โซน</label>
+            <input type="text" class="form-control" id="lZone" maxlength="20" list="zoneList" placeholder="เช่น A" autocomplete="off">
+            <datalist id="zoneList"></datalist>
+          </div>
+        </div>
+        <div class="mb-1">
+          <label class="form-label" for="lStatus">สถานะ <span class="text-danger" aria-hidden="true">*</span></label>
+          <select class="form-select" id="lStatus" required></select>
+          <div class="invalid-feedback">กรุณาเลือกสถานะ</div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">ยกเลิก</button>
+        <button type="submit" class="btn btn-primary" id="lSubmit"><i class="bi bi-check-lg me-1" aria-hidden="true"></i>บันทึก</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- locker detail modal (grid view) -->
+<div class="modal fade" id="detailModal" tabindex="-1" aria-labelledby="detailTitle" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title fs-5" id="detailTitle">รายละเอียดล็อกเกอร์</h2>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="ปิด"></button>
+      </div>
+      <div class="modal-body">
+        <dl class="row mb-4" id="detailInfo"></dl>
+        <label class="form-label small mb-1" for="detailStatus">เปลี่ยนสถานะ</label>
+        <div class="input-group">
+          <select class="form-select" id="detailStatus"></select>
+          <button type="button" class="btn btn-primary" id="detailSave">บันทึกสถานะ</button>
+        </div>
+      </div>
+      <div class="modal-footer justify-content-between">
+        <button type="button" class="btn btn-outline-danger" id="detailDelete"><i class="bi bi-trash3 me-1" aria-hidden="true"></i>ลบ</button>
+        <div class="d-flex gap-2">
+          <button type="button" class="btn btn-outline-primary" id="detailEdit"><i class="bi bi-pencil me-1" aria-hidden="true"></i>แก้ไข</button>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ปิด</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="../assets/js/mock-data.js"></script>
+<script src="../assets/js/mock-service.js"></script>
+<script src="../assets/js/api-client.js"></script>
+<script src="../assets/js/data-service.js"></script>
+<script src="../assets/js/auth.js"></script>
+<script src="../assets/js/main.js"></script>
+<script src="../assets/js/admin.js"></script>
+<script>
+(async () => {
+  const user = await Admin.ready;
+  if (!user) return;
+
+  const $ = (s, el = document) => el.querySelector(s);
+  const esc = LG.esc;
+  const STATUS_KEYS = Object.keys(LG.STATUS.locker);
+  const SIZE_KEYS = Object.keys(LG.SIZES);
+  const PER_PAGE = 20;
+  const collator = new Intl.Collator('th', { numeric: true });
+
+  const el = {
+    stats: $('#stats'), content: $('#content'), count: $('#resultCount'),
+    fLoc: $('#fLocation'), fSize: $('#fSize'), fStatus: $('#fStatus'), fQ: $('#fQuery'),
+    bulkBar: $('#bulkBar'), bulkCount: $('#bulkCount'), bulkStatus: $('#bulkStatus'), bulkResult: $('#bulkResult'),
+    form: $('#lockerForm'), formError: $('#formError'), lCode: $('#lCode'), lLoc: $('#lLocation'), lSize: $('#lSize'), lZone: $('#lZone'), lStatus: $('#lStatus'),
+    detailEl: $('#detailModal'), formEl: $('#lockerModal'),
+  };
+  const formModal = new bootstrap.Modal(el.formEl);
+  const detailModal = new bootstrap.Modal(el.detailEl);
+
+  const state = { lockers: [], locations: [], view: 'grid', page: 1, selected: new Set(), pageIds: [], editId: null, detailId: null };
+
+  // ---------- option builders ----------
+  const sizeOptions = (all) => (all ? '<option value="">ทุกขนาด</option>' : '') + SIZE_KEYS.map((k) => `<option value="${k}">${k} - ${esc(LG.SIZES[k].label)}</option>`).join('');
+  const statusOptions = (all, selected) => (all ? '<option value="">ทุกสถานะ</option>' : '') + STATUS_KEYS.map((k) => `<option value="${k}"${k === selected ? ' selected' : ''}>${esc(LG.STATUS.locker[k][0])}</option>`).join('');
+  const locationOptions = () => state.locations.map((x) => `<option value="${x.id}">${esc(x.name)}</option>`).join('');
+
+  const hideModal = (modalEl) => new Promise((resolve) => {
+    const inst = bootstrap.Modal.getInstance(modalEl);
+    if (!inst || !modalEl.classList.contains('show')) return resolve();
+    modalEl.addEventListener('hidden.bs.modal', () => resolve(), { once: true });
+    inst.hide();
+  });
+
+  // ---------- data ----------
+  async function reload() {
+    try {
+      state.lockers = (await DS.getLockers()).sort((a, b) => a.locationId - b.locationId || collator.compare(a.code, b.code));
+      render();
+    } catch (e) {
+      el.stats.innerHTML = '';
+      el.count.textContent = '';
+      el.content.innerHTML = LG.errorBox(e);
+    }
+  }
+
+  function baseFiltered() {
+    const loc = el.fLoc.value, size = el.fSize.value, q = el.fQ.value.trim().toLowerCase();
+    return state.lockers.filter((l) => (!loc || String(l.locationId) === loc) && (!size || l.size === size) && (!q || l.code.toLowerCase().includes(q)));
+  }
+
+  // ---------- render ----------
+  function renderStats(base) {
+    const counts = Object.fromEntries(STATUS_KEYS.map((k) => [k, 0]));
+    base.forEach((l) => { if (l.status in counts) counts[l.status]++; });
+    const card = (marker, label, n) => `<div class="col"><div class="card kpi-card h-100"><div class="card-body py-3"><div class="d-flex align-items-center gap-2 small text-body-secondary mb-1">${marker}<span>${esc(label)}</span></div><div class="kpi-value">${n.toLocaleString('th-TH')}</div></div></div></div>`;
+    el.stats.innerHTML = card('<i class="bi bi-grid-3x3-gap text-brand" aria-hidden="true"></i>', 'ทั้งหมด', base.length)
+      + STATUS_KEYS.map((k) => card(`<span class="legend-dot st-${LG.STATUS.locker[k][1]}" aria-hidden="true"></span>`, LG.STATUS.locker[k][0], counts[k])).join('');
+  }
+
+  function render() {
+    const base = baseFiltered();
+    renderStats(base);
+    const list = base.filter((l) => !el.fStatus.value || l.status === el.fStatus.value);
+    const visible = new Set(list.map((l) => l.id));
+    state.selected = new Set([...state.selected].filter((id) => visible.has(id)));
+    el.count.textContent = `พบล็อกเกอร์ ${list.length.toLocaleString('th-TH')} รายการ จากทั้งหมด ${state.lockers.length.toLocaleString('th-TH')} รายการ`;
+    if (state.view === 'grid') renderGrid(list); else renderTable(list);
+    updateBulk();
+  }
+
+  function renderGrid(list) {
+    if (!list.length) { el.content.innerHTML = LG.empty('ไม่พบล็อกเกอร์ตามเงื่อนไขที่เลือก', 'lock'); return; }
+    const groups = new Map();
+    list.forEach((l) => { if (!groups.has(l.locationId)) groups.set(l.locationId, []); groups.get(l.locationId).push(l); });
+    el.content.innerHTML = `<div class="card card-soft mb-3"><div class="card-body py-2 d-flex flex-wrap align-items-center gap-3"><span class="small text-body-secondary">คลิกที่ล็อกเกอร์เพื่อดูรายละเอียด</span><div class="ms-md-auto">${LG.legend()}</div></div></div>`
+      + [...groups.entries()].map(([locId, items]) => {
+        const free = items.filter((l) => l.status === 'available').length;
+        return `<section class="card card-soft mb-3" aria-labelledby="loc-h-${locId}"><div class="card-body">
+          <div class="d-flex flex-wrap align-items-center gap-2 mb-3"><h2 class="h6 mb-0" id="loc-h-${locId}"><i class="bi bi-geo-alt-fill text-brand me-1" aria-hidden="true"></i>${esc(items[0].locationName)}</h2>
+            <span class="badge text-bg-secondary rounded-pill">${items.length} ช่อง</span><span class="small text-body-secondary ms-auto">ว่าง ${free} / ${items.length}</span></div>
+          <div data-grid="${locId}"></div></div></section>`;
+      }).join('');
+    groups.forEach((items, locId) => LG.lockerGrid($(`[data-grid="${locId}"]`, el.content), items, { onClick: (l) => openDetail(l.id) }));
+  }
+
+  function renderTable(list) {
+    if (!list.length) { el.content.innerHTML = LG.empty('ไม่พบล็อกเกอร์ตามเงื่อนไขที่เลือก', 'lock'); state.pageIds = []; return; }
+    const pg = LG.paginate(list, state.page, PER_PAGE);
+    state.page = pg.page;
+    state.pageIds = pg.rows.map((l) => l.id);
+    el.content.innerHTML = `<div class="card card-soft table-card"><div class="table-responsive"><table class="table table-hover align-middle">
+      <caption class="visually-hidden">รายการล็อกเกอร์</caption>
+      <thead><tr>
+        <th scope="col"><input class="form-check-input" type="checkbox" id="chkAll" aria-label="เลือกทั้งหมดในหน้านี้"></th>
+        <th scope="col">รหัส</th><th scope="col">สาขา</th><th scope="col">โซน</th><th scope="col">ขนาด</th><th scope="col">สถานะ</th><th scope="col" class="text-end">จัดการ</th>
+      </tr></thead>
+      <tbody>${pg.rows.map((l) => {
+        const checked = state.selected.has(l.id);
+        return `<tr data-id="${l.id}"${checked ? ' class="table-active"' : ''}>
+          <td><input class="form-check-input" type="checkbox" data-chk="${l.id}" aria-label="เลือกล็อกเกอร์ ${esc(l.code)}"${checked ? ' checked' : ''}></td>
+          <td class="fw-semibold text-nowrap">${esc(l.code)}</td>
+          <td>${esc(l.locationName)}</td>
+          <td>${esc(l.zone || '-')}</td>
+          <td class="text-nowrap">${esc(l.size)} <span class="small text-body-secondary">${esc((LG.SIZES[l.size] || {}).label || '')}</span></td>
+          <td>${LG.badge('locker', l.status)}</td>
+          <td><div class="d-flex justify-content-end align-items-center gap-1">
+            <select class="form-select form-select-sm w-auto" data-status-for="${l.id}" aria-label="เปลี่ยนสถานะล็อกเกอร์ ${esc(l.code)}">${statusOptions(false, l.status)}</select>
+            <button type="button" class="btn btn-sm btn-outline-secondary" data-act="edit" aria-label="แก้ไขล็อกเกอร์ ${esc(l.code)}"><i class="bi bi-pencil" aria-hidden="true"></i></button>
+            <button type="button" class="btn btn-sm btn-outline-danger" data-act="delete" aria-label="ลบล็อกเกอร์ ${esc(l.code)}"><i class="bi bi-trash3" aria-hidden="true"></i></button>
+          </div></td></tr>`;
+      }).join('')}</tbody></table></div></div><div class="mt-3" id="pager"></div>`;
+    LG.pager($('#pager', el.content), { total: list.length, page: pg.page, per: PER_PAGE }, (p) => { state.page = p; render(); });
+  }
+
+  function updateBulk() {
+    const n = state.selected.size;
+    el.bulkBar.classList.toggle('d-none', !(n && state.view === 'table'));
+    el.bulkCount.textContent = n;
+    el.content.querySelectorAll('tbody tr[data-id]').forEach((tr) => tr.classList.toggle('table-active', state.selected.has(+tr.dataset.id)));
+    const all = $('#chkAll', el.content);
+    if (all) {
+      const c = state.pageIds.filter((id) => state.selected.has(id)).length;
+      all.checked = c > 0 && c === state.pageIds.length;
+      all.indeterminate = c > 0 && c < state.pageIds.length;
+    }
+  }
+
+  // ---------- single-locker actions ----------
+  const find = (id) => state.lockers.find((l) => l.id === +id);
+
+  async function setStatus(id, status) {
+    try {
+      await DS.updateLockerStatus(id, status);
+      LG.toast('เปลี่ยนสถานะล็อกเกอร์เรียบร้อยแล้ว');
+    } catch (e) { LG.toastError(e); }
+    await reload();
+  }
+
+  async function removeLocker(l) {
+    const ok = await LG.confirm({ title: 'ลบล็อกเกอร์', message: `ต้องการลบล็อกเกอร์ ${l.code} (${l.locationName}) ใช่หรือไม่? การดำเนินการนี้ไม่สามารถย้อนกลับได้`, okText: 'ลบล็อกเกอร์', danger: true });
+    if (!ok) return;
+    try {
+      await DS.deleteLocker(l.id);
+      state.selected.delete(l.id);
+      LG.toast(`ลบล็อกเกอร์ ${l.code} เรียบร้อยแล้ว`);
+    } catch (e) { LG.toastError(e); }
+    await reload();
+  }
+
+  // ---------- detail modal (grid view) ----------
+  function openDetail(id) {
+    const l = find(id);
+    if (!l) return;
+    state.detailId = l.id;
+    const s = LG.SIZES[l.size] || {};
+    $('#detailTitle').textContent = `ล็อกเกอร์ ${l.code}`;
+    $('#detailInfo').innerHTML = `
+      <dt class="col-4 text-body-secondary fw-normal">สาขา</dt><dd class="col-8">${esc(l.locationName)}</dd>
+      <dt class="col-4 text-body-secondary fw-normal">โซน</dt><dd class="col-8">${esc(l.zone || '-')}</dd>
+      <dt class="col-4 text-body-secondary fw-normal">ขนาด</dt><dd class="col-8">${esc(l.size)} (${esc(s.label || '')})<div class="small text-body-secondary">${esc(s.dim || '')}</div></dd>
+      <dt class="col-4 text-body-secondary fw-normal">สถานะ</dt><dd class="col-8 mb-0">${LG.badge('locker', l.status)}</dd>`;
+    $('#detailStatus').innerHTML = statusOptions(false, l.status);
+    detailModal.show();
+  }
+
+  $('#detailSave').addEventListener('click', (ev) => LG.busy(ev.currentTarget, async () => {
+    const l = find(state.detailId), status = $('#detailStatus').value;
+    if (!l) return;
+    if (status === l.status) { LG.toast('สถานะไม่มีการเปลี่ยนแปลง', 'info'); return; }
+    try {
+      await DS.updateLockerStatus(l.id, status);
+      LG.toast(`เปลี่ยนสถานะล็อกเกอร์ ${l.code} เรียบร้อยแล้ว`);
+      await hideModal(el.detailEl);
+      await reload();
+    } catch (e) { LG.toastError(e); }
+  }));
+  $('#detailEdit').addEventListener('click', async () => { const l = find(state.detailId); await hideModal(el.detailEl); if (l) openForm(l); });
+  $('#detailDelete').addEventListener('click', async () => { const l = find(state.detailId); await hideModal(el.detailEl); if (l) removeLocker(l); });
+
+  // ---------- add / edit modal ----------
+  function fillZones() {
+    const loc = state.locations.find((x) => String(x.id) === el.lLoc.value);
+    const zones = loc ? String(loc.zones || '').split(/[,،]\s*/).map((z) => z.trim()).filter(Boolean) : [];
+    $('#zoneList').innerHTML = zones.map((z) => `<option value="${esc(z)}"></option>`).join('');
+  }
+  el.lLoc.addEventListener('change', fillZones);
+
+  function openForm(l) {
+    if (!state.locations.length) { LG.toast('กรุณาเพิ่มสาขาก่อนเพิ่มล็อกเกอร์', 'warning'); return; }
+    state.editId = l ? l.id : null;
+    el.form.reset();
+    el.form.classList.remove('was-validated');
+    el.formError.classList.add('d-none');
+    $('#lockerModalTitle').textContent = l ? `แก้ไขล็อกเกอร์ ${l.code}` : 'เพิ่มล็อกเกอร์';
+    el.lCode.value = l ? l.code : '';
+    el.lLoc.value = String(l ? l.locationId : (el.fLoc.value || state.locations[0].id));
+    el.lSize.value = l ? l.size : 'M';
+    el.lZone.value = l ? (l.zone || '') : '';
+    el.lStatus.value = l ? l.status : 'available';
+    fillZones();
+    formModal.show();
+  }
+  el.formEl.addEventListener('shown.bs.modal', () => el.lCode.focus());
+
+  el.form.addEventListener('submit', async (ev) => {
+    ev.preventDefault();
+    el.formError.classList.add('d-none');
+    if (!LG.validate(el.form)) {
+      const bad = el.form.querySelector(':invalid');
+      if (bad) { bad.scrollIntoView({ block: 'center' }); bad.focus(); }
+      return;
+    }
+    const obj = { code: el.lCode.value.trim(), locationId: +el.lLoc.value, size: el.lSize.value, zone: el.lZone.value.trim(), status: el.lStatus.value };
+    if (state.editId) obj.id = state.editId;
+    await LG.busy($('#lSubmit'), async () => {
+      try {
+        await DS.saveLocker(obj);
+        formModal.hide();
+        LG.toast(state.editId ? `บันทึกการแก้ไขล็อกเกอร์ ${obj.code} แล้ว` : `เพิ่มล็อกเกอร์ ${obj.code} เรียบร้อยแล้ว`);
+        await reload();
+      } catch (e) {
+        el.formError.textContent = (e && e.message) || 'เกิดข้อผิดพลาด';
+        el.formError.classList.remove('d-none');
+      }
+    });
+  });
+
+  // ---------- filters / view switch ----------
+  const rerender = () => { state.page = 1; render(); };
+  [el.fLoc, el.fSize, el.fStatus].forEach((s) => s.addEventListener('change', rerender));
+  let timer;
+  el.fQ.addEventListener('input', () => { clearTimeout(timer); timer = setTimeout(rerender, 200); });
+  $('#filters').addEventListener('submit', (ev) => ev.preventDefault());
+  $('#fReset').addEventListener('click', () => { el.fLoc.value = ''; el.fSize.value = ''; el.fStatus.value = ''; el.fQ.value = ''; rerender(); });
+
+  document.querySelectorAll('[data-view]').forEach((b) => b.addEventListener('click', () => {
+    state.view = b.dataset.view; state.page = 1;
+    document.querySelectorAll('[data-view]').forEach((x) => { const on = x === b; x.classList.toggle('active', on); x.setAttribute('aria-pressed', on); });
+    el.bulkResult.classList.add('d-none');
+    render();
+  }));
+
+  // ---------- table interactions (delegated) ----------
+  el.content.addEventListener('click', (ev) => {
+    const btn = ev.target.closest('[data-act]');
+    if (!btn) return;
+    const l = find(btn.closest('tr').dataset.id);
+    if (!l) return;
+    if (btn.dataset.act === 'edit') openForm(l); else removeLocker(l);
+  });
+  el.content.addEventListener('change', (ev) => {
+    const t = ev.target;
+    if (t.matches('[data-status-for]')) {
+      const l = find(t.dataset.statusFor);
+      if (l && t.value !== l.status) setStatus(l.id, t.value);
+    } else if (t.matches('[data-chk]')) {
+      if (t.checked) state.selected.add(+t.dataset.chk); else state.selected.delete(+t.dataset.chk);
+      updateBulk();
+    } else if (t.id === 'chkAll') {
+      state.pageIds.forEach((id) => { if (t.checked) state.selected.add(id); else state.selected.delete(id); });
+      el.content.querySelectorAll('[data-chk]').forEach((c) => { c.checked = t.checked; });
+      updateBulk();
+    }
+  });
+
+  // ---------- bulk actions ----------
+  $('#bulkClear').addEventListener('click', () => {
+    state.selected.clear();
+    el.content.querySelectorAll('[data-chk]').forEach((c) => { c.checked = false; });
+    updateBulk();
+  });
+  $('#bulkApply').addEventListener('click', (ev) => LG.busy(ev.currentTarget, async () => {
+    const status = el.bulkStatus.value, ids = [...state.selected];
+    if (!status) { LG.toast('กรุณาเลือกสถานะที่ต้องการเปลี่ยน', 'warning'); return; }
+    if (!ids.length) return;
+    try {
+      const res = await DS.bulkUpdateLockerStatus(ids, status);
+      LG.toast(`เปลี่ยนสถานะ ${(res && res.updated) ?? ids.length} รายการเรียบร้อยแล้ว`);
+      state.selected.clear();
+      el.bulkResult.classList.add('d-none');
+    } catch (e) { LG.toastError(e); }
+    await reload();
+  }));
+  $('#bulkDelete').addEventListener('click', (ev) => LG.busy(ev.currentTarget, async () => {
+    const targets = [...state.selected].map(find).filter(Boolean);
+    if (!targets.length) return;
+    const ok = await LG.confirm({ title: 'ลบล็อกเกอร์ที่เลือก', message: `ต้องการลบล็อกเกอร์ที่เลือกทั้งหมด ${targets.length} รายการ ใช่หรือไม่? การดำเนินการนี้ไม่สามารถย้อนกลับได้`, okText: `ลบ ${targets.length} รายการ`, danger: true });
+    if (!ok) return;
+    const failed = []; let done = 0;
+    for (const l of targets) {
+      try { await DS.deleteLocker(l.id); state.selected.delete(l.id); done++; }
+      catch (e) { failed.push({ code: l.code, message: (e && e.message) || 'เกิดข้อผิดพลาด' }); }
+    }
+    if (done) LG.toast(`ลบล็อกเกอร์ ${done} รายการเรียบร้อยแล้ว`);
+    if (failed.length) {
+      el.bulkResult.innerHTML = `<strong>ลบไม่สำเร็จ ${failed.length} รายการ</strong><ul class="mb-0 mt-1">${failed.map((f) => `<li>${esc(f.code)}: ${esc(f.message)}</li>`).join('')}</ul><button type="button" class="btn-close" data-close-result aria-label="ปิด"></button>`;
+      el.bulkResult.classList.remove('d-none');
+      LG.toast(`ลบไม่สำเร็จ ${failed.length} รายการ`, 'warning');
+    } else el.bulkResult.classList.add('d-none');
+    await reload();
+  }));
+  el.bulkResult.addEventListener('click', (ev) => { if (ev.target.closest('[data-close-result]')) el.bulkResult.classList.add('d-none'); });
+
+  // ---------- init ----------
+  $('#page-actions').innerHTML = '<button type="button" class="btn btn-primary" id="btnAdd"><i class="bi bi-plus-lg me-1" aria-hidden="true"></i>เพิ่มล็อกเกอร์</button>';
+  $('#btnAdd').addEventListener('click', () => openForm(null));
+
+  el.stats.innerHTML = LG.skeleton(2);
+  el.content.innerHTML = LG.skeleton(8);
+  try { state.locations = await DS.getLocations(); }
+  catch (e) { el.stats.innerHTML = ''; el.count.textContent = ''; el.content.innerHTML = LG.errorBox(e); return; }
+
+  el.fLoc.innerHTML = '<option value="">ทุกสาขา</option>' + locationOptions();
+  el.fSize.innerHTML = sizeOptions(true);
+  el.fStatus.innerHTML = statusOptions(true);
+  el.bulkStatus.innerHTML = '<option value="">เลือกสถานะใหม่...</option>' + statusOptions(false);
+  el.lLoc.innerHTML = locationOptions();
+  el.lSize.innerHTML = sizeOptions(false);
+  el.lStatus.innerHTML = statusOptions(false);
+
+  const qStatus = LG.qs('status'), qLoc = LG.qs('locationId');
+  if (qStatus && STATUS_KEYS.includes(qStatus)) el.fStatus.value = qStatus;
+  if (qLoc && state.locations.some((x) => String(x.id) === qLoc)) el.fLoc.value = qLoc;
+
+  await reload();
+})();
+</script>
+</body>
+</html>

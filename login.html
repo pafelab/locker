@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>เข้าสู่ระบบ | LockerGo</title>
+<meta name="description" content="เข้าสู่ระบบ LockerGo เพื่อจองล็อกเกอร์ออนไลน์ ดูการจองของคุณ ต่อเวลา และจัดการบัญชีได้ทุกที่">
+<link rel="icon" type="image/svg+xml" href="assets/img/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+<link href="assets/css/custom.css" rel="stylesheet">
+<script src="assets/js/config.js"></script>
+</head>
+<body data-page="login">
+<a class="visually-hidden-focusable" href="#main">ข้ามไปยังเนื้อหา</a>
+
+<main id="main" class="auth-wrap">
+  <div class="auth-card card card-soft">
+    <div class="card-body p-4 p-sm-5">
+      <div class="d-flex justify-content-between align-items-start gap-2">
+        <a href="index.html" class="text-decoration-none" aria-label="LockerGo กลับหน้าแรก"><div data-logo="mb-3"></div></a>
+        <button type="button" class="btn btn-outline-secondary btn-sm" data-theme-toggle aria-label="สลับโหมดสว่าง/มืด"><i class="bi bi-moon-stars-fill"></i></button>
+      </div>
+
+      <h1 class="h3 mb-1">เข้าสู่ระบบ</h1>
+      <p class="text-body-secondary mb-4">ยินดีต้อนรับกลับ! เข้าสู่ระบบเพื่อจองและจัดการล็อกเกอร์ของคุณ</p>
+
+      <form id="login-form" novalidate>
+        <div id="form-alert" class="alert alert-danger d-none" role="alert"></div>
+
+        <div class="mb-3">
+          <label for="email" class="form-label">อีเมล</label>
+          <input type="email" class="form-control" id="email" name="email" autocomplete="email" placeholder="name@example.com" required>
+          <div class="invalid-feedback">กรุณากรอกอีเมลให้ถูกต้อง</div>
+        </div>
+
+        <div class="mb-3">
+          <div class="d-flex justify-content-between align-items-baseline">
+            <label for="password" class="form-label">รหัสผ่าน</label>
+            <a href="forgot-password.html" class="small">ลืมรหัสผ่าน?</a>
+          </div>
+          <div class="input-group has-validation">
+            <input type="password" class="form-control" id="password" name="password" autocomplete="current-password" required>
+            <button class="btn btn-outline-secondary" type="button" data-toggle-pw="password" aria-label="แสดงรหัสผ่าน" aria-pressed="false" aria-controls="password"><i class="bi bi-eye"></i></button>
+            <div class="invalid-feedback">กรุณากรอกรหัสผ่าน</div>
+          </div>
+        </div>
+
+        <div class="form-check mb-4">
+          <input class="form-check-input" type="checkbox" id="remember" name="remember">
+          <label class="form-check-label" for="remember">จดจำการเข้าสู่ระบบ</label>
+        </div>
+
+        <button type="submit" class="btn btn-primary w-100 py-2" id="login-btn"><i class="bi bi-box-arrow-in-right me-1"></i>เข้าสู่ระบบ</button>
+      </form>
+
+      <p class="text-center small mt-3 mb-4">ยังไม่มีบัญชี? <a href="register.html" id="register-link">สมัครสมาชิกฟรี</a></p>
+
+      <section class="demo-box" aria-labelledby="demo-title">
+        <h2 id="demo-title" class="h6 mb-2"><i class="bi bi-person-badge me-1"></i>บัญชีทดลองใช้งาน</h2>
+        <p class="mb-2">ลูกค้า: <span class="font-monospace">user@demo.com</span> / <span class="font-monospace">demo1234</span></p>
+        <button type="button" class="btn btn-outline-primary btn-sm mb-2" id="use-demo"><i class="bi bi-magic me-1"></i>ใช้บัญชีทดลอง</button>
+        <p class="mb-0 text-body-secondary">สำหรับเจ้าหน้าที่ เข้าสู่ระบบหลังบ้านที่ <a href="admin/login.html">หน้าเข้าสู่ระบบเจ้าหน้าที่</a> (<span class="font-monospace">admin@demo.com</span> / <span class="font-monospace">admin1234</span>)</p>
+      </section>
+
+      <p class="text-center mt-4 mb-0"><a href="index.html" class="link-secondary text-decoration-none small"><i class="bi bi-arrow-left me-1"></i>กลับหน้าแรก</a></p>
+    </div>
+  </div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="assets/js/mock-data.js"></script>
+<script src="assets/js/mock-service.js"></script>
+<script src="assets/js/api-client.js"></script>
+<script src="assets/js/data-service.js"></script>
+<script src="assets/js/auth.js"></script>
+<script src="assets/js/main.js"></script>
+<script>
+(async () => {
+  const form = document.getElementById('login-form');
+  const alertBox = document.getElementById('form-alert');
+  const email = document.getElementById('email');
+  const password = document.getElementById('password');
+  const target = Auth.next('my-bookings.html');
+
+  // Keep ?next= when switching to the register page
+  const next = new URLSearchParams(location.search).get('next');
+  if (next && Auth.next('') === next) document.getElementById('register-link').href = `register.html?next=${encodeURIComponent(next)}`;
+
+  // Show / hide password
+  document.querySelectorAll('[data-toggle-pw]').forEach((btn) => btn.addEventListener('click', () => {
+    const input = document.getElementById(btn.dataset.togglePw), show = input.type === 'password';
+    input.type = show ? 'text' : 'password';
+    btn.setAttribute('aria-pressed', String(show));
+    btn.setAttribute('aria-label', show ? 'ซ่อนรหัสผ่าน' : 'แสดงรหัสผ่าน');
+    btn.querySelector('i').className = `bi bi-eye${show ? '-slash' : ''}`;
+  }));
+
+  // Demo account
+  document.getElementById('use-demo').addEventListener('click', () => {
+    email.value = 'user@demo.com';
+    password.value = 'demo1234';
+    alertBox.classList.add('d-none');
+    form.classList.remove('was-validated');
+    document.getElementById('login-btn').focus();
+  });
+
+  form.addEventListener('submit', async (ev) => {
+    ev.preventDefault();
+    alertBox.classList.add('d-none');
+    if (!LG.validate(form)) return;
+    const btn = document.getElementById('login-btn');
+    await LG.busy(btn, async () => {
+      try {
+        const u = await Auth.login(email.value.trim(), password.value, false, document.getElementById('remember').checked);
+        LG.toast(`ยินดีต้อนรับ คุณ${u.name}`);
+        location.replace(target);
+      } catch (e) {
+        alertBox.innerHTML = `<i class="bi bi-exclamation-triangle-fill me-2"></i>${LG.esc(e.message || 'เข้าสู่ระบบไม่สำเร็จ')}`;
+        alertBox.classList.remove('d-none');
+        if (e.status === 401) { form.classList.remove('was-validated'); password.value = ''; password.focus(); }
+      }
+    });
+  });
+
+  // Already logged in -> go straight to the target page
+  const u = await Auth.current();
+  if (u) location.replace(target);
+})();
+</script>
+</body>
+</html>

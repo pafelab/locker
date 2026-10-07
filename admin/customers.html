@@ -1,0 +1,238 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ลูกค้า | LockerGo</title>
+<meta name="description" content="จัดการข้อมูลลูกค้า ดูประวัติการจอง ยอดใช้จ่าย และระงับหรือเปิดใช้งานบัญชีลูกค้า LockerGo">
+<link rel="icon" type="image/svg+xml" href="../assets/img/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+<link href="../assets/css/custom.css" rel="stylesheet">
+<link href="../assets/css/admin.css" rel="stylesheet">
+<script src="../assets/js/config.js"></script>
+</head>
+<body data-shell="admin" data-page="customers">
+<a class="visually-hidden-focusable" href="#main">ข้ามไปยังเนื้อหา</a>
+<div class="admin-wrap"><aside id="admin-sidebar"></aside>
+  <div class="admin-main"><div id="admin-topbar"></div>
+    <main id="main" class="admin-content" data-title="ลูกค้า">
+
+      <!-- summary cards -->
+      <section aria-labelledby="summary-heading" class="mb-4">
+        <h2 id="summary-heading" class="visually-hidden">สรุปจำนวนลูกค้า</h2>
+        <div class="row g-3">
+          <div class="col-12 col-sm-4">
+            <div class="card kpi-card h-100"><div class="card-body d-flex align-items-center gap-3">
+              <span class="icon-circle"><i class="bi bi-people-fill"></i></span>
+              <div><div class="small text-body-secondary">ลูกค้าทั้งหมด</div><div class="kpi-value" id="stat-total">-</div></div>
+            </div></div>
+          </div>
+          <div class="col-6 col-sm-4">
+            <div class="card kpi-card h-100"><div class="card-body d-flex align-items-center gap-3">
+              <span class="icon-circle"><i class="bi bi-person-check-fill"></i></span>
+              <div><div class="small text-body-secondary">ใช้งานอยู่</div><div class="kpi-value" id="stat-active">-</div></div>
+            </div></div>
+          </div>
+          <div class="col-6 col-sm-4">
+            <div class="card kpi-card h-100"><div class="card-body d-flex align-items-center gap-3">
+              <span class="icon-circle"><i class="bi bi-person-slash"></i></span>
+              <div><div class="small text-body-secondary">ถูกระงับ</div><div class="kpi-value" id="stat-suspended">-</div></div>
+            </div></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- filters -->
+      <form class="card card-soft mb-3" id="filters" role="search" aria-label="ค้นหาและกรองลูกค้า">
+        <div class="card-body">
+          <div class="row g-2 align-items-end">
+            <div class="col-12 col-md-5">
+              <label for="f-q" class="form-label small mb-1">ค้นหา</label>
+              <div class="input-group">
+                <span class="input-group-text"><i class="bi bi-search" aria-hidden="true"></i></span>
+                <input type="search" class="form-control" id="f-q" placeholder="ชื่อ อีเมล หรือเบอร์โทร" autocomplete="off">
+              </div>
+            </div>
+            <div class="col-6 col-md-3">
+              <label for="f-status" class="form-label small mb-1">สถานะ</label>
+              <select class="form-select" id="f-status">
+                <option value="">ทั้งหมด</option>
+                <option value="active">ใช้งานอยู่</option>
+                <option value="suspended">ถูกระงับ</option>
+              </select>
+            </div>
+            <div class="col-6 col-md-4">
+              <label for="f-sort" class="form-label small mb-1">เรียงตาม</label>
+              <select class="form-select" id="f-sort">
+                <option value="name">ชื่อ (ก-ฮ)</option>
+                <option value="spent">ยอดใช้จ่าย (มากไปน้อย)</option>
+                <option value="bookings">จำนวนการจอง (มากไปน้อย)</option>
+                <option value="joined">สมัครล่าสุด</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </form>
+
+      <!-- table -->
+      <section aria-labelledby="list-heading">
+        <h2 id="list-heading" class="visually-hidden">รายชื่อลูกค้า</h2>
+        <div class="card card-soft table-card">
+          <div id="list-area" class="p-3"><div class="placeholder-glow" aria-hidden="true"><span class="placeholder col-12 rounded mb-2 py-3"></span><span class="placeholder col-12 rounded mb-2 py-3"></span><span class="placeholder col-12 rounded mb-2 py-3"></span><span class="placeholder col-12 rounded mb-2 py-3"></span><span class="placeholder col-12 rounded mb-2 py-3"></span></div><span class="visually-hidden" role="status">กำลังโหลด...</span></div>
+          <div class="card-footer bg-transparent d-flex flex-wrap align-items-center gap-2 justify-content-between">
+            <span class="small text-body-secondary" id="result-count" aria-live="polite"></span>
+            <div id="pager"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- customer profile offcanvas -->
+      <div class="offcanvas offcanvas-end" tabindex="-1" id="customer-panel" aria-labelledby="customer-panel-title">
+        <div class="offcanvas-header border-bottom">
+          <h2 class="offcanvas-title h5" id="customer-panel-title">ข้อมูลลูกค้า</h2>
+          <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="ปิด"></button>
+        </div>
+        <div class="offcanvas-body" id="customer-body"></div>
+      </div>
+
+    </main>
+  </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="../assets/js/mock-data.js"></script>
+<script src="../assets/js/mock-service.js"></script>
+<script src="../assets/js/api-client.js"></script>
+<script src="../assets/js/data-service.js"></script>
+<script src="../assets/js/auth.js"></script>
+<script src="../assets/js/main.js"></script>
+<script src="../assets/js/admin.js"></script>
+<script>
+(async () => {
+  const user = await Admin.ready;
+  const PER = 10;
+  const $ = (s) => document.querySelector(s);
+  const state = { all: [], q: '', status: '', sort: 'name', page: 1, openId: null };
+  const listArea = $('#list-area'), panelBody = $('#customer-body');
+  const panel = bootstrap.Offcanvas.getOrCreateInstance('#customer-panel');
+
+  const sorters = {
+    name: (a, b) => a.name.localeCompare(b.name, 'th'),
+    spent: (a, b) => b.totalSpent - a.totalSpent || a.name.localeCompare(b.name, 'th'),
+    bookings: (a, b) => b.bookingCount - a.bookingCount || a.name.localeCompare(b.name, 'th'),
+    joined: (a, b) => String(b.createdAt).localeCompare(String(a.createdAt)),
+  };
+
+  function filtered() {
+    const needle = state.q.trim().toLowerCase();
+    return state.all
+      .filter((c) => (!state.status || c.status === state.status)
+        && (!needle || [c.name, c.email, c.phone].some((v) => String(v || '').toLowerCase().includes(needle))))
+      .sort(sorters[state.sort]);
+  }
+
+  function renderStats() {
+    $('#stat-total').textContent = state.all.length.toLocaleString('th-TH');
+    $('#stat-active').textContent = state.all.filter((c) => c.status === 'active').length.toLocaleString('th-TH');
+    $('#stat-suspended').textContent = state.all.filter((c) => c.status === 'suspended').length.toLocaleString('th-TH');
+  }
+
+  function render() {
+    const items = filtered();
+    const { rows, page } = LG.paginate(items, state.page, PER);
+    state.page = page;
+    $('#result-count').textContent = items.length ? `แสดง ${rows.length} จาก ${items.length} รายการ` : '';
+    if (!items.length) {
+      listArea.innerHTML = LG.empty(state.all.length ? 'ไม่พบลูกค้าตามเงื่อนไขที่ค้นหา' : 'ยังไม่มีลูกค้าในระบบ', 'people');
+      $('#pager').innerHTML = '';
+      return;
+    }
+    listArea.className = '';
+    listArea.innerHTML = `<div class="table-responsive"><table class="table table-hover align-middle">
+      <caption class="visually-hidden">รายชื่อลูกค้า</caption>
+      <thead><tr><th scope="col">ชื่อ</th><th scope="col">อีเมล</th><th scope="col">เบอร์โทร</th><th scope="col" class="text-end">การจอง</th><th scope="col" class="text-end">ยอดใช้จ่าย</th><th scope="col">สถานะ</th><th scope="col">สมัครเมื่อ</th></tr></thead>
+      <tbody>${rows.map((c) => `<tr>
+        <td><button type="button" class="btn btn-link p-0 text-start text-decoration-none fw-semibold d-flex align-items-center gap-2" data-id="${c.id}" aria-label="ดูโปรไฟล์ ${LG.esc(c.name)}"><span class="avatar" aria-hidden="true">${LG.esc(c.name.charAt(0))}</span><span>${LG.esc(c.name)}</span></button></td>
+        <td class="text-break">${LG.esc(c.email)}</td>
+        <td class="text-nowrap">${LG.esc(c.phone || '-')}</td>
+        <td class="text-end">${c.bookingCount}</td>
+        <td class="text-end text-nowrap">${LG.fmt.baht(c.totalSpent)}</td>
+        <td>${LG.badge('user', c.status)}</td>
+        <td class="text-nowrap">${LG.fmt.date(c.createdAt)}</td></tr>`).join('')}</tbody></table></div>`;
+    listArea.querySelectorAll('[data-id]').forEach((b) => b.addEventListener('click', () => openProfile(+b.dataset.id)));
+    LG.pager($('#pager'), { total: items.length, page, per: PER }, (p) => { state.page = p; render(); });
+  }
+
+  async function load() {
+    listArea.className = 'p-3';
+    listArea.innerHTML = LG.skeleton();
+    try {
+      state.all = await DS.getCustomers();
+      renderStats();
+      render();
+    } catch (e) { listArea.innerHTML = LG.errorBox(e); }
+  }
+
+  async function openProfile(id) {
+    state.openId = id;
+    panelBody.innerHTML = LG.skeleton(6);
+    panel.show();
+    try {
+      const c = await DS.getCustomer(id);
+      if (state.openId !== id) return;
+      const suspended = c.status === 'suspended';
+      panelBody.innerHTML = `
+        <div class="d-flex align-items-center gap-3 mb-3">
+          <span class="icon-circle fs-3 fw-semibold" aria-hidden="true">${LG.esc(c.name.charAt(0))}</span>
+          <div class="flex-grow-1"><h3 class="h5 mb-1">${LG.esc(c.name)}</h3>${LG.badge('user', c.status)}</div>
+        </div>
+        <ul class="list-unstyled small mb-3">
+          <li class="mb-1"><i class="bi bi-envelope me-2 text-body-secondary" aria-hidden="true"></i><span class="visually-hidden">อีเมล</span><a href="mailto:${LG.esc(c.email)}" class="text-break">${LG.esc(c.email)}</a></li>
+          <li class="mb-1"><i class="bi bi-telephone me-2 text-body-secondary" aria-hidden="true"></i><span class="visually-hidden">โทรศัพท์</span>${LG.esc(c.phone || '-')}</li>
+          <li class="mb-1"><i class="bi bi-calendar-plus me-2 text-body-secondary" aria-hidden="true"></i>สมัครเมื่อ ${LG.fmt.date(c.createdAt)}</li>
+          <li><i class="bi bi-box-arrow-in-right me-2 text-body-secondary" aria-hidden="true"></i>เข้าสู่ระบบล่าสุด ${LG.fmt.datetime(c.lastLoginAt)}</li>
+        </ul>
+        <div class="row g-2 mb-3 text-center">
+          <div class="col-6"><div class="border rounded-3 p-2 bg-body-tertiary"><div class="small text-body-secondary">จำนวนการจอง</div><div class="fs-5 fw-bold">${c.bookingCount}</div></div></div>
+          <div class="col-6"><div class="border rounded-3 p-2 bg-body-tertiary"><div class="small text-body-secondary">ยอดใช้จ่ายรวม</div><div class="fs-5 fw-bold">${LG.fmt.baht(c.totalSpent)}</div></div></div>
+        </div>
+        <h3 class="h6">ประวัติการจอง</h3>
+        ${c.bookings && c.bookings.length ? `<div class="table-responsive mb-3"><table class="table table-sm align-middle">
+          <thead><tr><th scope="col">รหัส</th><th scope="col">ล็อกเกอร์</th><th scope="col">เริ่มต้น</th><th scope="col" class="text-end">ยอด</th><th scope="col">สถานะ</th></tr></thead>
+          <tbody>${c.bookings.map((b) => `<tr><td class="text-nowrap"><a href="bookings.html?q=${encodeURIComponent(b.ref)}">${LG.esc(b.ref)}</a></td><td>${LG.esc(b.lockerCode)}</td><td class="text-nowrap">${LG.fmt.datetime(b.startAt)}</td><td class="text-end text-nowrap">${LG.fmt.baht(b.amount)}</td><td>${LG.badge('booking', b.status)}</td></tr>`).join('')}</tbody></table></div>` : LG.empty('ยังไม่มีประวัติการจอง', 'calendar-x')}
+        <div class="d-grid">
+          <button type="button" class="btn ${suspended ? 'btn-success' : 'btn-outline-danger'}" id="toggle-status"><i class="bi bi-${suspended ? 'person-check' : 'person-slash'} me-1" aria-hidden="true"></i>${suspended ? 'เปิดใช้งานบัญชี' : 'ระงับบัญชี'}</button>
+        </div>`;
+      $('#toggle-status').addEventListener('click', (ev) => LG.busy(ev.currentTarget, async () => {
+        const next = suspended ? 'active' : 'suspended';
+        const ok = await LG.confirm({
+          title: suspended ? 'เปิดใช้งานบัญชี' : 'ระงับบัญชี',
+          message: suspended ? `ต้องการเปิดใช้งานบัญชีของ ${c.name} อีกครั้งหรือไม่` : `ต้องการระงับบัญชีของ ${c.name} หรือไม่ ลูกค้าจะไม่สามารถเข้าสู่ระบบได้`,
+          okText: suspended ? 'เปิดใช้งาน' : 'ระงับบัญชี',
+          danger: !suspended,
+        });
+        if (!ok) return;
+        try {
+          await DS.updateCustomerStatus(c.id, next);
+          LG.toast(suspended ? 'เปิดใช้งานบัญชีเรียบร้อย' : 'ระงับบัญชีเรียบร้อย');
+          await load();
+          await openProfile(c.id);
+        } catch (e) { LG.toastError(e); }
+      }));
+    } catch (e) { if (state.openId === id) panelBody.innerHTML = LG.errorBox(e); }
+  }
+
+  // filters
+  let timer;
+  $('#f-q').addEventListener('input', (e) => { clearTimeout(timer); timer = setTimeout(() => { state.q = e.target.value; state.page = 1; render(); }, 200); });
+  $('#f-status').addEventListener('change', (e) => { state.status = e.target.value; state.page = 1; render(); });
+  $('#f-sort').addEventListener('change', (e) => { state.sort = e.target.value; state.page = 1; render(); });
+  $('#filters').addEventListener('submit', (e) => e.preventDefault());
+
+  load();
+})();
+</script>
+</body>
+</html>

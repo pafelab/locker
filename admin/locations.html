@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>สาขาและโซน | LockerGo</title>
+<meta name="description" content="จัดการสาขา โซน เวลาทำการ และดูจำนวนล็อกเกอร์ว่างของแต่ละสาขาในระบบ LockerGo">
+<link rel="icon" type="image/svg+xml" href="../assets/img/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+<link href="../assets/css/custom.css" rel="stylesheet">
+<link href="../assets/css/admin.css" rel="stylesheet">
+<script src="../assets/js/config.js"></script>
+</head>
+<body data-shell="admin" data-page="locations">
+<a class="visually-hidden-focusable" href="#main">ข้ามไปยังเนื้อหา</a>
+<div class="admin-wrap"><aside id="admin-sidebar"></aside>
+  <div class="admin-main"><div id="admin-topbar"></div>
+    <main id="main" class="admin-content" data-title="สาขาและโซน">
+
+      <section aria-labelledby="loc-heading">
+        <h2 id="loc-heading" class="visually-hidden">รายการสาขา</h2>
+        <div id="loc-area"><div class="placeholder-glow" aria-hidden="true"><span class="placeholder col-12 rounded mb-2 py-5"></span><span class="placeholder col-12 rounded mb-2 py-5"></span></div><span class="visually-hidden" role="status">กำลังโหลด...</span></div>
+      </section>
+
+      <!-- add / edit modal -->
+      <div class="modal fade" id="loc-modal" tabindex="-1" aria-labelledby="loc-modal-title" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+          <form class="modal-content" id="loc-form" novalidate>
+            <div class="modal-header">
+              <h2 class="modal-title fs-5" id="loc-modal-title">เพิ่มสาขา</h2>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="ปิด"></button>
+            </div>
+            <div class="modal-body">
+              <input type="hidden" name="id">
+              <div class="mb-3">
+                <label for="loc-name" class="form-label">ชื่อสาขา <span class="text-danger" aria-hidden="true">*</span></label>
+                <input type="text" class="form-control" id="loc-name" name="name" required minlength="2" maxlength="100" placeholder="เช่น สยามสแควร์">
+                <div class="invalid-feedback">กรุณากรอกชื่อสาขา (อย่างน้อย 2 ตัวอักษร)</div>
+              </div>
+              <div class="mb-3">
+                <label for="loc-address" class="form-label">ที่อยู่ <span class="text-danger" aria-hidden="true">*</span></label>
+                <textarea class="form-control" id="loc-address" name="address" rows="3" required minlength="5" maxlength="300" placeholder="เช่น 999 ถนนพระราม 1 แขวงปทุมวัน เขตปทุมวัน กรุงเทพฯ 10330"></textarea>
+                <div class="invalid-feedback">กรุณากรอกที่อยู่สาขา</div>
+              </div>
+              <div class="row g-3">
+                <div class="col-sm-6">
+                  <label for="loc-zones" class="form-label">โซน</label>
+                  <input type="text" class="form-control" id="loc-zones" name="zones" maxlength="100" placeholder="เช่น A, B, C" aria-describedby="loc-zones-help">
+                  <div class="form-text" id="loc-zones-help">คั่นแต่ละโซนด้วยเครื่องหมายจุลภาค</div>
+                </div>
+                <div class="col-sm-6">
+                  <label for="loc-hours" class="form-label">เวลาทำการ</label>
+                  <input type="text" class="form-control" id="loc-hours" name="openHours" maxlength="50" placeholder="เช่น 08:00 - 22:00">
+                </div>
+                <div class="col-12">
+                  <label for="loc-phone" class="form-label">เบอร์โทรศัพท์</label>
+                  <input type="tel" class="form-control" id="loc-phone" name="phone" pattern="[0-9\-+ ]{9,15}" maxlength="20" placeholder="เช่น 02-123-4567">
+                  <div class="invalid-feedback">กรุณากรอกเบอร์โทรศัพท์ให้ถูกต้อง (ตัวเลข 9-15 หลัก)</div>
+                </div>
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">ยกเลิก</button>
+              <button type="submit" class="btn btn-primary" id="loc-save"><i class="bi bi-check-lg me-1" aria-hidden="true"></i>บันทึก</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="../assets/js/mock-data.js"></script>
+<script src="../assets/js/mock-service.js"></script>
+<script src="../assets/js/api-client.js"></script>
+<script src="../assets/js/data-service.js"></script>
+<script src="../assets/js/auth.js"></script>
+<script src="../assets/js/main.js"></script>
+<script src="../assets/js/admin.js"></script>
+<script>
+(async () => {
+  const user = await Admin.ready;
+  const $ = (s) => document.querySelector(s);
+  const area = $('#loc-area'), form = $('#loc-form');
+  const modal = bootstrap.Modal.getOrCreateInstance('#loc-modal');
+  let locations = [];
+
+  $('#page-actions').innerHTML = '<button type="button" class="btn btn-primary" id="btn-add"><i class="bi bi-plus-lg me-1" aria-hidden="true"></i>เพิ่มสาขา</button>';
+
+  function card(l) {
+    const total = l.lockerCount, free = l.availableCount;
+    const pct = total ? Math.round(free / total * 100) : 0;
+    const zones = String(l.zones || '').split(',').map((z) => z.trim()).filter(Boolean);
+    return `<div class="col-12 col-md-6 col-xl-4"><article class="card card-soft h-100" aria-labelledby="loc-t-${l.id}">
+      <div class="cover-art" aria-hidden="true"><i class="bi bi-geo-alt-fill"></i></div>
+      <div class="card-body d-flex flex-column">
+        <h3 class="h5" id="loc-t-${l.id}">${LG.esc(l.name)}</h3>
+        <p class="text-body-secondary small mb-2"><i class="bi bi-geo-alt me-1" aria-hidden="true"></i>${LG.esc(l.address)}</p>
+        <ul class="list-unstyled small mb-3">
+          <li class="mb-1"><i class="bi bi-clock me-2 text-body-secondary" aria-hidden="true"></i>${LG.esc(l.openHours || '-')}</li>
+          <li class="mb-1"><i class="bi bi-telephone me-2 text-body-secondary" aria-hidden="true"></i>${LG.esc(l.phone || '-')}</li>
+          <li class="d-flex flex-wrap align-items-center gap-1"><i class="bi bi-diagram-3 me-1 text-body-secondary" aria-hidden="true"></i>โซน: ${zones.length ? zones.map((z) => `<span class="badge text-bg-secondary">${LG.esc(z)}</span>`).join('') : '-'}</li>
+        </ul>
+        <div class="mb-3">
+          <div class="d-flex justify-content-between small mb-1"><span>ล็อกเกอร์ว่าง</span><span class="fw-semibold">${free} / ${total}</span></div>
+          <div class="progress" role="progressbar" aria-label="ล็อกเกอร์ว่าง ${LG.esc(l.name)}" aria-valuenow="${pct}" aria-valuemin="0" aria-valuemax="100"><div class="progress-bar bg-success" data-pct="${pct}"></div></div>
+        </div>
+        <div class="d-flex flex-wrap gap-2 mt-auto">
+          <a class="btn btn-outline-primary btn-sm" href="lockers.html?locationId=${l.id}"><i class="bi bi-grid-3x3-gap me-1" aria-hidden="true"></i>ดูล็อกเกอร์</a>
+          <button type="button" class="btn btn-outline-secondary btn-sm" data-edit="${l.id}"><i class="bi bi-pencil me-1" aria-hidden="true"></i>แก้ไข</button>
+          <button type="button" class="btn btn-outline-danger btn-sm ms-auto" data-del="${l.id}" aria-label="ลบสาขา ${LG.esc(l.name)}"><i class="bi bi-trash" aria-hidden="true"></i></button>
+        </div>
+      </div></article></div>`;
+  }
+
+  function render() {
+    if (!locations.length) { area.innerHTML = LG.empty('ยังไม่มีสาขา กดปุ่ม "เพิ่มสาขา" เพื่อเริ่มต้น', 'geo-alt'); return; }
+    area.innerHTML = `<div class="row g-3">${locations.map(card).join('')}</div>`;
+    area.querySelectorAll('[data-pct]').forEach((b) => { b.style.width = b.dataset.pct + '%'; });
+    area.querySelectorAll('[data-edit]').forEach((b) => b.addEventListener('click', () => openForm(locations.find((l) => l.id === +b.dataset.edit))));
+    area.querySelectorAll('[data-del]').forEach((b) => b.addEventListener('click', () => remove(locations.find((l) => l.id === +b.dataset.del))));
+  }
+
+  async function load() {
+    area.innerHTML = LG.skeleton(4);
+    try { locations = await DS.getLocations(); render(); }
+    catch (e) { area.innerHTML = LG.errorBox(e); }
+  }
+
+  function openForm(l) {
+    form.classList.remove('was-validated');
+    form.reset();
+    $('#loc-modal-title').textContent = l ? 'แก้ไขสาขา' : 'เพิ่มสาขา';
+    form.id.value = l ? l.id : '';
+    form.name.value = l ? l.name : '';
+    form.address.value = l ? l.address : '';
+    form.zones.value = l ? l.zones || '' : '';
+    form.openHours.value = l ? l.openHours || '' : '';
+    form.phone.value = l ? l.phone || '' : '';
+    modal.show();
+  }
+
+  async function remove(l) {
+    const ok = await LG.confirm({ title: 'ลบสาขา', message: `ต้องการลบสาขา "${l.name}" หรือไม่ การลบไม่สามารถย้อนกลับได้`, okText: 'ลบสาขา', danger: true });
+    if (!ok) return;
+    try { await DS.deleteLocation(l.id); LG.toast('ลบสาขาเรียบร้อย'); await load(); }
+    catch (e) { LG.toastError(e); }   // 409 has_lockers shows the API message
+  }
+
+  $('#btn-add').addEventListener('click', () => openForm(null));
+  $('#loc-modal').addEventListener('shown.bs.modal', () => form.name.focus());
+
+  form.addEventListener('submit', (ev) => {
+    ev.preventDefault();
+    if (!LG.validate(form)) return;
+    LG.busy($('#loc-save'), async () => {
+      const obj = { name: form.name.value.trim(), address: form.address.value.trim(), zones: form.zones.value.trim(), openHours: form.openHours.value.trim(), phone: form.phone.value.trim() };
+      if (form.id.value) obj.id = +form.id.value;
+      try {
+        await DS.saveLocation(obj);
+        modal.hide();
+        LG.toast(obj.id ? 'บันทึกการแก้ไขสาขาเรียบร้อย' : 'เพิ่มสาขาเรียบร้อย');
+        await load();
+      } catch (e) { LG.toastError(e); }
+    });
+  });
+
+  load();
+})();
+</script>
+</body>
+</html>

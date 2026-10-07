@@ -1,0 +1,446 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ตั้งค่า | LockerGo</title>
+<meta name="description" content="ตั้งค่าระบบ LockerGo: ข้อมูลทั่วไป กฎการจอง แม่แบบการแจ้งเตือน การแสดงผล และโหมดข้อมูล">
+<link rel="icon" type="image/svg+xml" href="../assets/img/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+<link href="../assets/css/custom.css" rel="stylesheet">
+<link href="../assets/css/admin.css" rel="stylesheet">
+<script src="../assets/js/config.js"></script>
+</head>
+<body data-shell="admin" data-page="settings">
+<a class="visually-hidden-focusable" href="#main">ข้ามไปยังเนื้อหา</a>
+<div class="admin-wrap"><aside id="admin-sidebar"></aside>
+  <div class="admin-main"><div id="admin-topbar"></div>
+    <main id="main" class="admin-content" data-title="ตั้งค่า">
+
+      <div id="settings-loading" class="card card-soft"><div class="card-body" id="settings-loading-body"></div></div>
+
+      <div id="settings-area" class="card card-soft d-none">
+        <div class="card-header bg-body border-bottom-0 pt-3 pb-0">
+          <ul class="nav nav-tabs card-header-tabs flex-nowrap overflow-x-auto overflow-y-hidden" id="settings-tabs" role="tablist" aria-label="หมวดการตั้งค่า">
+            <li class="nav-item" role="presentation"><button class="nav-link active text-nowrap" id="tab-general" data-bs-toggle="tab" data-bs-target="#pane-general" type="button" role="tab" aria-controls="pane-general" aria-selected="true"><i class="bi bi-building me-1" aria-hidden="true"></i>ทั่วไป</button></li>
+            <li class="nav-item" role="presentation"><button class="nav-link text-nowrap" id="tab-rules" data-bs-toggle="tab" data-bs-target="#pane-rules" type="button" role="tab" aria-controls="pane-rules" aria-selected="false" tabindex="-1"><i class="bi bi-calendar2-check me-1" aria-hidden="true"></i>กฎการจอง</button></li>
+            <li class="nav-item" role="presentation"><button class="nav-link text-nowrap" id="tab-notify" data-bs-toggle="tab" data-bs-target="#pane-notify" type="button" role="tab" aria-controls="pane-notify" aria-selected="false" tabindex="-1"><i class="bi bi-bell me-1" aria-hidden="true"></i>แม่แบบการแจ้งเตือน</button></li>
+            <li class="nav-item" role="presentation"><button class="nav-link text-nowrap" id="tab-display" data-bs-toggle="tab" data-bs-target="#pane-display" type="button" role="tab" aria-controls="pane-display" aria-selected="false" tabindex="-1"><i class="bi bi-palette me-1" aria-hidden="true"></i>การแสดงผล</button></li>
+            <li class="nav-item" role="presentation"><button class="nav-link text-nowrap" id="tab-system" data-bs-toggle="tab" data-bs-target="#pane-system" type="button" role="tab" aria-controls="pane-system" aria-selected="false" tabindex="-1"><i class="bi bi-hdd-stack me-1" aria-hidden="true"></i>ระบบ</button></li>
+          </ul>
+        </div>
+
+        <div class="card-body p-3 p-md-4">
+          <div class="tab-content">
+
+            <!-- 1. General -->
+            <div class="tab-pane fade show active" id="pane-general" role="tabpanel" aria-labelledby="tab-general" tabindex="0">
+              <h2 class="h5 mb-1">ข้อมูลทั่วไป</h2>
+              <p class="text-body-secondary small mb-4">ข้อมูลที่แสดงบนหน้าเว็บไซต์ อีเมล และข้อความแจ้งเตือนถึงลูกค้า</p>
+              <form id="form-general" novalidate>
+                <div class="row g-4">
+                  <div class="col-lg-8">
+                    <div class="row g-3">
+                      <div class="col-md-6">
+                        <label class="form-label" for="siteName">ชื่อเว็บไซต์ <span class="text-danger" aria-hidden="true">*</span></label>
+                        <input type="text" class="form-control" id="siteName" name="siteName" required maxlength="80" placeholder="เช่น LockerGo">
+                        <div class="invalid-feedback">กรุณากรอกชื่อเว็บไซต์</div>
+                      </div>
+                      <div class="col-md-6">
+                        <label class="form-label" for="tagline">สโลแกน</label>
+                        <input type="text" class="form-control" id="tagline" name="tagline" maxlength="160" placeholder="เช่น ล็อกเกอร์ปลอดภัย จองง่าย ใช้ได้ทันที">
+                      </div>
+                      <div class="col-md-6">
+                        <label class="form-label" for="contactEmail">อีเมลติดต่อ</label>
+                        <input type="email" class="form-control" id="contactEmail" name="contactEmail" maxlength="150" autocomplete="off" placeholder="hello@lockergo.example">
+                        <div class="invalid-feedback">กรุณากรอกอีเมลให้ถูกต้อง</div>
+                      </div>
+                      <div class="col-md-6">
+                        <label class="form-label" for="contactPhone">เบอร์โทรติดต่อ</label>
+                        <input type="tel" class="form-control" id="contactPhone" name="contactPhone" pattern="[0-9\-+ ]{9,15}" autocomplete="off" placeholder="02-123-4500">
+                        <div class="invalid-feedback">กรุณากรอกเบอร์โทรศัพท์ 9-15 หลัก (ตัวเลข เว้นวรรค - หรือ +)</div>
+                      </div>
+                      <div class="col-12">
+                        <label class="form-label" for="address">ที่อยู่</label>
+                        <textarea class="form-control" id="address" name="address" rows="3" maxlength="300" placeholder="เลขที่ ถนน แขวง/เขต จังหวัด รหัสไปรษณีย์"></textarea>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="col-lg-4">
+                    <div class="border rounded p-3 bg-body-tertiary h-100">
+                      <label class="form-label fw-medium" for="logoFile">โลโก้เว็บไซต์</label>
+                      <div class="d-flex align-items-center justify-content-center bg-body border rounded p-3 mb-3">
+                        <img id="logo-preview" src="../assets/img/logo.svg" alt="ตัวอย่างโลโก้เว็บไซต์" class="object-fit-contain mw-100" width="160" height="64">
+                      </div>
+                      <input type="file" class="form-control form-control-sm" id="logoFile" accept="image/*" aria-describedby="logo-help">
+                      <div class="form-text" id="logo-help"><i class="bi bi-info-circle me-1" aria-hidden="true"></i>เป็นเพียงตัวอย่างบนหน้านี้เท่านั้น ไม่ได้อัปโหลดหรือบันทึกไฟล์ หากต้องการเปลี่ยนโลโก้จริง ให้แทนที่ไฟล์ <code>assets/img/logo.svg</code> ในโฟลเดอร์เว็บไซต์</div>
+                      <button type="button" class="btn btn-sm btn-link px-0 d-none" id="logo-reset">ยกเลิกตัวอย่าง</button>
+                    </div>
+                  </div>
+                </div>
+                <div class="d-flex justify-content-end mt-4">
+                  <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg me-1" aria-hidden="true"></i>บันทึกข้อมูลทั่วไป</button>
+                </div>
+              </form>
+            </div>
+
+            <!-- 2. Booking rules -->
+            <div class="tab-pane fade" id="pane-rules" role="tabpanel" aria-labelledby="tab-rules" tabindex="0">
+              <h2 class="h5 mb-1">กฎการจอง</h2>
+              <p class="text-body-secondary small mb-4">กำหนดช่วงเวลาที่ลูกค้าจองได้ เวลาผ่อนผัน และเงื่อนไขการยกเลิก</p>
+              <form id="form-rules" novalidate>
+                <div class="row g-3">
+                  <div class="col-sm-6 col-lg-3">
+                    <label class="form-label" for="minDuration">ระยะเวลาจองขั้นต่ำ (ชั่วโมง) <span class="text-danger" aria-hidden="true">*</span></label>
+                    <input type="number" class="form-control" id="minDuration" name="minDuration" required min="1" max="8760" step="1" inputmode="numeric">
+                    <div class="invalid-feedback">กรุณากรอกจำนวนชั่วโมงตั้งแต่ 1 ขึ้นไป</div>
+                  </div>
+                  <div class="col-sm-6 col-lg-3">
+                    <label class="form-label" for="maxDuration">ระยะเวลาจองสูงสุด (ชั่วโมง) <span class="text-danger" aria-hidden="true">*</span></label>
+                    <input type="number" class="form-control" id="maxDuration" name="maxDuration" required min="1" max="8760" step="1" inputmode="numeric" aria-describedby="max-help">
+                    <div class="invalid-feedback" id="max-feedback">กรุณากรอกจำนวนชั่วโมงสูงสุด</div>
+                    <div class="form-text" id="max-help">720 ชั่วโมง = 30 วัน</div>
+                  </div>
+                  <div class="col-sm-6 col-lg-3">
+                    <label class="form-label" for="gracePeriod">เวลาผ่อนผันหลังหมดเวลา (นาที) <span class="text-danger" aria-hidden="true">*</span></label>
+                    <input type="number" class="form-control" id="gracePeriod" name="gracePeriod" required min="0" max="240" step="1" inputmode="numeric">
+                    <div class="invalid-feedback">กรุณากรอกจำนวนนาที 0-240</div>
+                  </div>
+                  <div class="col-sm-6 col-lg-3">
+                    <label class="form-label" for="cancelFreeHours">ยกเลิกฟรีก่อนเริ่ม (ชั่วโมง) <span class="text-danger" aria-hidden="true">*</span></label>
+                    <input type="number" class="form-control" id="cancelFreeHours" name="cancelFreeHours" required min="0" max="720" step="1" inputmode="numeric">
+                    <div class="invalid-feedback">กรุณากรอกจำนวนชั่วโมง 0-720</div>
+                  </div>
+                  <div class="col-12">
+                    <label class="form-label" for="cancelPolicy">นโยบายการยกเลิกและคืนเงิน</label>
+                    <textarea class="form-control" id="cancelPolicy" name="cancelPolicy" rows="3" maxlength="500" placeholder="เช่น ยกเลิกฟรีก่อนเวลาเริ่มใช้งาน 24 ชั่วโมง หลังจากนั้นคืนเงิน 50%"></textarea>
+                    <div class="form-text">ข้อความนี้จะแสดงให้ลูกค้าเห็นในขั้นตอนการจองและในหน้าข้อกำหนด</div>
+                  </div>
+                </div>
+                <div class="d-flex justify-content-end mt-4">
+                  <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg me-1" aria-hidden="true"></i>บันทึกกฎการจอง</button>
+                </div>
+              </form>
+            </div>
+
+            <!-- 3. Notification templates -->
+            <div class="tab-pane fade" id="pane-notify" role="tabpanel" aria-labelledby="tab-notify" tabindex="0">
+              <h2 class="h5 mb-1">แม่แบบการแจ้งเตือน</h2>
+              <p class="text-body-secondary small mb-3">ข้อความที่ส่งถึงลูกค้าทางอีเมลและ SMS สามารถใช้ตัวแปรที่ระบบจะแทนค่าให้อัตโนมัติ</p>
+              <div class="alert alert-secondary py-2 small d-flex flex-wrap align-items-center gap-2" role="note">
+                <span class="fw-medium"><i class="bi bi-braces me-1" aria-hidden="true"></i>ตัวแปรที่ใช้ได้</span>
+                <span><code>{ref}</code> รหัสการจอง</span>
+                <span><code>{locker}</code> รหัสล็อกเกอร์</span>
+                <span><code>{pin}</code> รหัส PIN เปิดตู้</span>
+              </div>
+              <form id="form-notify" novalidate>
+                <div class="vstack gap-4">
+                  <div class="row g-3" data-tpl="tplConfirm">
+                    <div class="col-lg-7">
+                      <label class="form-label" for="tplConfirm">เมื่อยืนยันการจอง <span class="text-danger" aria-hidden="true">*</span></label>
+                      <textarea class="form-control" id="tplConfirm" name="tplConfirm" rows="3" required maxlength="400"></textarea>
+                      <div class="invalid-feedback">กรุณากรอกข้อความแจ้งเตือน</div>
+                      <div class="mt-2 d-flex flex-wrap gap-1" role="group" aria-label="แทรกตัวแปรในข้อความยืนยันการจอง">
+                        <button type="button" class="btn btn-sm btn-outline-secondary" data-ins="{ref}" data-target="tplConfirm">+ {ref}</button>
+                        <button type="button" class="btn btn-sm btn-outline-secondary" data-ins="{locker}" data-target="tplConfirm">+ {locker}</button>
+                        <button type="button" class="btn btn-sm btn-outline-secondary" data-ins="{pin}" data-target="tplConfirm">+ {pin}</button>
+                      </div>
+                    </div>
+                    <div class="col-lg-5">
+                      <div class="small text-body-secondary mb-1" id="pv-label-confirm">ตัวอย่างข้อความ</div>
+                      <div class="border rounded p-3 bg-body-tertiary h-100 small" data-preview="tplConfirm" role="group" aria-labelledby="pv-label-confirm"></div>
+                    </div>
+                  </div>
+                  <div class="row g-3" data-tpl="tplReminder">
+                    <div class="col-lg-7">
+                      <label class="form-label" for="tplReminder">เตือนก่อนเริ่มใช้งาน <span class="text-danger" aria-hidden="true">*</span></label>
+                      <textarea class="form-control" id="tplReminder" name="tplReminder" rows="3" required maxlength="400"></textarea>
+                      <div class="invalid-feedback">กรุณากรอกข้อความแจ้งเตือน</div>
+                      <div class="mt-2 d-flex flex-wrap gap-1" role="group" aria-label="แทรกตัวแปรในข้อความเตือน">
+                        <button type="button" class="btn btn-sm btn-outline-secondary" data-ins="{ref}" data-target="tplReminder">+ {ref}</button>
+                        <button type="button" class="btn btn-sm btn-outline-secondary" data-ins="{locker}" data-target="tplReminder">+ {locker}</button>
+                        <button type="button" class="btn btn-sm btn-outline-secondary" data-ins="{pin}" data-target="tplReminder">+ {pin}</button>
+                      </div>
+                    </div>
+                    <div class="col-lg-5">
+                      <div class="small text-body-secondary mb-1" id="pv-label-reminder">ตัวอย่างข้อความ</div>
+                      <div class="border rounded p-3 bg-body-tertiary h-100 small" data-preview="tplReminder" role="group" aria-labelledby="pv-label-reminder"></div>
+                    </div>
+                  </div>
+                  <div class="row g-3" data-tpl="tplCancel">
+                    <div class="col-lg-7">
+                      <label class="form-label" for="tplCancel">เมื่อยกเลิกการจอง <span class="text-danger" aria-hidden="true">*</span></label>
+                      <textarea class="form-control" id="tplCancel" name="tplCancel" rows="3" required maxlength="400"></textarea>
+                      <div class="invalid-feedback">กรุณากรอกข้อความแจ้งเตือน</div>
+                      <div class="mt-2 d-flex flex-wrap gap-1" role="group" aria-label="แทรกตัวแปรในข้อความยกเลิก">
+                        <button type="button" class="btn btn-sm btn-outline-secondary" data-ins="{ref}" data-target="tplCancel">+ {ref}</button>
+                        <button type="button" class="btn btn-sm btn-outline-secondary" data-ins="{locker}" data-target="tplCancel">+ {locker}</button>
+                        <button type="button" class="btn btn-sm btn-outline-secondary" data-ins="{pin}" data-target="tplCancel">+ {pin}</button>
+                      </div>
+                    </div>
+                    <div class="col-lg-5">
+                      <div class="small text-body-secondary mb-1" id="pv-label-cancel">ตัวอย่างข้อความ</div>
+                      <div class="border rounded p-3 bg-body-tertiary h-100 small" data-preview="tplCancel" role="group" aria-labelledby="pv-label-cancel"></div>
+                    </div>
+                  </div>
+                </div>
+                <p class="form-text mt-3 mb-0">ตัวอย่างใช้ค่าสมมติ: {ref} = LG260712A1, {locker} = A-12, {pin} = 482916</p>
+                <div class="d-flex justify-content-end mt-3">
+                  <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg me-1" aria-hidden="true"></i>บันทึกแม่แบบ</button>
+                </div>
+              </form>
+            </div>
+
+            <!-- 4. Display -->
+            <div class="tab-pane fade" id="pane-display" role="tabpanel" aria-labelledby="tab-display" tabindex="0">
+              <h2 class="h5 mb-1">การแสดงผล</h2>
+              <p class="text-body-secondary small mb-4">เลือกธีมเริ่มต้นของเว็บไซต์ ผู้ใช้แต่ละคนยังสลับโหมดสว่าง/มืดเองได้จากปุ่มบนแถบเมนู</p>
+              <form id="form-display" novalidate>
+                <fieldset class="mb-4">
+                  <legend class="form-label fs-6">ธีมเริ่มต้น</legend>
+                  <div class="row g-3">
+                    <div class="col-sm-6 col-lg-4">
+                      <input type="radio" class="btn-check" name="defaultTheme" id="theme-light" value="light" autocomplete="off">
+                      <label class="btn btn-outline-primary w-100 text-start p-3" for="theme-light"><i class="bi bi-sun-fill me-2" aria-hidden="true"></i><span class="fw-medium">โหมดสว่าง</span><span class="d-block small opacity-75">พื้นหลังสว่าง อ่านง่ายในที่ที่มีแสง</span></label>
+                    </div>
+                    <div class="col-sm-6 col-lg-4">
+                      <input type="radio" class="btn-check" name="defaultTheme" id="theme-dark" value="dark" autocomplete="off">
+                      <label class="btn btn-outline-primary w-100 text-start p-3" for="theme-dark"><i class="bi bi-moon-stars-fill me-2" aria-hidden="true"></i><span class="fw-medium">โหมดมืด</span><span class="d-block small opacity-75">พื้นหลังมืด สบายตาในที่แสงน้อย</span></label>
+                    </div>
+                  </div>
+                </fieldset>
+                <div class="border rounded p-3 bg-body-tertiary mb-4">
+                  <div class="fw-medium mb-1">ทดลองใช้ธีมตอนนี้</div>
+                  <p class="small text-body-secondary mb-2">เปลี่ยนธีมของเบราว์เซอร์นี้ทันที (ไม่กระทบการตั้งค่าที่บันทึกไว้)</p>
+                  <div class="d-flex flex-wrap gap-2">
+                    <button type="button" class="btn btn-outline-secondary btn-sm" data-apply-theme="light"><i class="bi bi-sun me-1" aria-hidden="true"></i>ใช้โหมดสว่างตอนนี้</button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm" data-apply-theme="dark"><i class="bi bi-moon-stars me-1" aria-hidden="true"></i>ใช้โหมดมืดตอนนี้</button>
+                  </div>
+                </div>
+                <div class="d-flex justify-content-end">
+                  <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg me-1" aria-hidden="true"></i>บันทึกการแสดงผล</button>
+                </div>
+              </form>
+            </div>
+
+            <!-- 5. System -->
+            <div class="tab-pane fade" id="pane-system" role="tabpanel" aria-labelledby="tab-system" tabindex="0">
+              <h2 class="h5 mb-1">ระบบ</h2>
+              <p class="text-body-secondary small mb-4">สถานะการเชื่อมต่อข้อมูลของเว็บไซต์นี้</p>
+              <div class="row g-4">
+                <div class="col-lg-6">
+                  <div class="border rounded p-3 h-100">
+                    <div class="d-flex align-items-center gap-3 mb-3">
+                      <span class="icon-circle" id="mode-icon"><i class="bi bi-database"></i></span>
+                      <div>
+                        <div class="small text-body-secondary">โหมดข้อมูลปัจจุบัน</div>
+                        <div class="fs-5 fw-semibold" id="mode-label" role="status">-</div>
+                      </div>
+                    </div>
+                    <p class="small text-body-secondary mb-2" id="mode-desc"></p>
+                    <dl class="small mb-0 row">
+                      <dt class="col-sm-5 fw-medium">ค่า dataMode ใน config.js</dt>
+                      <dd class="col-sm-7"><code id="cfg-mode">-</code></dd>
+                    </dl>
+                  </div>
+                </div>
+                <div class="col-lg-6">
+                  <div class="border rounded p-3 h-100 bg-body-tertiary">
+                    <h3 class="h6"><i class="bi bi-gear-wide-connected me-1" aria-hidden="true"></i>วิธีเปลี่ยนโหมดข้อมูล</h3>
+                    <p class="small mb-2">แก้ค่า <code>dataMode</code> ในไฟล์ <code>assets/js/config.js</code>:</p>
+                    <ul class="small mb-0">
+                      <li><code>'auto'</code> ใช้ API ก่อน หากเชื่อมต่อฐานข้อมูลไม่ได้จะสลับไปใช้ข้อมูลตัวอย่างอัตโนมัติ</li>
+                      <li><code>'api'</code> ใช้ฐานข้อมูลจริงเท่านั้น (แนะนำสำหรับเว็บไซต์ที่เปิดใช้งานจริง) หากเชื่อมต่อไม่ได้จะแสดงหน้าระบบไม่พร้อมให้บริการ</li>
+                      <li><code>'mock'</code> ใช้ข้อมูลตัวอย่างในเบราว์เซอร์เท่านั้น ไม่เรียก API</li>
+                    </ul>
+                  </div>
+                </div>
+                <div class="col-12">
+                  <div class="border border-danger-subtle rounded p-3 d-flex flex-wrap align-items-center gap-3">
+                    <div class="flex-grow-1">
+                      <h3 class="h6 text-danger mb-1"><i class="bi bi-exclamation-triangle me-1" aria-hidden="true"></i>รีเซ็ตข้อมูลตัวอย่าง</h3>
+                      <p class="small text-body-secondary mb-0" id="reset-help">คืนค่าข้อมูลตัวอย่างทั้งหมด (การจอง ลูกค้า ล็อกเกอร์ ราคา การตั้งค่า) กลับเป็นค่าเริ่มต้น ใช้ได้เฉพาะเมื่ออยู่ในโหมดข้อมูลตัวอย่าง</p>
+                    </div>
+                    <button type="button" class="btn btn-outline-danger" id="reset-demo" aria-describedby="reset-help" disabled><i class="bi bi-arrow-counterclockwise me-1" aria-hidden="true"></i>รีเซ็ตข้อมูลตัวอย่าง</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+    </main>
+  </div></div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="../assets/js/mock-data.js"></script>
+<script src="../assets/js/mock-service.js"></script>
+<script src="../assets/js/api-client.js"></script>
+<script src="../assets/js/data-service.js"></script>
+<script src="../assets/js/auth.js"></script>
+<script src="../assets/js/main.js"></script>
+<script src="../assets/js/admin.js"></script>
+<script>
+(async () => {
+  const user = await Admin.ready;
+  const loadingBox = document.getElementById('settings-loading');
+  const loadingBody = document.getElementById('settings-loading-body');
+  const area = document.getElementById('settings-area');
+  const SAMPLE = { '{ref}': 'LG260712A1', '{locker}': 'A-12', '{pin}': '482916' };
+  const TEXT_FIELDS = ['siteName', 'tagline', 'contactEmail', 'contactPhone', 'address', 'cancelPolicy', 'tplConfirm', 'tplReminder', 'tplCancel'];
+  const NUM_FIELDS = ['minDuration', 'maxDuration', 'gracePeriod', 'cancelFreeHours'];
+  let settings = {};
+
+  const el = (id) => document.getElementById(id);
+  const forms = { general: el('form-general'), rules: el('form-rules'), notify: el('form-notify'), display: el('form-display') };
+
+  loadingBody.innerHTML = LG.skeleton(6);
+  try {
+    settings = await DS.getSettings();
+    await DS.init();
+  } catch (e) {
+    loadingBody.innerHTML = LG.errorBox(e);
+    return;
+  }
+  loadingBox.classList.add('d-none');
+  area.classList.remove('d-none');
+
+  // ---------- fill the forms ----------
+  function fill() {
+    TEXT_FIELDS.forEach((k) => { const f = document.getElementById(k); if (f) f.value = settings[k] ?? ''; });
+    NUM_FIELDS.forEach((k) => { el(k).value = settings[k] ?? ''; });
+    const theme = settings.defaultTheme === 'dark' ? 'dark' : 'light';
+    el('theme-' + theme).checked = true;
+    ['tplConfirm', 'tplReminder', 'tplCancel'].forEach(renderPreview);
+    checkRange();
+  }
+
+  // ---------- generic save: merge the form values over the current settings ----------
+  async function save(form, collect, btn, okMsg) {
+    if (!LG.validate(form)) { const bad = form.querySelector(':invalid'); if (bad) bad.focus(); return; }
+    await LG.busy(btn, async () => {
+      try {
+        const next = { ...settings, ...collect() };
+        const res = await DS.saveSettings(next);
+        settings = (res && typeof res === 'object') ? { ...next, ...res } : next;
+        form.classList.remove('was-validated');
+        LG.toast(okMsg);
+      } catch (e) { LG.toastError(e); }   // e.g. 422 validation message from the API
+    });
+  }
+  const submitBtn = (form) => form.querySelector('button[type="submit"]');
+
+  // ---------- 1. General ----------
+  forms.general.addEventListener('submit', (ev) => {
+    ev.preventDefault();
+    save(forms.general, () => ({
+      siteName: el('siteName').value.trim(), tagline: el('tagline').value.trim(),
+      contactEmail: el('contactEmail').value.trim(), contactPhone: el('contactPhone').value.trim(), address: el('address').value.trim(),
+    }), submitBtn(forms.general), 'บันทึกข้อมูลทั่วไปแล้ว');
+  });
+
+  const logoImg = el('logo-preview'), logoReset = el('logo-reset'), logoOriginal = logoImg.getAttribute('src');
+  el('logoFile').addEventListener('change', (ev) => {
+    const file = ev.target.files[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')) { LG.toast('กรุณาเลือกไฟล์รูปภาพเท่านั้น', 'warning'); ev.target.value = ''; return; }
+    if (file.size > 2 * 1024 * 1024) { LG.toast('ไฟล์ต้องมีขนาดไม่เกิน 2 MB', 'warning'); ev.target.value = ''; return; }
+    const reader = new FileReader();
+    reader.onload = () => { logoImg.src = reader.result; logoImg.alt = `ตัวอย่างโลโก้จากไฟล์ ${file.name} (ยังไม่ได้บันทึก)`; logoReset.classList.remove('d-none'); };
+    reader.onerror = () => LG.toast('ไม่สามารถอ่านไฟล์รูปภาพได้', 'danger');
+    reader.readAsDataURL(file);
+  });
+  logoReset.addEventListener('click', () => {
+    logoImg.src = logoOriginal; logoImg.alt = 'ตัวอย่างโลโก้เว็บไซต์'; el('logoFile').value = ''; logoReset.classList.add('d-none');
+  });
+
+  // ---------- 2. Booking rules ----------
+  function checkRange() {
+    const min = Number(el('minDuration').value), max = Number(el('maxDuration').value), maxEl = el('maxDuration');
+    const bad = el('minDuration').value !== '' && el('maxDuration').value !== '' && min > max;
+    maxEl.setCustomValidity(bad ? 'invalid' : '');
+    el('max-feedback').textContent = bad ? 'ระยะเวลาสูงสุดต้องไม่น้อยกว่าระยะเวลาขั้นต่ำ' : (maxEl.validity.valueMissing ? 'กรุณากรอกจำนวนชั่วโมงสูงสุด' : 'กรุณากรอกจำนวนชั่วโมงตั้งแต่ 1 ขึ้นไป');
+  }
+  ['minDuration', 'maxDuration'].forEach((id) => el(id).addEventListener('input', checkRange));
+  forms.rules.addEventListener('submit', (ev) => {
+    ev.preventDefault(); checkRange();
+    save(forms.rules, () => ({
+      minDuration: Number(el('minDuration').value), maxDuration: Number(el('maxDuration').value),
+      gracePeriod: Number(el('gracePeriod').value), cancelFreeHours: Number(el('cancelFreeHours').value),
+      cancelPolicy: el('cancelPolicy').value.trim(),
+    }), submitBtn(forms.rules), 'บันทึกกฎการจองแล้ว');
+  });
+
+  // ---------- 3. Notification templates ----------
+  function renderPreview(id) {
+    let text = el(id).value;
+    Object.entries(SAMPLE).forEach(([k, v]) => { text = text.split(k).join(v); });
+    const box = document.querySelector(`[data-preview="${id}"]`);
+    box.textContent = text.trim() ? text : 'ยังไม่มีข้อความ';   // textContent: safe, no HTML injection
+    box.classList.toggle('text-body-secondary', !text.trim());
+  }
+  ['tplConfirm', 'tplReminder', 'tplCancel'].forEach((id) => {
+    el(id).addEventListener('input', () => renderPreview(id));
+  });
+  document.querySelectorAll('[data-ins]').forEach((b) => b.addEventListener('click', () => {
+    const t = el(b.dataset.target), s = t.selectionStart ?? t.value.length, e = t.selectionEnd ?? t.value.length;
+    t.value = t.value.slice(0, s) + b.dataset.ins + t.value.slice(e);
+    t.focus(); t.setSelectionRange(s + b.dataset.ins.length, s + b.dataset.ins.length);
+    renderPreview(b.dataset.target);
+  }));
+  forms.notify.addEventListener('submit', (ev) => {
+    ev.preventDefault();
+    save(forms.notify, () => ({ tplConfirm: el('tplConfirm').value.trim(), tplReminder: el('tplReminder').value.trim(), tplCancel: el('tplCancel').value.trim() }), submitBtn(forms.notify), 'บันทึกแม่แบบการแจ้งเตือนแล้ว');
+  });
+
+  // ---------- 4. Display ----------
+  forms.display.addEventListener('submit', (ev) => {
+    ev.preventDefault();
+    save(forms.display, () => ({ defaultTheme: forms.display.elements.defaultTheme.value }), submitBtn(forms.display), 'บันทึกการแสดงผลแล้ว');
+  });
+  document.querySelectorAll('[data-apply-theme]').forEach((b) => b.addEventListener('click', () => {
+    LG.theme.set(b.dataset.applyTheme);
+    LG.toast(b.dataset.applyTheme === 'dark' ? 'เปลี่ยนเป็นโหมดมืดแล้ว' : 'เปลี่ยนเป็นโหมดสว่างแล้ว', 'info');
+  }));
+
+  // ---------- 5. System ----------
+  const mode = DS.mode(), isApi = mode === 'api', isMock = mode === 'mock';
+  el('mode-label').textContent = isApi ? 'เชื่อมต่อฐานข้อมูล' : isMock ? 'ข้อมูลตัวอย่าง' : 'ไม่พร้อมใช้งาน';
+  el('mode-icon').innerHTML = `<i class="bi bi-${isApi ? 'database-check' : 'database-exclamation'}"></i>`;
+  el('mode-desc').textContent = isApi
+    ? 'เว็บไซต์กำลังอ่านและบันทึกข้อมูลผ่าน API (PHP + MySQL) การเปลี่ยนแปลงทุกอย่างจะถูกเก็บในฐานข้อมูลจริง'
+    : 'เว็บไซต์กำลังใช้ข้อมูลตัวอย่างที่เก็บในเบราว์เซอร์ การเปลี่ยนแปลงจะไม่ถูกบันทึกลงฐานข้อมูลจริง เหมาะสำหรับทดลองใช้งานและสาธิต';
+  el('cfg-mode').textContent = LG_CONFIG.dataMode;
+  const resetBtn = el('reset-demo');
+  resetBtn.disabled = !isMock;
+  resetBtn.addEventListener('click', async () => {
+    const ok = await LG.confirm({ title: 'รีเซ็ตข้อมูลตัวอย่าง', message: 'ข้อมูลตัวอย่างทั้งหมดที่แก้ไขไว้ (การจอง ลูกค้า ล็อกเกอร์ ราคา การตั้งค่า) จะถูกแทนที่ด้วยค่าเริ่มต้น และไม่สามารถกู้คืนได้ ต้องการดำเนินการต่อหรือไม่?', okText: 'รีเซ็ตข้อมูล', danger: true });
+    if (!ok) return;
+    await LG.busy(resetBtn, async () => {
+      try {
+        await DS.resetDemo();
+        LG.toast('รีเซ็ตข้อมูลตัวอย่างเรียบร้อยแล้ว กำลังโหลดหน้าใหม่...');
+        setTimeout(() => location.reload(), 900);
+      } catch (e) { LG.toastError(e); }
+    });
+  });
+
+  fill();
+
+  // ---------- role gate: staff accounts may view but not change system settings ----------
+  if (user && user.role === 'staff') {
+    area.insertAdjacentHTML('afterbegin', '<div class="alert alert-info d-flex align-items-start gap-2" role="alert"><i class="bi bi-info-circle-fill" aria-hidden="true"></i><div>บัญชีพนักงานดูการตั้งค่าได้อย่างเดียว ไม่สามารถบันทึกหรือรีเซ็ตข้อมูลได้ หากต้องการแก้ไขโปรดติดต่อผู้จัดการหรือผู้ดูแลระบบ</div></div>');
+    Object.values(forms).forEach((f) => {
+      f.querySelectorAll('input, textarea, select, button').forEach((c) => { c.disabled = true; });
+    });
+    resetBtn.disabled = true;
+  }
+})();
+</script>
+</body>
+</html>

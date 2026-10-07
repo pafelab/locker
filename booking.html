@@ -1,0 +1,655 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>จองล็อกเกอร์ | LockerGo</title>
+<meta name="description" content="จองล็อกเกอร์ออนไลน์ใน 6 ขั้นตอนง่ายๆ เลือกสาขา วันเวลา กรอกข้อมูล ตรวจสอบ ชำระเงิน แล้วรับรหัส PIN ทันที">
+<link rel="icon" type="image/svg+xml" href="assets/img/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+<link href="assets/css/custom.css" rel="stylesheet">
+<script src="assets/js/config.js"></script>
+</head>
+<body data-page="booking">
+<a class="visually-hidden-focusable" href="#main">ข้ามไปยังเนื้อหา</a>
+<div id="lg-navbar"></div>
+
+<main id="main">
+  <div class="container py-4 py-lg-5">
+    <h1 class="h2 mb-1">จองล็อกเกอร์</h1>
+    <p class="text-body-secondary mb-4">ทำตามขั้นตอนด้านล่างเพื่อจองล็อกเกอร์ ใช้เวลาไม่ถึง 3 นาที</p>
+
+    <div id="boot">
+      <div class="card card-soft"><div class="card-body p-4" id="boot-body"></div></div>
+    </div>
+
+    <div id="wizard" hidden>
+      <ol class="wizard-steps" id="steps" aria-label="ขั้นตอนการจอง">
+        <li><span>สาขาและล็อกเกอร์</span></li>
+        <li><span>วันเวลาและระยะเวลา</span></li>
+        <li><span>ข้อมูลผู้จอง</span></li>
+        <li><span>ตรวจสอบ</span></li>
+        <li><span>ชำระเงิน</span></li>
+        <li><span>ยืนยัน</span></li>
+      </ol>
+
+      <div class="row g-4">
+        <div class="col-lg-8">
+          <div class="card card-soft">
+            <div class="card-body p-3 p-md-4">
+
+              <!-- Step 1 -->
+              <section id="step-1" aria-labelledby="h-1">
+                <h2 class="h4 mb-1" id="h-1" tabindex="-1">1. เลือกสาขาและล็อกเกอร์</h2>
+                <p class="text-body-secondary">เลือกสาขาและขนาด แล้วแตะล็อกเกอร์ที่ว่างเพื่อเลือก</p>
+                <form id="form-1" novalidate>
+                  <div class="row g-3 mb-3">
+                    <div class="col-sm-7">
+                      <label for="b-location" class="form-label">สาขา <span class="text-danger" aria-hidden="true">*</span></label>
+                      <select id="b-location" class="form-select" required></select>
+                      <div class="invalid-feedback">กรุณาเลือกสาขา</div>
+                    </div>
+                    <div class="col-sm-5">
+                      <label for="b-size" class="form-label">ขนาดล็อกเกอร์</label>
+                      <select id="b-size" class="form-select"></select>
+                    </div>
+                  </div>
+                  <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
+                    <p id="window-note" class="small text-body-secondary mb-0"></p>
+                    <button type="button" class="btn btn-sm btn-outline-secondary" id="edit-window"><i class="bi bi-calendar-event me-1"></i>เปลี่ยนวันเวลา</button>
+                  </div>
+                  <div class="mb-2" id="legend"></div>
+                  <div id="grid-count" class="small text-body-secondary mb-2" aria-live="polite"></div>
+                  <div id="grid"></div>
+                  <div id="locker-feedback" class="text-danger small mt-2" role="alert" hidden><i class="bi bi-exclamation-circle me-1"></i>กรุณาเลือกล็อกเกอร์ที่ว่าง 1 ช่อง</div>
+                  <div id="locker-picked" class="alert alert-success mt-3 mb-0 d-none" role="status"></div>
+                </form>
+              </section>
+
+              <!-- Step 2 -->
+              <section id="step-2" aria-labelledby="h-2" hidden>
+                <h2 class="h4 mb-1" id="h-2" tabindex="-1">2. วันเวลาและระยะเวลา</h2>
+                <p class="text-body-secondary">เลือกวัน เวลาเริ่มใช้งาน และระยะเวลาที่ต้องการ ราคาจะคำนวณให้อัตโนมัติ</p>
+                <form id="form-2" novalidate>
+                  <div class="row g-3">
+                    <div class="col-sm-6">
+                      <label for="b-date" class="form-label">วันที่เริ่มใช้งาน <span class="text-danger" aria-hidden="true">*</span></label>
+                      <input type="date" id="b-date" class="form-control" required>
+                      <div class="invalid-feedback">กรุณาเลือกวันที่ตั้งแต่วันนี้เป็นต้นไป</div>
+                    </div>
+                    <div class="col-sm-6">
+                      <label for="b-time" class="form-label">เวลาเริ่ม <span class="text-danger" aria-hidden="true">*</span></label>
+                      <select id="b-time" class="form-select" required></select>
+                      <div class="invalid-feedback">กรุณาเลือกเวลาเริ่ม</div>
+                    </div>
+                    <div class="col-12">
+                      <fieldset>
+                        <legend class="form-label fs-6">ประเภทระยะเวลา</legend>
+                        <div class="btn-group w-100" role="group" id="type-group"></div>
+                      </fieldset>
+                    </div>
+                    <div class="col-sm-6">
+                      <label for="b-qty" class="form-label">จำนวน (<span id="qty-unit">ชั่วโมง</span>) <span class="text-danger" aria-hidden="true">*</span></label>
+                      <div class="input-group has-validation">
+                        <button type="button" class="btn btn-outline-secondary" id="qty-minus" aria-label="ลดจำนวน"><i class="bi bi-dash-lg"></i></button>
+                        <input type="number" id="b-qty" class="form-control text-center" min="1" max="720" step="1" inputmode="numeric" required>
+                        <button type="button" class="btn btn-outline-secondary" id="qty-plus" aria-label="เพิ่มจำนวน"><i class="bi bi-plus-lg"></i></button>
+                        <div class="invalid-feedback" id="qty-feedback">กรุณากรอกจำนวนเป็นเลขจำนวนเต็ม</div>
+                      </div>
+                      <div class="form-text" id="qty-hint"></div>
+                    </div>
+                    <div class="col-sm-6">
+                      <div class="form-label">สิ้นสุดการใช้งาน</div>
+                      <div class="form-control-plaintext fw-semibold" id="end-text" aria-live="polite">-</div>
+                    </div>
+                  </div>
+                  <div id="rate-box" class="mt-3"></div>
+                </form>
+              </section>
+
+              <!-- Step 3 -->
+              <section id="step-3" aria-labelledby="h-3" hidden>
+                <h2 class="h4 mb-1" id="h-3" tabindex="-1">3. ข้อมูลผู้จอง</h2>
+                <p class="text-body-secondary">ข้อมูลนี้ใช้สำหรับยืนยันการจองและติดต่อกลับเมื่อจำเป็น</p>
+                <form id="form-3" novalidate>
+                  <div class="row g-3">
+                    <div class="col-12">
+                      <label for="c-name" class="form-label">ชื่อ-นามสกุล <span class="text-danger" aria-hidden="true">*</span></label>
+                      <input type="text" id="c-name" class="form-control" autocomplete="name" required minlength="2" maxlength="100">
+                      <div class="invalid-feedback">กรุณากรอกชื่อ-นามสกุล (อย่างน้อย 2 ตัวอักษร)</div>
+                    </div>
+                    <div class="col-md-6">
+                      <label for="c-email" class="form-label">อีเมล <span class="text-danger" aria-hidden="true">*</span></label>
+                      <input type="email" id="c-email" class="form-control" autocomplete="email" required maxlength="150" placeholder="name@example.com">
+                      <div class="invalid-feedback">กรุณากรอกอีเมลให้ถูกต้อง</div>
+                    </div>
+                    <div class="col-md-6">
+                      <label for="c-phone" class="form-label">เบอร์โทรศัพท์ <span class="text-danger" aria-hidden="true">*</span></label>
+                      <input type="tel" id="c-phone" class="form-control" autocomplete="tel" required pattern="[0-9+ \-]{9,15}" inputmode="tel" placeholder="08x-xxx-xxxx">
+                      <div class="invalid-feedback">กรุณากรอกเบอร์โทรศัพท์ 9-15 หลัก (ตัวเลข เว้นวรรค หรือเครื่องหมาย - +)</div>
+                    </div>
+                  </div>
+                </form>
+              </section>
+
+              <!-- Step 4 -->
+              <section id="step-4" aria-labelledby="h-4" hidden>
+                <h2 class="h4 mb-1" id="h-4" tabindex="-1">4. ตรวจสอบรายการจอง</h2>
+                <p class="text-body-secondary">ตรวจสอบรายละเอียดให้ถูกต้องก่อนชำระเงิน</p>
+                <form id="form-4" novalidate>
+                  <div id="review" class="mb-3"></div>
+                  <div id="promo-area" class="mb-3"></div>
+                  <div id="review-price" class="mb-3"></div>
+                  <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="accept" required>
+                    <label class="form-check-label" for="accept">ฉันได้อ่านและยอมรับ <a href="terms.html" target="_blank" rel="noopener">ข้อกำหนดและเงื่อนไขการใช้บริการ</a></label>
+                    <div class="invalid-feedback">กรุณายอมรับข้อกำหนดและเงื่อนไขก่อนดำเนินการต่อ</div>
+                  </div>
+                </form>
+              </section>
+
+              <!-- Step 5 -->
+              <section id="step-5" aria-labelledby="h-5" hidden>
+                <h2 class="h4 mb-1" id="h-5" tabindex="-1">5. ชำระเงิน</h2>
+                <p class="text-body-secondary">เลือกวิธีชำระเงิน (ระบบตัวอย่าง ไม่มีการตัดเงินจริง)</p>
+                <form id="form-5" novalidate>
+                  <div id="pay-alert" class="alert alert-danger d-none" role="alert"></div>
+                  <fieldset class="mb-3">
+                    <legend class="form-label fs-6">วิธีชำระเงิน</legend>
+                    <div class="row g-2" id="pay-methods"></div>
+                  </fieldset>
+
+                  <div id="pay-card">
+                    <div class="alert alert-secondary small d-flex gap-2" role="note"><i class="bi bi-shield-lock-fill"></i><div>นี่คือหน้าตัวอย่าง ข้อมูลบัตรจะไม่ถูกส่งหรือจัดเก็บที่ใด กรอกเลขใดก็ได้ตามรูปแบบ เช่น 4242 4242 4242 4242</div></div>
+                    <div class="row g-3">
+                      <div class="col-12">
+                        <label for="p-number" class="form-label">หมายเลขบัตร</label>
+                        <input type="text" id="p-number" class="form-control" inputmode="numeric" autocomplete="off" required pattern="[0-9 ]{13,23}" maxlength="23" placeholder="0000 0000 0000 0000">
+                        <div class="invalid-feedback">กรุณากรอกหมายเลขบัตร 13-19 หลัก</div>
+                      </div>
+                      <div class="col-12">
+                        <label for="p-name" class="form-label">ชื่อบนบัตร</label>
+                        <input type="text" id="p-name" class="form-control" autocomplete="off" required minlength="2" maxlength="60" placeholder="SOMCHAI JAIDEE">
+                        <div class="invalid-feedback">กรุณากรอกชื่อบนบัตร</div>
+                      </div>
+                      <div class="col-6">
+                        <label for="p-exp" class="form-label">วันหมดอายุ (MM/YY)</label>
+                        <input type="text" id="p-exp" class="form-control" inputmode="numeric" autocomplete="off" required pattern="(0[1-9]|1[0-2])\/[0-9]{2}" maxlength="5" placeholder="MM/YY">
+                        <div class="invalid-feedback">กรุณากรอกวันหมดอายุรูปแบบ MM/YY ที่ยังไม่หมดอายุ</div>
+                      </div>
+                      <div class="col-6">
+                        <label for="p-cvc" class="form-label">CVC</label>
+                        <input type="password" id="p-cvc" class="form-control" inputmode="numeric" autocomplete="off" required pattern="[0-9]{3,4}" maxlength="4" placeholder="123">
+                        <div class="invalid-feedback">กรุณากรอก CVC 3-4 หลัก</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div id="pay-promptpay" hidden>
+                    <div class="text-center py-3">
+                      <div class="qr-placeholder mx-auto mb-3" role="img" aria-label="คิวอาร์โค้ดพร้อมเพย์ (ตัวอย่าง)"></div>
+                      <p class="mb-1 fw-semibold">สแกนเพื่อชำระเงินผ่านพร้อมเพย์</p>
+                      <p class="text-body-secondary small mb-0">ยอดชำระ <strong id="pp-amount"></strong> · เปิดแอปธนาคารแล้วสแกน จากนั้นกดปุ่ม "ชำระเงิน" (จำลอง)</p>
+                    </div>
+                  </div>
+
+                  <div id="pay-cash" hidden>
+                    <div class="alert alert-info d-flex gap-2" role="note"><i class="bi bi-cash-coin"></i><div>ชำระเงินสดที่เคาน์เตอร์สาขาเมื่อมารับบริการ กดปุ่ม "ชำระเงิน" เพื่อยืนยันการจองและรับรหัส PIN</div></div>
+                  </div>
+                </form>
+              </section>
+
+              <!-- Step 6 -->
+              <section id="step-6" aria-labelledby="h-6" hidden>
+                <div class="text-center py-4">
+                  <i class="bi bi-check-circle-fill text-success display-3" aria-hidden="true"></i>
+                  <h2 class="h3 mt-2" id="h-6" tabindex="-1">จองล็อกเกอร์สำเร็จ</h2>
+                  <p class="text-body-secondary mb-1">หมายเลขการจอง <strong id="done-ref"></strong></p>
+                  <p class="text-body-secondary">กำลังพาคุณไปยังหน้าสรุปการจองและรหัส PIN...</p>
+                  <a id="done-link" class="btn btn-primary" href="booking-success.html">ไปที่หน้าสรุปการจอง</a>
+                </div>
+              </section>
+
+              <div id="wizard-nav" class="d-flex justify-content-between gap-2 mt-4 pt-3 border-top">
+                <button type="button" class="btn btn-outline-secondary d-none" id="btn-back"><i class="bi bi-arrow-left me-1"></i>ย้อนกลับ</button>
+                <button type="button" class="btn btn-primary ms-auto" id="btn-next">ถัดไป<i class="bi bi-arrow-right ms-1"></i></button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <aside class="col-lg-4" aria-label="สรุปราคา">
+          <div class="sticky-lg-top pt-lg-5">
+            <div class="card card-soft mt-lg-3">
+              <div class="card-body">
+                <h2 class="h5 mb-3"><i class="bi bi-receipt me-2 text-brand"></i>สรุปการจอง</h2>
+                <div id="summary" aria-live="polite"></div>
+              </div>
+            </div>
+          </div>
+        </aside>
+      </div>
+    </div>
+  </div>
+</main>
+
+<div id="lg-footer"></div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="assets/js/mock-data.js"></script>
+<script src="assets/js/mock-service.js"></script>
+<script src="assets/js/api-client.js"></script>
+<script src="assets/js/data-service.js"></script>
+<script src="assets/js/auth.js"></script>
+<script src="assets/js/main.js"></script>
+<script>
+(async () => {
+  const user = await Auth.require('customer');
+  const $ = (id) => document.getElementById(id);
+  const esc = LG.esc;
+  const p2 = (n) => String(n).padStart(2, '0');
+  const HOURS_PER = (window.MockData && MockData.HOURS_PER) || { hour: 1, day: 24, month: 720 };
+  const PAY_ICON = { card: 'credit-card-2-front', promptpay: 'qr-code-scan', cash: 'cash-coin' };
+  const STEP_COUNT = 6;
+  const localStr = (d) => `${LG.fmt.isoDate(d)} ${p2(d.getHours())}:${p2(d.getMinutes())}:00`;
+
+  $('boot-body').innerHTML = LG.skeleton(6);
+
+  // ---------- boot: reference data ----------
+  let locations = [], prices = [], settings = null;
+  try {
+    const res = await Promise.all([DS.getLocations(), DS.getPricing(), DS.getSettings().catch(() => null)]);
+    locations = res[0]; prices = res[1].prices || []; settings = res[2];
+  } catch (e) {
+    $('boot-body').innerHTML = LG.errorBox(e) + '<a class="btn btn-outline-primary" href="booking.html"><i class="bi bi-arrow-clockwise me-1"></i>ลองใหม่</a>';
+    return;
+  }
+  const minH = Math.max(1, Number(settings && settings.minDuration) || 1);
+  const maxH = Math.max(1, Number(settings && settings.maxDuration) || 720);
+  const limits = (type) => ({ min: Math.max(1, Math.ceil(minH / HOURS_PER[type])), max: Math.floor(maxH / HOURS_PER[type]) });
+
+  // ---------- state ----------
+  const state = {
+    step: 1, locationId: '', size: '', locker: null,
+    date: '', time: '', type: 'hour', qty: 1,
+    name: user.name || '', email: user.email || '', phone: user.phone || '',
+    promo: null, method: 'card',
+  };
+  const startDate = () => new Date(`${state.date}T${state.time}:00`);
+  const endDate = () => new Date(startDate().getTime() + state.qty * HOURS_PER[state.type] * 3600000);
+  const startStr = () => `${state.date} ${state.time}:00`;
+  const unitPrice = () => { const row = prices.find((p) => p.size === (state.locker && state.locker.size)); return row ? Number(row[state.type]) : 0; };
+  const calc = () => quote(unitPrice(), state.qty, state.promo);
+
+  // ---------- prefill from URL ----------
+  const nxt = new Date(Date.now() + 3600000);
+  const qLoc = LG.qs('locationId'), qSize = LG.qs('size'), qDate = LG.qs('date'), qTime = LG.qs('time'), qType = LG.qs('type');
+  const qHours = parseInt(LG.qs('hours'), 10), qQty = parseInt(LG.qs('qty'), 10), qLocker = parseInt(LG.qs('lockerId'), 10);
+  const validDate = qDate && /^\d{4}-\d{2}-\d{2}$/.test(qDate) && qDate >= LG.fmt.isoDate();
+  state.date = validDate ? qDate : LG.fmt.isoDate(nxt);
+  state.time = /^([01]\d|2[0-3]):[0-5]\d$/.test(qTime || '') ? `${qTime.slice(0, 2)}:00` : `${p2(nxt.getHours())}:00`;
+  if (Object.prototype.hasOwnProperty.call(HOURS_PER, qType)) {
+    state.type = qType;
+    state.qty = qQty > 0 ? qQty : qHours > 0 ? (qType === 'hour' ? qHours : Math.ceil(qHours / HOURS_PER[qType])) : 1;
+  } else if (qHours > 0) {
+    if (qHours % 720 === 0) { state.type = 'month'; state.qty = qHours / 720; }
+    else if (qHours % 24 === 0) { state.type = 'day'; state.qty = qHours / 24; }
+    else { state.type = 'hour'; state.qty = qHours; }
+  } else if (qQty > 0) {
+    state.qty = qQty;
+  }
+  if (!limits(state.type).max) state.type = 'hour';
+  state.qty = Math.min(Math.max(state.qty, limits(state.type).min), limits(state.type).max);
+  if (qLoc && locations.some((l) => String(l.id) === qLoc)) state.locationId = qLoc;
+  if (qSize && LG.SIZES[qSize]) state.size = qSize;
+  if (qLocker > 0) {
+    try {
+      const l = await DS.getLocker(qLocker);
+      state.locker = l; state.locationId = String(l.locationId);
+      if (state.size && state.size !== l.size) state.size = '';
+    } catch (e) { LG.toast('ไม่พบล็อกเกอร์ที่ระบุ กรุณาเลือกใหม่', 'warning'); }
+  }
+
+  // ---------- build static controls ----------
+  $('b-location').innerHTML = '<option value="">เลือกสาขา</option>' + locations.map((l) => `<option value="${l.id}">${esc(l.name)}</option>`).join('');
+  $('b-size').innerHTML = '<option value="">ทุกขนาด</option>' + Object.entries(LG.SIZES).map(([k, s]) => `<option value="${k}">${k} - ${esc(s.label)}</option>`).join('');
+  $('legend').innerHTML = LG.legend();
+  $('type-group').innerHTML = Object.entries(LG.DURATION).map(([k, label]) => `<input type="radio" class="btn-check" name="durationType" id="t-${k}" value="${k}"${limits(k).max < 1 ? ' disabled' : ''}><label class="btn btn-outline-primary" for="t-${k}">ราย${esc(label)}</label>`).join('');
+  $('pay-methods').innerHTML = Object.entries(LG.PAY_METHODS).map(([k, label]) => `<div class="col-sm-4"><input type="radio" class="btn-check" name="method" id="m-${k}" value="${k}"><label class="btn btn-outline-primary w-100 py-3" for="m-${k}"><i class="bi bi-${PAY_ICON[k]} fs-4 d-block mb-1" aria-hidden="true"></i>${esc(label)}</label></div>`).join('');
+  $('b-date').min = LG.fmt.isoDate();
+
+  function fillTimes() {
+    const nowH = new Date().getHours(), isToday = state.date === LG.fmt.isoDate(), sel = $('b-time');
+    sel.innerHTML = Array.from({ length: 24 }, (_, h) => `<option value="${p2(h)}:00"${isToday && h < nowH ? ' disabled' : ''}>${p2(h)}:00</option>`).join('');
+    if (isToday && +state.time.slice(0, 2) < nowH) state.time = `${p2(nowH)}:00`;
+    sel.value = state.time;
+  }
+
+  /** Push state into the step 1-3 inputs. */
+  function syncInputs() {
+    $('b-location').value = state.locationId; $('b-size').value = state.size;
+    $('b-date').value = state.date; fillTimes();
+    document.querySelectorAll('input[name="durationType"]').forEach((r) => { r.checked = r.value === state.type; });
+    applyQtyLimits();
+    $('b-qty').value = state.qty;
+    $('c-name').value = state.name; $('c-email').value = state.email; $('c-phone').value = state.phone;
+    document.querySelectorAll('input[name="method"]').forEach((r) => { r.checked = r.value === state.method; });
+    togglePayPanels();
+  }
+
+  function applyQtyLimits() {
+    const { min, max } = limits(state.type), qty = $('b-qty');
+    qty.min = min; qty.max = max;
+    state.qty = Math.min(Math.max(state.qty, min), max);
+    $('qty-unit').textContent = LG.DURATION[state.type];
+    $('qty-hint').textContent = `จองได้ ${min}-${max} ${LG.DURATION[state.type]}`;
+    $('qty-feedback').textContent = `กรุณากรอกจำนวนเต็ม ${min}-${max} ${LG.DURATION[state.type]}`;
+  }
+
+  // ---------- locker grid (step 1) ----------
+  let gridRows = [], gridSeq = 0, gridTimer = null;
+  const gridEl = $('grid');
+
+  function drawGrid() {
+    LG.lockerGrid(gridEl, gridRows, { selectedIds: state.locker ? [state.locker.id] : [], selectable: (l) => l.status === 'available', onClick: pick });
+  }
+  function pick(l) {
+    state.locker = l; $('locker-feedback').hidden = true;
+    drawGrid();
+    const t = gridEl.querySelector(`[data-id="${l.id}"]`); if (t) t.focus();
+    renderPicked(); renderAll();
+  }
+  function renderPicked() {
+    const box = $('locker-picked'), l = state.locker;
+    box.classList.toggle('d-none', !l);
+    if (l) box.innerHTML = `<i class="bi bi-check-circle-fill me-1"></i>เลือกล็อกเกอร์ <strong>${esc(l.code)}</strong> ขนาด ${esc(l.size)} (${esc((LG.SIZES[l.size] || {}).label || '')}) · ${esc(l.locationName || '')}`;
+  }
+  function renderWindowNote() {
+    $('window-note').innerHTML = `<i class="bi bi-clock me-1"></i>สถานะว่างสำหรับ ${LG.fmt.datetime(startDate())} - ${LG.fmt.datetime(endDate())}`;
+  }
+
+  async function loadGrid() {
+    const id = ++gridSeq;
+    renderWindowNote();
+    if (!state.locationId) {
+      gridRows = []; gridEl.innerHTML = LG.empty('เลือกสาขาเพื่อดูล็อกเกอร์ที่ว่าง', 'geo-alt'); $('grid-count').textContent = ''; return;
+    }
+    gridEl.innerHTML = LG.skeleton(4);
+    const query = { locationId: state.locationId, start: localStr(startDate()), end: localStr(endDate()) };
+    if (state.size) query.size = state.size;
+    try {
+      const rows = await DS.getLockers(query);
+      if (id !== gridSeq) return;
+      gridRows = rows.slice().sort((a, b) => a.code.localeCompare(b.code, 'en', { numeric: true }));
+      if (state.locker) {
+        const cur = gridRows.find((r) => r.id === state.locker.id);
+        if (cur && cur.status !== 'available') {
+          LG.toast(`ล็อกเกอร์ ${cur.code} ไม่ว่างในช่วงเวลาที่เลือก กรุณาเลือกล็อกเกอร์ใหม่`, 'warning');
+          state.locker = null; renderPicked(); renderAll();
+        } else if (cur) { state.locker = cur; }
+      }
+      $('grid-count').textContent = `ว่าง ${gridRows.filter((r) => r.status === 'available').length} จากทั้งหมด ${gridRows.length} ช่อง`;
+      drawGrid();
+    } catch (e) {
+      if (id === gridSeq) gridEl.innerHTML = LG.errorBox(e);
+    }
+  }
+  const scheduleGrid = () => { clearTimeout(gridTimer); gridTimer = setTimeout(loadGrid, 300); };
+
+  // ---------- summary + price ----------
+  const dtRow = (label, value) => `<div class="d-flex justify-content-between gap-3 mb-1"><dt class="fw-normal text-body-secondary">${label}</dt><dd class="mb-0 text-end fw-semibold">${value}</dd></div>`;
+  function priceRows() {
+    const c = calc();
+    return `<div class="d-flex justify-content-between small"><span>${LG.fmt.baht(unitPrice())} × ${state.qty} ${LG.DURATION[state.type]}</span><span>${LG.fmt.baht(c.gross)}</span></div>
+      <div class="d-flex justify-content-between small${c.discount ? ' text-success' : ' text-body-secondary'}"><span>ส่วนลด${state.promo ? ` (${esc(state.promo.code)})` : ''}</span><span>${c.discount ? '-' : ''}${LG.fmt.baht(c.discount)}</span></div>
+      <div class="d-flex justify-content-between align-items-baseline mt-2 pt-2 border-top"><span class="fw-semibold">ยอดรวมสุทธิ</span><span class="fs-4 fw-bold text-brand">${LG.fmt.baht(c.total)}</span></div>`;
+  }
+  function renderSummary() {
+    const l = state.locker, box = $('summary');
+    if (!l) { box.innerHTML = '<p class="text-body-secondary small mb-0"><i class="bi bi-info-circle me-1"></i>ยังไม่ได้เลือกล็อกเกอร์ เลือกสาขาและล็อกเกอร์ที่ว่างเพื่อดูราคา</p>'; return; }
+    const sz = LG.SIZES[l.size] || {};
+    box.innerHTML = `<dl class="small mb-3">
+      ${dtRow('ล็อกเกอร์', `${esc(l.code)} · ${esc(l.size)} (${esc(sz.label || '')})`)}
+      ${dtRow('สาขา', esc(l.locationName || ''))}
+      ${dtRow('เริ่ม', LG.fmt.datetime(startDate()))}
+      ${dtRow('สิ้นสุด', LG.fmt.datetime(endDate()))}
+      ${dtRow('ระยะเวลา', LG.fmt.duration(state.type, state.qty))}
+    </dl><hr class="my-2">${priceRows()}`;
+  }
+  function renderEnd() {
+    $('end-text').textContent = LG.fmt.datetime(endDate());
+    const l = state.locker, box = $('rate-box');
+    const row = l && prices.find((p) => p.size === l.size);
+    box.innerHTML = row ? `<h3 class="h6">อัตราค่าบริการขนาด ${esc(l.size)}</h3><div class="row row-cols-3 g-2 text-center">${[['hour', 'ต่อชั่วโมง'], ['day', 'ต่อวัน'], ['month', 'ต่อเดือน']].map(([k, t]) => `<div class="col"><div class="border rounded p-2 h-100${state.type === k ? ' border-primary bg-brand-soft' : ''}"><div class="small text-body-secondary">${t}</div><div class="fw-semibold">${LG.fmt.baht(row[k])}</div></div></div>`).join('')}</div>` : '';
+  }
+  function renderReview() {
+    const l = state.locker; if (!l) return;
+    const sz = LG.SIZES[l.size] || {};
+    $('review').innerHTML = `<div class="row g-3">
+      <div class="col-md-6"><div class="border rounded p-3 h-100"><h3 class="h6 mb-2"><i class="bi bi-lock-fill me-1 text-brand"></i>ล็อกเกอร์</h3><dl class="small mb-0">
+        ${dtRow('รหัส', esc(l.code))}${dtRow('ขนาด', `${esc(l.size)} (${esc(sz.label || '')})`)}${dtRow('สาขา', esc(l.locationName || ''))}${dtRow('โซน', esc(l.zone || '-'))}</dl></div></div>
+      <div class="col-md-6"><div class="border rounded p-3 h-100"><h3 class="h6 mb-2"><i class="bi bi-calendar-event me-1 text-brand"></i>ช่วงเวลา</h3><dl class="small mb-0">
+        ${dtRow('เริ่ม', LG.fmt.datetime(startDate()))}${dtRow('สิ้นสุด', LG.fmt.datetime(endDate()))}${dtRow('ระยะเวลา', LG.fmt.duration(state.type, state.qty))}</dl></div></div>
+      <div class="col-12"><div class="border rounded p-3"><h3 class="h6 mb-2"><i class="bi bi-person-fill me-1 text-brand"></i>ผู้จอง</h3><dl class="small mb-0">
+        ${dtRow('ชื่อ', esc(state.name))}${dtRow('อีเมล', esc(state.email))}${dtRow('โทรศัพท์', esc(state.phone))}</dl></div></div></div>`;
+    $('review-price').innerHTML = `<div class="border rounded p-3 bg-body-tertiary"><h3 class="h6 mb-2">รายละเอียดราคา</h3>${priceRows()}</div>`;
+  }
+  function renderAll() {
+    renderSummary(); renderEnd();
+    if (state.step === 4) { renderReview(); }
+    if (state.step === 5) renderPayAmount();
+  }
+  function renderPayAmount() {
+    const t = LG.fmt.baht(calc().total);
+    $('pp-amount').textContent = t;
+    $('btn-next').innerHTML = `<i class="bi bi-lock-fill me-1"></i>ชำระเงิน ${t}`;
+  }
+
+  // ---------- promo ----------
+  function renderPromo() {
+    const area = $('promo-area'), p = state.promo;
+    if (p) {
+      area.innerHTML = `<div class="alert alert-success d-flex flex-wrap justify-content-between align-items-center gap-2 py-2 mb-0" role="status"><span><i class="bi bi-tag-fill me-1"></i>ใช้โค้ด <strong>${esc(p.code)}</strong> แล้ว (${p.type === 'percent' ? `ลด ${esc(p.value)}%` : `ลด ${LG.fmt.baht(p.value)}`})</span><button type="button" class="btn btn-sm btn-outline-secondary" id="promo-remove">เอาออก</button></div>`;
+    } else {
+      area.innerHTML = `<label for="promo-code" class="form-label">โค้ดส่วนลด (ถ้ามี)</label><div class="input-group has-validation"><input type="text" id="promo-code" class="form-control text-uppercase" maxlength="30" autocomplete="off" placeholder="เช่น WELCOME10"><button type="button" class="btn btn-outline-primary" id="promo-apply">ใช้โค้ด</button><div class="invalid-feedback" id="promo-error"></div></div>`;
+    }
+  }
+  async function applyPromo() {
+    const input = $('promo-code'), btn = $('promo-apply'), code = input.value.trim().toUpperCase();
+    input.classList.remove('is-invalid');
+    if (!code) { $('promo-error').textContent = 'กรุณากรอกโค้ดส่วนลด'; input.classList.add('is-invalid'); input.focus(); return; }
+    await LG.busy(btn, async () => {
+      try {
+        state.promo = await DS.checkPromo(code);
+        renderPromo(); renderAll();
+        LG.toast(`ใช้โค้ด ${state.promo.code} สำเร็จ`);
+        $('promo-remove').focus();
+      } catch (e) {
+        state.promo = null;
+        $('promo-error').textContent = e.message || 'รหัสโปรโมชันไม่ถูกต้อง';
+        input.classList.add('is-invalid'); input.focus();
+      }
+    });
+  }
+  $('promo-area').addEventListener('click', (ev) => {
+    if (ev.target.closest('#promo-apply')) applyPromo();
+    if (ev.target.closest('#promo-remove')) { state.promo = null; renderPromo(); renderAll(); $('promo-code').focus(); }
+  });
+  $('promo-area').addEventListener('keydown', (ev) => { if (ev.key === 'Enter' && ev.target.id === 'promo-code') { ev.preventDefault(); applyPromo(); } });
+
+  // ---------- payment panel ----------
+  function togglePayPanels() {
+    $('pay-card').hidden = state.method !== 'card';
+    $('pay-promptpay').hidden = state.method !== 'promptpay';
+    $('pay-cash').hidden = state.method !== 'cash';
+    $('pay-card').querySelectorAll('input').forEach((i) => { i.disabled = state.method !== 'card'; });
+  }
+  $('pay-methods').addEventListener('change', (ev) => { if (ev.target.name === 'method') { state.method = ev.target.value; togglePayPanels(); } });
+  $('p-number').addEventListener('input', (ev) => { const d = ev.target.value.replace(/\D/g, '').slice(0, 19); ev.target.value = d.replace(/(.{4})/g, '$1 ').trim(); ev.target.setCustomValidity(''); });
+  $('p-exp').addEventListener('input', (ev) => { let d = ev.target.value.replace(/\D/g, '').slice(0, 4); if (d.length > 2) d = `${d.slice(0, 2)}/${d.slice(2)}`; ev.target.value = d; ev.target.setCustomValidity(''); });
+  function checkCardFields() {
+    const num = $('p-number'), exp = $('p-exp');
+    const digits = num.value.replace(/\D/g, '').length;
+    num.setCustomValidity(digits >= 13 && digits <= 19 ? '' : 'invalid');
+    const m = /^(0[1-9]|1[0-2])\/(\d{2})$/.exec(exp.value);
+    exp.setCustomValidity(m && new Date(2000 + +m[2], +m[1], 1) > new Date() ? '' : 'invalid');
+  }
+
+  // ---------- inputs -> state ----------
+  $('b-location').addEventListener('change', (ev) => {
+    state.locationId = ev.target.value;
+    if (state.locker && String(state.locker.locationId) !== state.locationId) { state.locker = null; renderPicked(); }
+    renderAll(); loadGrid();
+  });
+  $('b-size').addEventListener('change', (ev) => {
+    state.size = ev.target.value;
+    if (state.locker && state.size && state.locker.size !== state.size) { state.locker = null; renderPicked(); }
+    renderAll(); loadGrid();
+  });
+  $('b-date').addEventListener('change', (ev) => {
+    if (!ev.target.value) return;
+    state.date = ev.target.value; fillTimes(); $('b-time').value = state.time; renderAll(); scheduleGrid();
+  });
+  $('b-time').addEventListener('change', (ev) => { state.time = ev.target.value; renderAll(); scheduleGrid(); });
+  $('type-group').addEventListener('change', (ev) => {
+    if (ev.target.name !== 'durationType') return;
+    state.type = ev.target.value; applyQtyLimits(); $('b-qty').value = state.qty; renderAll(); scheduleGrid();
+  });
+  function setQty(v) {
+    const n = parseInt(v, 10), { min, max } = limits(state.type);
+    if (Number.isInteger(n) && n >= min && n <= max) { state.qty = n; renderAll(); scheduleGrid(); }
+  }
+  $('b-qty').addEventListener('input', (ev) => setQty(ev.target.value));
+  $('qty-minus').addEventListener('click', () => { const { min } = limits(state.type); state.qty = Math.max(min, (parseInt($('b-qty').value, 10) || state.qty) - 1); $('b-qty').value = state.qty; renderAll(); scheduleGrid(); });
+  $('qty-plus').addEventListener('click', () => { const { max } = limits(state.type); state.qty = Math.min(max, (parseInt($('b-qty').value, 10) || state.qty) + 1); $('b-qty').value = state.qty; renderAll(); scheduleGrid(); });
+  $('c-name').addEventListener('input', (ev) => { state.name = ev.target.value.trim(); });
+  $('c-email').addEventListener('input', (ev) => { state.email = ev.target.value.trim(); });
+  $('c-phone').addEventListener('input', (ev) => { state.phone = ev.target.value.trim(); });
+  $('edit-window').addEventListener('click', () => go(2));
+
+  // ---------- wizard navigation ----------
+  const stepEls = Array.from({ length: STEP_COUNT }, (_, i) => $(`step-${i + 1}`));
+  const stepLis = Array.from($('steps').children);
+  const btnNext = $('btn-next'), btnBack = $('btn-back');
+
+  function focusInvalid(form) { const bad = form.querySelector(':invalid:not(fieldset)'); if (bad) bad.focus(); }
+
+  async function go(n) {
+    state.step = n;
+    stepEls.forEach((el, i) => { el.hidden = i + 1 !== n; });
+    stepLis.forEach((li, i) => {
+      li.classList.toggle('done', i + 1 < n); li.classList.toggle('active', i + 1 === n);
+      if (i + 1 === n) li.setAttribute('aria-current', 'step'); else li.removeAttribute('aria-current');
+    });
+    btnBack.classList.toggle('d-none', n === 1 || n === STEP_COUNT);
+    $('wizard-nav').classList.toggle('d-none', n === STEP_COUNT);
+    btnNext.innerHTML = 'ถัดไป<i class="bi bi-arrow-right ms-1"></i>';
+    if (n === 1) loadGrid();
+    if (n === 2) { renderEnd(); }
+    if (n === 4) { renderPromo(); renderReview(); }
+    if (n === 5) { $('pay-alert').classList.add('d-none'); renderPayAmount(); }
+    renderSummary();
+    const h = $(`h-${n}`);
+    h.focus({ preventScroll: true });
+    const y = $('steps').getBoundingClientRect().top + window.scrollY - 90;
+    if (window.scrollY > y) window.scrollTo({ top: y });
+  }
+
+  /** Re-check that the chosen locker is still free for the chosen window. */
+  async function stillAvailable() {
+    const rows = await DS.getLockers({ locationId: state.locker.locationId, start: localStr(startDate()), end: localStr(endDate()) });
+    const cur = rows.find((r) => r.id === state.locker.id);
+    return !!cur && cur.status === 'available';
+  }
+  async function backToStep1(message) {
+    if (message) LG.toast(message, 'warning');
+    state.locker = null; renderPicked(); renderAll(); await go(1);
+  }
+
+  async function validate(n) {
+    if (n === 1) {
+      const form = $('form-1'), formOk = LG.validate(form);
+      if (!formOk) { focusInvalid(form); return false; }
+      if (!state.locker) { $('locker-feedback').hidden = false; const t = gridEl.querySelector('.locker-tile:not(:disabled)'); if (t) t.focus(); return false; }
+      $('locker-feedback').hidden = true; return true;
+    }
+    if (n === 2) {
+      const form = $('form-2');
+      const startOk = startDate().getTime() >= new Date().setMinutes(0, 0, 0);
+      $('b-time').setCustomValidity(startOk ? '' : 'invalid');
+      if (!LG.validate(form)) { focusInvalid(form); return false; }
+      if (!state.locker) { await backToStep1('กรุณาเลือกล็อกเกอร์ก่อน'); return false; }
+      try {
+        if (!(await stillAvailable())) { await backToStep1(`ล็อกเกอร์ ${state.locker.code} ไม่ว่างในช่วงเวลาที่เลือก กรุณาเลือกล็อกเกอร์ใหม่`); return false; }
+      } catch (e) { LG.toastError(e); return false; }
+      return true;
+    }
+    if (n === 3) { const form = $('form-3'); if (!LG.validate(form)) { focusInvalid(form); return false; } return true; }
+    if (n === 4) { const form = $('form-4'); if (!LG.validate(form)) { focusInvalid(form); return false; } return true; }
+    if (n === 5) {
+      if (state.method === 'card') checkCardFields();
+      const form = $('form-5'); if (!LG.validate(form)) { focusInvalid(form); return false; } return true;
+    }
+    return true;
+  }
+
+  async function pay() {
+    const alertBox = $('pay-alert');
+    alertBox.classList.add('d-none');
+    btnBack.disabled = true;
+    try {
+      const b = await DS.createBooking({
+        lockerId: state.locker.id, startAt: startStr(), durationType: state.type, quantity: state.qty,
+        customerName: state.name, customerEmail: state.email, customerPhone: state.phone,
+        promoCode: state.promo ? state.promo.code : '', paymentMethod: state.method,
+      });
+      const url = `booking-success.html?ref=${encodeURIComponent(b.ref)}`;
+      $('done-ref').textContent = b.ref; $('done-link').href = url;
+      await go(6);
+      LG.toast('จองล็อกเกอร์สำเร็จ');
+      setTimeout(() => { location.href = url; }, 1800);
+    } catch (e) {
+      btnBack.disabled = false;
+      if (e.status === 409) {
+        LG.toastError(e);
+        state.locker = null; renderPicked(); renderAll(); await go(1);
+      } else if (e.code === 'invalid_promo') {
+        LG.toastError(e); state.promo = null; renderAll(); await go(4);
+      } else {
+        alertBox.innerHTML = `<i class="bi bi-exclamation-triangle-fill me-2"></i>${esc(e.message || 'ไม่สามารถทำรายการได้')}`;
+        alertBox.classList.remove('d-none');
+        LG.toastError(e);
+      }
+    }
+  }
+
+  btnNext.addEventListener('click', () => LG.busy(btnNext, async () => {
+    const n = state.step;
+    if (!(await validate(n))) return;
+    if (n === STEP_COUNT - 1) return pay();
+    await go(n + 1);
+  }));
+  btnBack.addEventListener('click', () => { if (state.step > 1) go(state.step - 1); });
+
+  // Enter inside a text field = Next (the promo field handles Enter itself)
+  document.querySelectorAll('#wizard form').forEach((form) => {
+    form.addEventListener('submit', (ev) => ev.preventDefault());
+    form.addEventListener('keydown', (ev) => {
+      if (ev.key === 'Enter' && ev.target.tagName === 'INPUT' && !['checkbox', 'radio', 'button'].includes(ev.target.type) && ev.target.id !== 'promo-code') { ev.preventDefault(); btnNext.click(); }
+    });
+  });
+
+  // ---------- start ----------
+  syncInputs();
+  renderPicked();
+  renderSummary(); renderEnd();
+  $('boot').hidden = true;
+  $('wizard').hidden = false;
+  await go(1);
+  $('h-1').blur();
+})();
+</script>
+</body>
+</html>

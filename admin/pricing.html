@@ -1,0 +1,254 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ราคาและโปรโมชัน | LockerGo</title>
+<meta name="description" content="กำหนดราคาล็อกเกอร์ตามขนาดและระยะเวลา พร้อมจัดการรหัสโปรโมชันส่วนลดของ LockerGo">
+<link rel="icon" type="image/svg+xml" href="../assets/img/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+<link href="../assets/css/custom.css" rel="stylesheet">
+<link href="../assets/css/admin.css" rel="stylesheet">
+<script src="../assets/js/config.js"></script>
+</head>
+<body data-shell="admin" data-page="pricing">
+<a class="visually-hidden-focusable" href="#main">ข้ามไปยังเนื้อหา</a>
+<div class="admin-wrap"><aside id="admin-sidebar"></aside>
+  <div class="admin-main"><div id="admin-topbar"></div>
+    <main id="main" class="admin-content" data-title="ราคาและโปรโมชัน">
+
+      <!-- section 1: prices -->
+      <section class="mb-5" aria-labelledby="price-heading">
+        <div class="mb-3">
+          <h2 class="h5 mb-1" id="price-heading">ราคาตามขนาดและระยะเวลา</h2>
+          <p class="text-body-secondary small mb-0">กำหนดราคาต่อหน่วย (บาท) ของล็อกเกอร์แต่ละขนาด แก้ไขแล้วกด "บันทึก" ในแถวนั้น ราคาใหม่จะใช้กับการจองครั้งต่อไป</p>
+        </div>
+        <div class="card card-soft table-card">
+          <div id="price-area" class="p-3"><div class="placeholder-glow" aria-hidden="true"><span class="placeholder col-12 rounded mb-2 py-3"></span><span class="placeholder col-12 rounded mb-2 py-3"></span><span class="placeholder col-12 rounded mb-2 py-3"></span></div><span class="visually-hidden" role="status">กำลังโหลด...</span></div>
+        </div>
+      </section>
+
+      <!-- section 2: promos -->
+      <section aria-labelledby="promo-heading">
+        <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+          <div>
+            <h2 class="h5 mb-1" id="promo-heading">รหัสโปรโมชัน</h2>
+            <p class="text-body-secondary small mb-0">ลูกค้ากรอกรหัสในขั้นตอนการจองเพื่อรับส่วนลด</p>
+          </div>
+          <button type="button" class="btn btn-primary ms-auto" id="btn-add-promo"><i class="bi bi-plus-lg me-1" aria-hidden="true"></i>เพิ่มโปรโมชัน</button>
+        </div>
+        <div class="card card-soft table-card">
+          <div id="promo-area" class="p-3"><div class="placeholder-glow" aria-hidden="true"><span class="placeholder col-12 rounded mb-2 py-3"></span><span class="placeholder col-12 rounded mb-2 py-3"></span></div><span class="visually-hidden" role="status">กำลังโหลด...</span></div>
+        </div>
+      </section>
+
+      <!-- promo modal -->
+      <div class="modal fade" id="promo-modal" tabindex="-1" aria-labelledby="promo-modal-title" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+          <form class="modal-content" id="promo-form" novalidate>
+            <div class="modal-header">
+              <h2 class="modal-title fs-5" id="promo-modal-title">เพิ่มโปรโมชัน</h2>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="ปิด"></button>
+            </div>
+            <div class="modal-body">
+              <input type="hidden" name="id">
+              <div class="mb-3">
+                <label for="pm-code" class="form-label">รหัสโปรโมชัน <span class="text-danger" aria-hidden="true">*</span></label>
+                <input type="text" class="form-control text-uppercase" id="pm-code" name="code" required minlength="3" maxlength="20" pattern="[A-Za-z0-9_\-]+" placeholder="เช่น WELCOME10" autocomplete="off">
+                <div class="invalid-feedback">กรุณากรอกรหัส 3-20 ตัว ใช้ได้เฉพาะ A-Z ตัวเลข - และ _</div>
+              </div>
+              <div class="row g-3 mb-3">
+                <div class="col-sm-6">
+                  <label for="pm-type" class="form-label">ประเภทส่วนลด</label>
+                  <select class="form-select" id="pm-type" name="type">
+                    <option value="percent">เปอร์เซ็นต์ (%)</option>
+                    <option value="fixed">จำนวนเงิน (บาท)</option>
+                  </select>
+                </div>
+                <div class="col-sm-6">
+                  <label for="pm-value" class="form-label">มูลค่าส่วนลด <span class="text-danger" aria-hidden="true">*</span></label>
+                  <div class="input-group has-validation">
+                    <input type="number" class="form-control" id="pm-value" name="value" required min="1" max="100" step="1" inputmode="numeric" placeholder="10">
+                    <span class="input-group-text" id="pm-unit">%</span>
+                    <div class="invalid-feedback" id="pm-value-fb">กรุณากรอกส่วนลด 1-100%</div>
+                  </div>
+                </div>
+              </div>
+              <div class="mb-3">
+                <label for="pm-exp" class="form-label">วันหมดอายุ</label>
+                <input type="date" class="form-control" id="pm-exp" name="expiresAt" aria-describedby="pm-exp-help">
+                <div class="form-text" id="pm-exp-help">เว้นว่างไว้หากไม่มีวันหมดอายุ</div>
+              </div>
+              <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" role="switch" id="pm-active" name="active" checked>
+                <label class="form-check-label" for="pm-active">เปิดใช้งานรหัสนี้</label>
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">ยกเลิก</button>
+              <button type="submit" class="btn btn-primary" id="pm-save"><i class="bi bi-check-lg me-1" aria-hidden="true"></i>บันทึก</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="../assets/js/mock-data.js"></script>
+<script src="../assets/js/mock-service.js"></script>
+<script src="../assets/js/api-client.js"></script>
+<script src="../assets/js/data-service.js"></script>
+<script src="../assets/js/auth.js"></script>
+<script src="../assets/js/main.js"></script>
+<script src="../assets/js/admin.js"></script>
+<script>
+(async () => {
+  const user = await Admin.ready;
+  const $ = (s) => document.querySelector(s);
+  const priceArea = $('#price-area'), promoArea = $('#promo-area'), form = $('#promo-form');
+  const modal = bootstrap.Modal.getOrCreateInstance('#promo-modal');
+  const SIZE_ORDER = ['S', 'M', 'L', 'XL'];
+  const UNITS = [['hour', 'ต่อชั่วโมง'], ['day', 'ต่อวัน'], ['month', 'ต่อเดือน']];
+  let prices = [], promos = [];
+
+  // ---------- prices ----------
+  function renderPrices() {
+    const rows = SIZE_ORDER.map((s) => prices.find((p) => p.size === s)).filter(Boolean);
+    if (!rows.length) { priceArea.innerHTML = LG.empty('ยังไม่มีข้อมูลราคา', 'tags'); return; }
+    priceArea.className = '';
+    priceArea.innerHTML = `<div class="table-responsive"><table class="table align-middle">
+      <caption class="visually-hidden">ตารางราคาล็อกเกอร์ตามขนาดและระยะเวลา</caption>
+      <thead><tr><th scope="col">ขนาด</th>${UNITS.map(([, l]) => `<th scope="col">${l}</th>`).join('')}<th scope="col" class="text-end">จัดการ</th></tr></thead>
+      <tbody>${rows.map((p) => {
+        const info = LG.SIZES[p.size] || { label: p.size, dim: '' };
+        return `<tr data-size="${p.size}">
+          <th scope="row"><div class="d-flex align-items-center gap-2"><span class="size-art px-2 py-1" aria-hidden="true">${p.size}</span><div><div>${LG.esc(info.label)}</div><div class="small text-body-secondary fw-normal text-nowrap">${LG.esc(info.dim)}</div></div></div></th>
+          ${UNITS.map(([k, l]) => `<td><label class="visually-hidden" for="pr-${p.size}-${k}">ราคา${LG.esc(info.label)} ${l}</label>
+            <div class="input-group input-group-sm has-validation"><span class="input-group-text">฿</span>
+            <input type="number" class="form-control" id="pr-${p.size}-${k}" name="${k}" form="pf-${p.size}" min="0" max="1000000" step="1" required inputmode="numeric" value="${+p[k]}">
+            <div class="invalid-feedback">ราคาต้องเป็นตัวเลขตั้งแต่ 0 ขึ้นไป</div></div></td>`).join('')}
+          <td class="text-end"><form id="pf-${p.size}" data-size="${p.size}" novalidate><button type="submit" class="btn btn-primary btn-sm"><i class="bi bi-check-lg me-1" aria-hidden="true"></i>บันทึก<span class="visually-hidden"> ราคาขนาด ${LG.esc(info.label)}</span></button></form></td>
+        </tr>`;
+      }).join('')}</tbody></table></div>`;
+    priceArea.querySelectorAll('form[data-size]').forEach((f) => f.addEventListener('submit', async (ev) => {
+      ev.preventDefault();
+      const tr = f.closest('tr');
+      tr.classList.add('was-validated');
+      if (!f.checkValidity()) return;
+      const get = (k) => +tr.querySelector(`input[name="${k}"]`).value;
+      await LG.busy(f.querySelector('button'), async () => {
+        try {
+          await DS.savePrice({ size: f.dataset.size, hour: get('hour'), day: get('day'), month: get('month') });
+          tr.classList.remove('was-validated');
+          LG.toast(`บันทึกราคาขนาด ${f.dataset.size} เรียบร้อย`);
+        } catch (e) { LG.toastError(e); }
+      });
+    }));
+  }
+
+  // ---------- promos ----------
+  const isExpired = (p) => !!p.expiresAt && String(p.expiresAt).slice(0, 10) < LG.fmt.isoDate();
+  const discountText = (p) => (p.type === 'percent' ? `${+p.value}%` : LG.fmt.baht(p.value));
+
+  function renderPromos() {
+    if (!promos.length) { promoArea.className = 'p-3'; promoArea.innerHTML = LG.empty('ยังไม่มีรหัสโปรโมชัน กดปุ่ม "เพิ่มโปรโมชัน" เพื่อสร้าง', 'ticket-perforated'); return; }
+    promoArea.className = '';
+    promoArea.innerHTML = `<div class="table-responsive"><table class="table table-hover align-middle">
+      <caption class="visually-hidden">รายการรหัสโปรโมชัน</caption>
+      <thead><tr><th scope="col">รหัส</th><th scope="col">ประเภท</th><th scope="col" class="text-end">ส่วนลด</th><th scope="col">หมดอายุ</th><th scope="col">เปิดใช้งาน</th><th scope="col" class="text-end">จัดการ</th></tr></thead>
+      <tbody>${promos.map((p) => `<tr>
+        <td><code class="fs-6 text-body">${LG.esc(p.code)}</code></td>
+        <td>${p.type === 'percent' ? 'เปอร์เซ็นต์' : 'จำนวนเงิน'}</td>
+        <td class="text-end fw-semibold text-nowrap">${LG.esc(discountText(p))}</td>
+        <td class="text-nowrap">${p.expiresAt ? LG.fmt.date(p.expiresAt) : 'ไม่มีกำหนด'}${isExpired(p) ? ' <span class="badge status-badge st-red">หมดอายุแล้ว</span>' : ''}</td>
+        <td><div class="form-check form-switch mb-0"><input class="form-check-input" type="checkbox" role="switch" id="sw-${p.id}" data-toggle="${p.id}" ${+p.active ? 'checked' : ''}><label class="form-check-label" for="sw-${p.id}">${+p.active ? 'เปิด' : 'ปิด'}<span class="visually-hidden"> รหัส ${LG.esc(p.code)}</span></label></div></td>
+        <td class="text-end text-nowrap">
+          <button type="button" class="btn btn-outline-secondary btn-sm" data-edit="${p.id}" aria-label="แก้ไขรหัส ${LG.esc(p.code)}"><i class="bi bi-pencil" aria-hidden="true"></i></button>
+          <button type="button" class="btn btn-outline-danger btn-sm" data-del="${p.id}" aria-label="ลบรหัส ${LG.esc(p.code)}"><i class="bi bi-trash" aria-hidden="true"></i></button>
+        </td></tr>`).join('')}</tbody></table></div>`;
+    const find = (id) => promos.find((p) => p.id === +id);
+    promoArea.querySelectorAll('[data-edit]').forEach((b) => b.addEventListener('click', () => openForm(find(b.dataset.edit))));
+    promoArea.querySelectorAll('[data-del]').forEach((b) => b.addEventListener('click', () => removePromo(find(b.dataset.del))));
+    promoArea.querySelectorAll('[data-toggle]').forEach((sw) => sw.addEventListener('change', async () => {
+      const p = find(sw.dataset.toggle);
+      sw.disabled = true;
+      try {
+        await DS.savePromo({ id: p.id, code: p.code, type: p.type, value: +p.value, active: sw.checked, expiresAt: p.expiresAt ? String(p.expiresAt).slice(0, 10) : '' });
+        LG.toast(sw.checked ? `เปิดใช้งานรหัส ${p.code} แล้ว` : `ปิดใช้งานรหัส ${p.code} แล้ว`);
+        await loadPromos();
+      } catch (e) { sw.checked = !sw.checked; sw.disabled = false; LG.toastError(e); }
+    }));
+  }
+
+  async function loadPrices() {
+    priceArea.className = 'p-3'; priceArea.innerHTML = LG.skeleton(4);
+    promoArea.className = 'p-3'; promoArea.innerHTML = LG.skeleton(3);
+    try {
+      const data = await DS.getPricing();
+      prices = data.prices || []; promos = data.promos || [];
+      renderPrices(); renderPromos();
+    } catch (e) { priceArea.innerHTML = LG.errorBox(e); promoArea.innerHTML = LG.errorBox(e); }
+  }
+  async function loadPromos() {
+    try { promos = (await DS.getPricing()).promos || []; renderPromos(); }
+    catch (e) { promoArea.className = 'p-3'; promoArea.innerHTML = LG.errorBox(e); }
+  }
+
+  async function removePromo(p) {
+    const ok = await LG.confirm({ title: 'ลบรหัสโปรโมชัน', message: `ต้องการลบรหัส "${p.code}" หรือไม่ การจองเดิมที่ใช้รหัสนี้จะไม่ได้รับผลกระทบ`, okText: 'ลบรหัส', danger: true });
+    if (!ok) return;
+    try { await DS.deletePromo(p.id); LG.toast('ลบรหัสโปรโมชันเรียบร้อย'); await loadPromos(); }
+    catch (e) { LG.toastError(e); }
+  }
+
+  // ---------- promo form ----------
+  function syncType() {
+    const pct = form.type.value === 'percent', v = form.value;
+    $('#pm-unit').textContent = pct ? '%' : '฿';
+    v.max = pct ? '100' : '100000';
+    $('#pm-value-fb').textContent = pct ? 'กรุณากรอกส่วนลด 1-100%' : 'กรุณากรอกส่วนลดเป็นจำนวนเงินมากกว่า 0 บาท';
+  }
+  function openForm(p) {
+    form.classList.remove('was-validated');
+    form.reset();
+    $('#promo-modal-title').textContent = p ? 'แก้ไขโปรโมชัน' : 'เพิ่มโปรโมชัน';
+    form.id.value = p ? p.id : '';
+    form.code.value = p ? p.code : '';
+    form.type.value = p ? p.type : 'percent';
+    form.value.value = p ? +p.value : '';
+    form.expiresAt.value = p && p.expiresAt ? String(p.expiresAt).slice(0, 10) : '';
+    form.active.checked = p ? !!+p.active : true;
+    syncType();
+    modal.show();
+  }
+
+  $('#btn-add-promo').addEventListener('click', () => openForm(null));
+  $('#pm-type').addEventListener('change', syncType);
+  $('#pm-code').addEventListener('input', (e) => { e.target.value = e.target.value.toUpperCase(); });
+  $('#promo-modal').addEventListener('shown.bs.modal', () => form.code.focus());
+
+  form.addEventListener('submit', (ev) => {
+    ev.preventDefault();
+    if (!LG.validate(form)) return;
+    LG.busy($('#pm-save'), async () => {
+      const obj = { code: form.code.value.trim().toUpperCase(), type: form.type.value, value: +form.value.value, active: form.active.checked, expiresAt: form.expiresAt.value || '' };
+      if (form.id.value) obj.id = +form.id.value;
+      try {
+        await DS.savePromo(obj);
+        modal.hide();
+        LG.toast(obj.id ? 'บันทึกโปรโมชันเรียบร้อย' : 'เพิ่มโปรโมชันเรียบร้อย');
+        await loadPromos();
+      } catch (e) { LG.toastError(e); }   // 409 duplicate / 422 validation
+    });
+  });
+
+  loadPrices();
+})();
+</script>
+</body>
+</html>

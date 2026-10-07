@@ -1,0 +1,401 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>หน้าแรก | LockerGo</title>
+<meta name="description" content="LockerGo บริการล็อกเกอร์อัจฉริยะ จองออนไลน์ใน 1 นาที ฝากกระเป๋าและสัมภาระได้อย่างปลอดภัย เปิดด้วยรหัส PIN หรือ QR Code พร้อมกล้องวงจรปิดตลอด 24 ชั่วโมง">
+<link rel="icon" type="image/svg+xml" href="assets/img/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+<link href="assets/css/custom.css" rel="stylesheet">
+<script src="assets/js/config.js"></script>
+</head>
+<body data-page="home">
+<a class="visually-hidden-focusable" href="#main">ข้ามไปยังเนื้อหา</a>
+<div id="lg-navbar"></div>
+
+<main id="main">
+
+  <!-- Hero -->
+  <section class="hero py-5" aria-labelledby="hero-title">
+    <div class="container py-lg-4">
+      <div class="row align-items-center gy-5">
+        <div class="col-lg-7">
+          <span class="badge rounded-pill bg-body-secondary text-body-secondary border mb-3"><i class="bi bi-stars text-accent me-1"></i>ล็อกเกอร์อัจฉริยะ เปิดบริการทุกสาขา</span>
+          <h1 id="hero-title" class="display-4 fw-bold mb-3">ฝากของปลอดภัย<br>จองล็อกเกอร์ง่ายใน 1 นาที</h1>
+          <p class="lead text-white text-opacity-75 mb-4">เที่ยวมือเปล่า เดินทางสบายตัว ฝากกระเป๋าและสัมภาระไว้กับเราได้ทั้งแบบรายชั่วโมง รายวัน และรายเดือน เปิดล็อกเกอร์ด้วยรหัส PIN หรือ QR Code ไม่ต้องรอคิว</p>
+          <div class="d-flex flex-wrap gap-2">
+            <a href="lockers.html" class="btn btn-accent btn-lg"><i class="bi bi-search me-1"></i>ค้นหาล็อกเกอร์</a>
+            <a href="#how" class="btn btn-outline-light btn-lg">ดูวิธีใช้งาน</a>
+          </div>
+        </div>
+        <div class="col-lg-5 d-none d-lg-block" aria-hidden="true">
+          <div class="row g-3 row-cols-3">
+            <div class="col"><div class="bg-white bg-opacity-10 border border-white border-opacity-25 rounded-4 p-4 text-center"><i class="bi bi-lock-fill fs-1"></i><div class="small mt-1">A01</div></div></div>
+            <div class="col"><div class="bg-white bg-opacity-25 border border-white border-opacity-50 rounded-4 p-4 text-center"><i class="bi bi-unlock-fill fs-1"></i><div class="small mt-1">A02</div></div></div>
+            <div class="col"><div class="bg-white bg-opacity-10 border border-white border-opacity-25 rounded-4 p-4 text-center"><i class="bi bi-lock-fill fs-1"></i><div class="small mt-1">A03</div></div></div>
+            <div class="col"><div class="bg-white bg-opacity-10 border border-white border-opacity-25 rounded-4 p-4 text-center"><i class="bi bi-lock-fill fs-1"></i><div class="small mt-1">B01</div></div></div>
+            <div class="col"><div class="bg-white bg-opacity-10 border border-white border-opacity-25 rounded-4 p-4 text-center"><i class="bi bi-lock-fill fs-1"></i><div class="small mt-1">B02</div></div></div>
+            <div class="col"><div class="bg-white bg-opacity-25 border border-white border-opacity-50 rounded-4 p-4 text-center"><i class="bi bi-unlock-fill fs-1"></i><div class="small mt-1">B03</div></div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick search -->
+      <form id="search-form" class="hero-search p-3 p-md-4 mt-5" action="lockers.html" method="get" aria-label="ค้นหาล็อกเกอร์ว่าง">
+        <div class="row g-3 align-items-end">
+          <div class="col-md-4">
+            <label for="s-location" class="form-label fw-medium"><i class="bi bi-geo-alt me-1"></i>สาขา</label>
+            <select class="form-select" id="s-location" name="locationId">
+              <option value="">ทุกสาขา</option>
+            </select>
+          </div>
+          <div class="col-sm-6 col-md-3">
+            <label for="s-date" class="form-label fw-medium"><i class="bi bi-calendar-event me-1"></i>วันที่ใช้งาน</label>
+            <input type="date" class="form-control" id="s-date" name="date" required>
+            <div class="invalid-feedback">กรุณาเลือกวันที่ตั้งแต่วันนี้เป็นต้นไป</div>
+          </div>
+          <div class="col-sm-6 col-md-3">
+            <label for="s-size" class="form-label fw-medium"><i class="bi bi-box-seam me-1"></i>ขนาด</label>
+            <select class="form-select" id="s-size" name="size">
+              <option value="">ทุกขนาด</option>
+            </select>
+          </div>
+          <div class="col-md-2 d-grid">
+            <button type="submit" class="btn btn-primary"><i class="bi bi-search me-1"></i>ค้นหา</button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </section>
+
+  <!-- How it works -->
+  <section class="section" id="how" aria-labelledby="how-title">
+    <div class="container">
+      <div class="section-title">
+        <h2 id="how-title" class="fw-bold">วิธีใช้งาน</h2>
+        <p class="text-body-secondary mb-0">ฝากของได้ง่าย ๆ เพียง 4 ขั้นตอน ไม่ต้องดาวน์โหลดแอป</p>
+      </div>
+      <ol class="row g-4 list-unstyled mb-0">
+        <li class="col-sm-6 col-lg-3">
+          <div class="card card-soft h-100 text-center">
+            <div class="card-body p-4">
+              <span class="icon-circle mb-3"><i class="bi bi-search" aria-hidden="true"></i></span>
+              <h3 class="h5"><span class="text-brand">1.</span> เลือกสาขาและขนาด</h3>
+              <p class="text-body-secondary small mb-0">ค้นหาสาขาที่สะดวก เลือกขนาดล็อกเกอร์ให้พอดีกับสัมภาระของคุณ</p>
+            </div>
+          </div>
+        </li>
+        <li class="col-sm-6 col-lg-3">
+          <div class="card card-soft h-100 text-center">
+            <div class="card-body p-4">
+              <span class="icon-circle mb-3"><i class="bi bi-calendar2-check" aria-hidden="true"></i></span>
+              <h3 class="h5"><span class="text-brand">2.</span> เลือกช่วงเวลา</h3>
+              <p class="text-body-secondary small mb-0">กำหนดวันเวลาเริ่มต้นและระยะเวลา ระบบแสดงล็อกเกอร์ที่ว่างให้ทันที</p>
+            </div>
+          </div>
+        </li>
+        <li class="col-sm-6 col-lg-3">
+          <div class="card card-soft h-100 text-center">
+            <div class="card-body p-4">
+              <span class="icon-circle mb-3"><i class="bi bi-credit-card-2-front" aria-hidden="true"></i></span>
+              <h3 class="h5"><span class="text-brand">3.</span> ชำระเงิน</h3>
+              <p class="text-body-secondary small mb-0">จ่ายผ่านบัตรหรือพร้อมเพย์ รับอีเมลยืนยันและรหัส PIN ทันทีหลังชำระเงิน</p>
+            </div>
+          </div>
+        </li>
+        <li class="col-sm-6 col-lg-3">
+          <div class="card card-soft h-100 text-center">
+            <div class="card-body p-4">
+              <span class="icon-circle mb-3"><i class="bi bi-qr-code-scan" aria-hidden="true"></i></span>
+              <h3 class="h5"><span class="text-brand">4.</span> สแกนหรือกด PIN</h3>
+              <p class="text-body-secondary small mb-0">ไปที่ตู้ล็อกเกอร์ สแกน QR หรือกดรหัส PIN เพื่อเปิด ฝากของ แล้วไปเที่ยวได้เลย</p>
+            </div>
+          </div>
+        </li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- Sizes -->
+  <section class="section bg-body-tertiary" id="sizes" aria-labelledby="sizes-title">
+    <div class="container">
+      <div class="section-title">
+        <h2 id="sizes-title" class="fw-bold">ขนาดล็อกเกอร์ให้เลือก</h2>
+        <p class="text-body-secondary mb-0">4 ขนาด รองรับตั้งแต่ของใช้ส่วนตัวไปจนถึงกระเป๋าเดินทางใบใหญ่</p>
+      </div>
+      <div id="sizes-box" class="row g-4">
+        <div class="col-12"><div id="sizes-loading"></div></div>
+      </div>
+      <p class="text-center mt-4 mb-0"><a href="pricing.html" class="btn btn-outline-primary">ดูตารางราคาทั้งหมด <i class="bi bi-arrow-right ms-1"></i></a></p>
+    </div>
+  </section>
+
+  <!-- Features -->
+  <section class="section" id="features" aria-labelledby="features-title">
+    <div class="container">
+      <div class="section-title">
+        <h2 id="features-title" class="fw-bold">ทำไมต้อง LockerGo</h2>
+        <p class="text-body-secondary mb-0">บริการที่ออกแบบมาเพื่อให้การฝากของเป็นเรื่องง่ายและอุ่นใจ</p>
+      </div>
+      <div class="row g-4">
+        <div class="col-md-6 col-lg-4">
+          <div class="d-flex gap-3">
+            <span class="icon-circle"><i class="bi bi-clock-history" aria-hidden="true"></i></span>
+            <div><h3 class="h5">เข้าถึงได้ 24/7</h3><p class="text-body-secondary mb-0">สาขาสุวรรณภูมิเปิดตลอด 24 ชั่วโมง สาขาอื่นเปิดยาวถึงค่ำ เหมาะกับทุกไฟลต์และทุกตารางเดินทาง</p></div>
+          </div>
+        </div>
+        <div class="col-md-6 col-lg-4">
+          <div class="d-flex gap-3">
+            <span class="icon-circle"><i class="bi bi-qr-code" aria-hidden="true"></i></span>
+            <div><h3 class="h5">เปิดด้วย PIN / QR</h3><p class="text-body-secondary mb-0">รับรหัส PIN 6 หลักและ QR Code ทันทีหลังจอง ไม่ต้องใช้กุญแจ ไม่ต้องกลัวทำหาย</p></div>
+          </div>
+        </div>
+        <div class="col-md-6 col-lg-4">
+          <div class="d-flex gap-3">
+            <span class="icon-circle"><i class="bi bi-camera-video" aria-hidden="true"></i></span>
+            <div><h3 class="h5">กล้องวงจรปิดและรักษาความปลอดภัย</h3><p class="text-body-secondary mb-0">ทุกสาขาติดตั้งกล้องวงจรปิดบันทึกตลอด 24 ชั่วโมง พร้อมเจ้าหน้าที่ดูแลประจำจุด</p></div>
+          </div>
+        </div>
+        <div class="col-md-6 col-lg-4">
+          <div class="d-flex gap-3">
+            <span class="icon-circle"><i class="bi bi-shield-check" aria-hidden="true"></i></span>
+            <div><h3 class="h5">ประกันความเสียหาย</h3><p class="text-body-secondary mb-0">คุ้มครองสิ่งของที่ฝากภายในล็อกเกอร์ตามเงื่อนไขของบริการ ช่วยให้คุณอุ่นใจทุกการเดินทาง</p></div>
+          </div>
+        </div>
+        <div class="col-md-6 col-lg-4">
+          <div class="d-flex gap-3">
+            <span class="icon-circle"><i class="bi bi-phone" aria-hidden="true"></i></span>
+            <div><h3 class="h5">จองออนไลน์ ต่อเวลาได้เอง</h3><p class="text-body-secondary mb-0">จอง ชำระเงิน ดูสถานะ และต่อเวลาผ่านมือถือได้ทุกที่ รับการแจ้งเตือนก่อนหมดเวลา</p></div>
+          </div>
+        </div>
+        <div class="col-md-6 col-lg-4">
+          <div class="d-flex gap-3">
+            <span class="icon-circle"><i class="bi bi-buildings" aria-hidden="true"></i></span>
+            <div><h3 class="h5">หลายสาขาทั่วประเทศ</h3><p class="text-body-secondary mb-0">สยามสแควร์ หมอชิต สุวรรณภูมิ และเชียงใหม่ ฝากที่หนึ่งสะดวกต่อการเดินทางไปอีกที่หนึ่ง</p></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Locations -->
+  <section class="section bg-body-tertiary" id="locations" aria-labelledby="loc-title">
+    <div class="container">
+      <div class="section-title">
+        <h2 id="loc-title" class="fw-bold">สาขาของเรา</h2>
+        <p class="text-body-secondary mb-0">เลือกสาขาที่ใกล้คุณ ดูจำนวนล็อกเกอร์ที่ว่างได้แบบเรียลไทม์</p>
+      </div>
+      <div id="locations-box" class="row g-4"></div>
+    </div>
+  </section>
+
+  <!-- Testimonials -->
+  <section class="section" id="reviews" aria-labelledby="reviews-title">
+    <div class="container">
+      <div class="section-title">
+        <h2 id="reviews-title" class="fw-bold">เสียงจากผู้ใช้งานจริง</h2>
+        <p class="text-body-secondary mb-0">ลูกค้าของเราพึงพอใจกับความสะดวกและความปลอดภัย</p>
+      </div>
+      <div class="row g-4">
+        <div class="col-lg-4">
+          <figure class="card card-soft h-100 mb-0">
+            <div class="card-body p-4 d-flex flex-column">
+              <p class="mb-2 text-warning" role="img" aria-label="ให้คะแนน 5 จาก 5 ดาว"><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i></p>
+              <blockquote class="mb-4 flex-grow-1">"แวะฝากกระเป๋าที่สยามก่อนเดินช้อปปิ้ง จองบนมือถือเสร็จใน 2 นาที ได้ PIN ทันที ไม่ต้องหอบของเดินทั้งวัน สะดวกมากค่ะ"</blockquote>
+              <figcaption class="d-flex align-items-center gap-3">
+                <span class="icon-circle"><i class="bi bi-person-fill" aria-hidden="true"></i></span>
+                <span><strong class="d-block">คุณพิมพ์ชนก ศรีสุวรรณ</strong><span class="small text-body-secondary">นักท่องเที่ยว กรุงเทพฯ</span></span>
+              </figcaption>
+            </div>
+          </figure>
+        </div>
+        <div class="col-lg-4">
+          <figure class="card card-soft h-100 mb-0">
+            <div class="card-body p-4 d-flex flex-column">
+              <p class="mb-2 text-warning" role="img" aria-label="ให้คะแนน 5 จาก 5 ดาว"><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i></p>
+              <blockquote class="mb-4 flex-grow-1">"เที่ยวบินตอนดึก แต่ที่สุวรรณภูมิเปิด 24 ชั่วโมง ฝากกระเป๋าใบใหญ่ได้สบาย มีกล้องและเจ้าหน้าที่ดูแล รู้สึกปลอดภัยมาก"</blockquote>
+              <figcaption class="d-flex align-items-center gap-3">
+                <span class="icon-circle"><i class="bi bi-person-fill" aria-hidden="true"></i></span>
+                <span><strong class="d-block">คุณธนกร วงศ์สกุล</strong><span class="small text-body-secondary">พนักงานบริษัท เดินทางบ่อย</span></span>
+              </figcaption>
+            </div>
+          </figure>
+        </div>
+        <div class="col-lg-4">
+          <figure class="card card-soft h-100 mb-0">
+            <div class="card-body p-4 d-flex flex-column">
+              <p class="mb-2 text-warning" role="img" aria-label="ให้คะแนน 4 จาก 5 ดาว"><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star"></i></p>
+              <blockquote class="mb-4 flex-grow-1">"เช่ารายเดือนไว้เก็บอุปกรณ์ถ่ายภาพ ราคาคุ้มกว่าเช่าห้องเก็บของมาก ต่อเวลาเองผ่านเว็บได้ อยากให้เพิ่มสาขาในเชียงใหม่อีกค่ะ"</blockquote>
+              <figcaption class="d-flex align-items-center gap-3">
+                <span class="icon-circle"><i class="bi bi-person-fill" aria-hidden="true"></i></span>
+                <span><strong class="d-block">คุณวรัญญา แก้วมณี</strong><span class="small text-body-secondary">ช่างภาพอิสระ เชียงใหม่</span></span>
+              </figcaption>
+            </div>
+          </figure>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section class="section bg-body-tertiary" id="faq" aria-labelledby="faq-title">
+    <div class="container">
+      <div class="section-title">
+        <h2 id="faq-title" class="fw-bold">คำถามที่พบบ่อย</h2>
+        <p class="text-body-secondary mb-0">ไม่พบคำตอบที่ต้องการ? <a href="contact.html">ติดต่อทีมงาน</a></p>
+      </div>
+      <div class="row justify-content-center">
+        <div class="col-lg-9">
+          <div class="accordion" id="faq-accordion">
+            <div class="accordion-item">
+              <h3 class="accordion-header"><button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#faq1" aria-expanded="true" aria-controls="faq1">ยกเลิกการจองได้หรือไม่ และได้รับเงินคืนเท่าไร</button></h3>
+              <div id="faq1" class="accordion-collapse collapse show" data-bs-parent="#faq-accordion">
+                <div class="accordion-body"><span id="faq-cancel">ยกเลิกได้ที่เมนู "การจองของฉัน" ก่อนเวลาเริ่มใช้งาน</span> รายละเอียดเพิ่มเติมดูได้ที่ <a href="terms.html#refund">เงื่อนไขการยกเลิกและคืนเงิน</a></div>
+              </div>
+            </div>
+            <div class="accordion-item">
+              <h3 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq2" aria-expanded="false" aria-controls="faq2">ฝากอะไรได้บ้าง และมีของต้องห้ามหรือไม่</button></h3>
+              <div id="faq2" class="accordion-collapse collapse" data-bs-parent="#faq-accordion">
+                <div class="accordion-body">ฝากได้ทั้งกระเป๋าเดินทาง เป้ ถุงช้อปปิ้ง อุปกรณ์กีฬา และของใช้ส่วนตัว แต่ห้ามฝากของมีชีวิต อาหารสดหรือของที่เน่าเสียง่าย วัตถุอันตราย วัตถุไวไฟ อาวุธ ยาเสพติด และของผิดกฎหมายทุกชนิด ดูรายการทั้งหมดได้ที่ <a href="terms.html#prohibited">ข้อกำหนดสิ่งของต้องห้าม</a></div>
+              </div>
+            </div>
+            <div class="accordion-item">
+              <h3 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq3" aria-expanded="false" aria-controls="faq3">เปิดล็อกเกอร์อย่างไร</button></h3>
+              <div id="faq3" class="accordion-collapse collapse" data-bs-parent="#faq-accordion">
+                <div class="accordion-body">หลังจองสำเร็จ ระบบจะส่งรหัส PIN 6 หลักและ QR Code ให้ทางหน้าจอและอีเมล เมื่อถึงตู้ล็อกเกอร์ให้สแกน QR หรือกดรหัส PIN บนหน้าจอเพื่อเปิดประตู ใช้รหัสเดิมเปิดและปิดได้ตลอดระยะเวลาที่จอง</div>
+              </div>
+            </div>
+            <div class="accordion-item">
+              <h3 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq4" aria-expanded="false" aria-controls="faq4">ต่อเวลาการใช้งานได้หรือไม่</button></h3>
+              <div id="faq4" class="accordion-collapse collapse" data-bs-parent="#faq-accordion">
+                <div class="accordion-body">ได้ เข้าสู่ระบบแล้วไปที่ "การจองของฉัน" เลือกรายการที่กำลังใช้งานและกด "ต่อเวลา" ระบบจะคิดราคาตามอัตราปกติ หากมีผู้จองต่อจากคุณแล้ว จะไม่สามารถต่อเวลาในล็อกเกอร์เดิมได้ ควรต่อเวลาก่อนหมดเวลาล่วงหน้า</div>
+              </div>
+            </div>
+            <div class="accordion-item">
+              <h3 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq5" aria-expanded="false" aria-controls="faq5">ชำระเงินได้ด้วยวิธีใดบ้าง</button></h3>
+              <div id="faq5" class="accordion-collapse collapse" data-bs-parent="#faq-accordion">
+                <div class="accordion-body">รองรับบัตรเครดิต/เดบิต พร้อมเพย์ (สแกน QR) และเงินสด ณ จุดบริการของสาขา ทุกราคารวมภาษีมูลค่าเพิ่มแล้ว และสามารถใช้รหัสโปรโมชันเพื่อรับส่วนลดได้ในขั้นตอนการชำระเงิน</div>
+              </div>
+            </div>
+            <div class="accordion-item">
+              <h3 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq6" aria-expanded="false" aria-controls="faq6">ลืมรหัส PIN ต้องทำอย่างไร</button></h3>
+              <div id="faq6" class="accordion-collapse collapse" data-bs-parent="#faq-accordion">
+                <div class="accordion-body">เข้าสู่ระบบแล้วเปิดรายการจองในเมนู "การจองของฉัน" จะเห็นรหัส PIN และ QR Code ของการจองนั้นอีกครั้ง หากเข้าถึงไม่ได้ ติดต่อเจ้าหน้าที่ประจำสาขาพร้อมบัตรประชาชนและหมายเลขการจอง หรือโทรหาเราที่ <span id="faq-phone">02-123-4500</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Call to action -->
+  <section class="section" aria-labelledby="cta-title">
+    <div class="container">
+      <div class="hero rounded-xl p-4 p-md-5 text-center">
+        <div class="container">
+          <h2 id="cta-title" class="fw-bold mb-2">พร้อมเที่ยวแบบไม่หอบของแล้วหรือยัง</h2>
+          <p class="text-white text-opacity-75 mb-4">สมัครสมาชิกวันนี้ รับส่วนลดสำหรับการจองครั้งแรกด้วยรหัส <span class="fw-semibold">WELCOME10</span></p>
+          <div class="d-flex flex-wrap justify-content-center gap-2">
+            <a href="lockers.html" class="btn btn-accent btn-lg">จองล็อกเกอร์ตอนนี้</a>
+            <a href="register.html" class="btn btn-outline-light btn-lg">สมัครสมาชิกฟรี</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<div id="lg-footer"></div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="assets/js/mock-data.js"></script>
+<script src="assets/js/mock-service.js"></script>
+<script src="assets/js/api-client.js"></script>
+<script src="assets/js/data-service.js"></script>
+<script src="assets/js/auth.js"></script>
+<script src="assets/js/main.js"></script>
+<script>
+(async () => {
+  const $ = (id) => document.getElementById(id);
+  const form = $('search-form'), locSel = $('s-location'), dateEl = $('s-date'), sizeEl = $('s-size');
+  const locBox = $('locations-box'), sizesBox = $('sizes-box');
+
+  // Quick search defaults
+  const today = LG.fmt.isoDate();
+  dateEl.value = today;
+  dateEl.min = today;
+  sizeEl.insertAdjacentHTML('beforeend', Object.entries(LG.SIZES).map(([k, s]) => `<option value="${k}">${k} - ${LG.esc(s.label)} (${LG.esc(s.dim)})</option>`).join(''));
+
+  // Only send filled-in fields to lockers.html
+  form.addEventListener('submit', (ev) => {
+    dateEl.setCustomValidity(dateEl.value && dateEl.value < today ? 'invalid' : '');
+    if (!LG.validate(form)) { ev.preventDefault(); return; }
+    [locSel, sizeEl].forEach((el) => { if (!el.value) el.disabled = true; });
+  });
+  dateEl.addEventListener('input', () => { dateEl.setCustomValidity(dateEl.value && dateEl.value < today ? 'invalid' : ''); });
+  window.addEventListener('pageshow', () => { [locSel, sizeEl].forEach((el) => { el.disabled = false; }); });
+
+  // Skeletons
+  $('sizes-loading').innerHTML = LG.skeleton(4);
+  locBox.innerHTML = [1, 2, 3, 4].map(() => `<div class="col-sm-6 col-lg-3"><div class="card card-soft h-100"><div class="card-body">${LG.skeleton(4)}</div></div></div>`).join('');
+
+  // Size cards: art scales by icon size (no inline styles)
+  const ART = { S: 'fs-5', M: 'fs-3', L: 'fs-1', XL: 'display-4' };
+  const renderSizes = (prices) => {
+    const byKey = Object.fromEntries(prices.map((p) => [p.size, p]));
+    sizesBox.innerHTML = Object.entries(LG.SIZES).map(([k, s]) => {
+      const p = byKey[k];
+      const priceHtml = p
+        ? `<p class="mb-1"><span class="fs-4 fw-bold text-brand">${LG.fmt.baht(p.hour)}</span> <span class="text-body-secondary small">/ ชั่วโมง</span></p><p class="mb-3 text-body-secondary small">${LG.fmt.baht(p.day)} / วัน &middot; ${LG.fmt.baht(p.month)} / เดือน</p>`
+        : '<p class="text-body-secondary small mb-3">ติดต่อสอบถามราคา</p>';
+      return `<div class="col-sm-6 col-lg-3"><div class="card card-soft h-100 price-card text-center"><div class="card-body p-4 d-flex flex-column">
+        <div class="d-flex align-items-end justify-content-center mb-3 pt-2"><div class="size-art p-3" role="img" aria-label="ภาพเปรียบเทียบขนาด ${k}"><i class="bi bi-box-seam ${ART[k]}" aria-hidden="true"></i></div></div>
+        <h3 class="h4 mb-0">ขนาด ${k} <span class="fs-6 fw-normal text-body-secondary">${LG.esc(s.label)}</span></h3>
+        <p class="small text-body-secondary mb-2">${LG.esc(s.dim)}</p>
+        <p class="small mb-3"><i class="bi bi-check2-circle text-brand me-1" aria-hidden="true"></i>${LG.esc(s.fits)}</p>
+        <div class="mt-auto"><p class="small text-body-secondary mb-0">เริ่มต้น</p>${priceHtml}
+        <a href="booking.html?size=${k}" class="btn btn-outline-primary w-100" aria-label="จองล็อกเกอร์ขนาด ${k}">จองขนาด ${k}</a></div>
+      </div></div></div>`;
+    }).join('');
+  };
+
+  const renderLocations = (locs) => {
+    if (!locs.length) { locBox.innerHTML = `<div class="col-12">${LG.empty('ยังไม่มีสาขาให้บริการ', 'geo-alt')}</div>`; return; }
+    locBox.innerHTML = locs.map((l) => {
+      const free = l.availableCount, total = l.lockerCount;
+      return `<div class="col-sm-6 col-lg-3"><article class="card card-soft h-100">
+        <div class="cover-art" aria-hidden="true"><i class="bi bi-buildings"></i></div>
+        <div class="card-body d-flex flex-column">
+          <h3 class="h5">${LG.esc(l.name)}</h3>
+          <p class="small text-body-secondary mb-2"><i class="bi bi-geo-alt me-1" aria-hidden="true"></i>${LG.esc(l.address)}</p>
+          <p class="small mb-2"><i class="bi bi-clock me-1" aria-hidden="true"></i>${LG.esc(l.openHours)}</p>
+          <p class="mb-3"><span class="badge status-badge ${free > 0 ? 'st-green' : 'st-gray'}">ว่าง ${free} / ${total} ช่อง</span></p>
+          <a href="lockers.html?locationId=${l.id}" class="btn btn-primary mt-auto" aria-label="ดูล็อกเกอร์ ${LG.esc(l.name)}">ดูล็อกเกอร์ <i class="bi bi-arrow-right ms-1" aria-hidden="true"></i></a>
+        </div>
+      </article></div>`;
+    }).join('');
+    locSel.insertAdjacentHTML('beforeend', locs.map((l) => `<option value="${l.id}">${LG.esc(l.name)}</option>`).join(''));
+  };
+
+  const [pricing, locs, settings] = await Promise.allSettled([DS.getPricing(), DS.getLocations(), DS.getSettings()]);
+
+  if (pricing.status === 'fulfilled') renderSizes(pricing.value.prices);
+  else sizesBox.innerHTML = `<div class="col-12">${LG.errorBox(pricing.reason)}</div>`;
+
+  if (locs.status === 'fulfilled') renderLocations(locs.value);
+  else locBox.innerHTML = `<div class="col-12">${LG.errorBox(locs.reason)}</div>`;
+
+  if (settings.status === 'fulfilled') {
+    const s = settings.value;
+    if (s.cancelPolicy) $('faq-cancel').textContent = s.cancelPolicy + ' ผ่านเมนู "การจองของฉัน"';
+    if (s.contactPhone) $('faq-phone').textContent = s.contactPhone;
+  }
+})();
+</script>
+</body>
+</html>

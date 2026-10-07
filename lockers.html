@@ -1,0 +1,277 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ค้นหาล็อกเกอร์ | LockerGo</title>
+<meta name="description" content="ค้นหาล็อกเกอร์ว่างตามสาขา ขนาด วันที่ และเวลา ดูสถานะแบบเรียลไทม์ แล้วจองออนไลน์ได้ทันทีกับ LockerGo">
+<link rel="icon" type="image/svg+xml" href="assets/img/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+<link href="assets/css/custom.css" rel="stylesheet">
+<script src="assets/js/config.js"></script>
+</head>
+<body data-page="lockers">
+<a class="visually-hidden-focusable" href="#main">ข้ามไปยังเนื้อหา</a>
+<div id="lg-navbar"></div>
+
+<main id="main">
+  <section class="bg-brand-soft border-bottom">
+    <div class="container py-4 py-lg-5">
+      <h1 class="h2 mb-1"><i class="bi bi-grid-3x3-gap-fill text-brand me-2"></i>ค้นหาล็อกเกอร์ว่าง</h1>
+      <p class="text-body-secondary mb-0">เลือกสาขา ขนาด วันที่ และช่วงเวลาที่ต้องการ ระบบจะแสดงสถานะล็อกเกอร์ที่ว่างในช่วงเวลานั้นให้ทันที</p>
+    </div>
+  </section>
+
+  <div class="container py-4">
+    <form id="filters" class="card card-soft mb-4" novalidate aria-label="ตัวกรองล็อกเกอร์">
+      <div class="card-body">
+        <div class="row g-3 align-items-end">
+          <div class="col-md-6 col-lg-3">
+            <label for="f-location" class="form-label">สาขา</label>
+            <select id="f-location" class="form-select"></select>
+          </div>
+          <div class="col-6 col-md-3 col-lg-2">
+            <label for="f-size" class="form-label">ขนาด</label>
+            <select id="f-size" class="form-select"></select>
+          </div>
+          <div class="col-6 col-md-3 col-lg-2">
+            <label for="f-date" class="form-label">วันที่</label>
+            <input type="date" id="f-date" class="form-control" required>
+          </div>
+          <div class="col-6 col-md-4 col-lg-2">
+            <label for="f-time" class="form-label">เวลาเริ่ม</label>
+            <select id="f-time" class="form-select"></select>
+          </div>
+          <div class="col-6 col-md-4 col-lg-2">
+            <label for="f-hours" class="form-label">ระยะเวลา</label>
+            <select id="f-hours" class="form-select"></select>
+          </div>
+          <div class="col-12 col-md-4 col-lg-1">
+            <button type="button" class="btn btn-outline-secondary w-100" id="f-reset" aria-label="ล้างตัวกรอง" title="ล้างตัวกรอง"><i class="bi bi-arrow-counterclockwise"></i><span class="ms-2 d-lg-none">ล้างตัวกรอง</span></button>
+          </div>
+        </div>
+      </div>
+    </form>
+
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+      <div id="summary" aria-live="polite"></div>
+      <div id="legend"></div>
+    </div>
+
+    <div id="results"></div>
+  </div>
+
+  <!-- Locker detail modal -->
+  <div class="modal fade" id="locker-modal" tabindex="-1" aria-labelledby="locker-modal-title" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2 class="modal-title fs-5" id="locker-modal-title">รายละเอียดล็อกเกอร์</h2>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="ปิด"></button>
+        </div>
+        <div class="modal-body" id="locker-modal-body"></div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">ปิด</button>
+          <a id="book-link" class="btn btn-primary" href="booking.html"><i class="bi bi-calendar-check me-1"></i>จองล็อกเกอร์นี้</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<div id="lg-footer"></div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="assets/js/mock-data.js"></script>
+<script src="assets/js/mock-service.js"></script>
+<script src="assets/js/api-client.js"></script>
+<script src="assets/js/data-service.js"></script>
+<script src="assets/js/auth.js"></script>
+<script src="assets/js/main.js"></script>
+<script>
+(async () => {
+  const HOUR_CHOICES = [1, 2, 3, 4, 6, 8, 12, 24];
+  const $ = (id) => document.getElementById(id);
+  const p2 = (n) => String(n).padStart(2, '0');
+  const f = { loc: $('f-location'), size: $('f-size'), date: $('f-date'), time: $('f-time'), hours: $('f-hours') };
+  const results = $('results'), summary = $('summary');
+  const modalEl = $('locker-modal'), modal = new bootstrap.Modal(modalEl);
+  const hourLabel = (h) => (h === 24 ? '24 ชั่วโมง (1 วัน)' : `${h} ชั่วโมง`);
+  const localStr = (d) => `${LG.fmt.isoDate(d)} ${p2(d.getHours())}:${p2(d.getMinutes())}:00`;
+
+  let locations = [], prices = [], seq = 0;
+
+  $('legend').innerHTML = LG.legend();
+  results.innerHTML = LG.skeleton(6);
+
+  try {
+    const [locs, pr] = await Promise.all([DS.getLocations(), DS.getPricing().catch(() => ({ prices: [] }))]);
+    locations = locs; prices = pr.prices || [];
+  } catch (e) {
+    results.innerHTML = LG.errorBox(e);
+    return;
+  }
+
+  // ---------- filter controls ----------
+  f.loc.innerHTML = '<option value="">ทุกสาขา</option>' + locations.map((l) => `<option value="${l.id}">${LG.esc(l.name)}</option>`).join('');
+  f.size.innerHTML = '<option value="">ทุกขนาด</option>' + Object.entries(LG.SIZES).map(([k, s]) => `<option value="${k}">${k} - ${LG.esc(s.label)}</option>`).join('');
+  f.hours.innerHTML = HOUR_CHOICES.map((h) => `<option value="${h}">${hourLabel(h)}</option>`).join('');
+
+  /** Fill the hour select; hours already passed today are disabled. */
+  function fillTimes(date, wanted) {
+    const nowH = new Date().getHours(), isToday = date === LG.fmt.isoDate();
+    f.time.innerHTML = Array.from({ length: 24 }, (_, h) => `<option value="${p2(h)}:00"${isToday && h < nowH ? ' disabled' : ''}>${p2(h)}:00</option>`).join('');
+    let v = wanted;
+    if (isToday && +v.slice(0, 2) < nowH) v = `${p2(nowH)}:00`;
+    f.time.value = v;
+  }
+
+  function setDefaults() {
+    const nxt = new Date(Date.now() + 3600000);
+    f.loc.value = ''; f.size.value = '';
+    f.date.value = LG.fmt.isoDate(nxt);
+    fillTimes(f.date.value, `${p2(nxt.getHours())}:00`);
+    f.hours.value = '4';
+  }
+
+  f.date.min = LG.fmt.isoDate();
+  setDefaults();
+
+  // initial values from the URL
+  const qLoc = LG.qs('locationId'), qSize = LG.qs('size'), qDate = LG.qs('date'), qTime = LG.qs('time'), qHours = LG.qs('hours');
+  if (qLoc && locations.some((l) => String(l.id) === qLoc)) f.loc.value = qLoc;
+  if (qSize && LG.SIZES[qSize]) f.size.value = qSize;
+  if (qDate && /^\d{4}-\d{2}-\d{2}$/.test(qDate) && qDate >= LG.fmt.isoDate()) {
+    f.date.value = qDate;
+    fillTimes(qDate, /^([01]\d|2[0-3]):[0-5]\d$/.test(qTime || '') ? `${qTime.slice(0, 2)}:00` : f.time.value);
+  } else if (qTime && /^([01]\d|2[0-3]):[0-5]\d$/.test(qTime)) {
+    fillTimes(f.date.value, `${qTime.slice(0, 2)}:00`);
+  }
+  if (qHours && HOUR_CHOICES.includes(+qHours)) f.hours.value = qHours;
+
+  function syncUrl() {
+    const p = new URLSearchParams();
+    if (f.loc.value) p.set('locationId', f.loc.value);
+    if (f.size.value) p.set('size', f.size.value);
+    if (f.date.value) p.set('date', f.date.value);
+    p.set('time', f.time.value);
+    p.set('hours', f.hours.value);
+    try { history.replaceState(null, '', `${location.pathname}?${p}`); } catch (e) { /* ignore */ }
+  }
+
+  // ---------- booking window helpers ----------
+  /** Hours -> the duration type/quantity that booking.html uses (24h = 1 day). */
+  const asDuration = (h) => (h % 720 === 0 ? { type: 'month', qty: h / 720 } : h % 24 === 0 ? { type: 'day', qty: h / 24 } : { type: 'hour', qty: h });
+  const windowNow = () => {
+    const hours = +f.hours.value;
+    const s = new Date(`${f.date.value}T${f.time.value}:00`);
+    return { hours, s, e: new Date(s.getTime() + hours * 3600000) };
+  };
+
+  // ---------- load + render ----------
+  async function load() {
+    const id = ++seq;
+    syncUrl();
+    if (!f.date.value || f.date.value < LG.fmt.isoDate()) {
+      summary.innerHTML = '';
+      results.innerHTML = '<div class="alert alert-warning" role="alert"><i class="bi bi-exclamation-triangle-fill me-2"></i>กรุณาเลือกวันที่ตั้งแต่วันนี้เป็นต้นไป</div>';
+      return;
+    }
+    const { s, e } = windowNow();
+    const query = { start: localStr(s), end: localStr(e) };
+    if (f.loc.value) query.locationId = f.loc.value;
+    if (f.size.value) query.size = f.size.value;
+    results.innerHTML = LG.skeleton(6);
+    try {
+      const rows = await DS.getLockers(query);
+      if (id !== seq) return;   // a newer search replaced this one
+      render(rows, s, e);
+    } catch (err) {
+      if (id === seq) { summary.innerHTML = ''; results.innerHTML = LG.errorBox(err); }
+    }
+  }
+
+  function render(rows, s, e) {
+    const avail = rows.filter((l) => l.status === 'available').length;
+    summary.innerHTML = `<span class="fs-5 fw-semibold text-success-emphasis">ว่าง ${avail}</span> <span class="text-body-secondary">จากทั้งหมด ${rows.length} ช่อง · ${LG.fmt.datetime(s)} - ${LG.fmt.datetime(e)}</span>`;
+    if (!rows.length) { results.innerHTML = LG.empty('ไม่พบล็อกเกอร์ตามเงื่อนไขที่เลือก ลองเปลี่ยนสาขาหรือขนาด', 'lock'); return; }
+
+    const byLoc = new Map();
+    rows.forEach((l) => { if (!byLoc.has(l.locationId)) byLoc.set(l.locationId, []); byLoc.get(l.locationId).push(l); });
+    const order = locations.filter((l) => byLoc.has(l.id));
+    byLoc.forEach((_, id) => { if (!order.some((l) => l.id === id)) order.push({ id, name: byLoc.get(id)[0].locationName, address: '', openHours: '' }); });
+
+    const note = avail ? '' : '<div class="alert alert-info d-flex gap-2 align-items-center" role="status"><i class="bi bi-info-circle-fill"></i><div>ไม่มีล็อกเกอร์ว่างในช่วงเวลานี้ ลองเปลี่ยนเวลา ระยะเวลา ขนาด หรือสาขา</div></div>';
+    results.innerHTML = note + order.map((l) => {
+      const ls = byLoc.get(l.id), a = ls.filter((x) => x.status === 'available').length;
+      return `<section class="mb-5" aria-labelledby="loc-${l.id}">
+        <div class="d-flex flex-wrap justify-content-between align-items-end gap-2 mb-3">
+          <div>
+            <h2 class="h5 mb-1" id="loc-${l.id}">${LG.esc(l.name)}</h2>
+            <p class="small text-body-secondary mb-0">${l.address ? `<i class="bi bi-geo-alt me-1"></i>${LG.esc(l.address)}` : ''}${l.openHours ? ` · <i class="bi bi-clock me-1"></i>${LG.esc(l.openHours)}` : ''}</p>
+          </div>
+          <span class="badge rounded-pill ${a ? 'bg-success-subtle text-success-emphasis' : 'bg-secondary-subtle text-secondary-emphasis'}">ว่าง ${a} / ${ls.length}</span>
+        </div>
+        <div data-grid="${l.id}"></div>
+      </section>`;
+    }).join('');
+
+    order.forEach((l) => {
+      const ls = byLoc.get(l.id).slice().sort((a, b) => a.code.localeCompare(b.code, 'en', { numeric: true }));
+      LG.lockerGrid(results.querySelector(`[data-grid="${l.id}"]`), ls, { onClick: openModal, selectable: (x) => x.status === 'available' });
+    });
+  }
+
+  // ---------- detail modal ----------
+  function openModal(l) {
+    const sz = LG.SIZES[l.size] || { label: l.size, dim: '-', fits: '-' };
+    const price = prices.find((p) => p.size === l.size);
+    const { hours, s, e } = windowNow();
+    const dur = asDuration(hours);
+    const est = price ? quote(price[dur.type], dur.qty, null).total : null;
+    const time = f.time.value, date = f.date.value;
+
+    $('locker-modal-title').textContent = `ล็อกเกอร์ ${l.code}`;
+    $('locker-modal-body').innerHTML = `
+      <div class="d-flex align-items-center gap-3 mb-3">
+        <span class="size-art fs-3 px-4 py-3" aria-hidden="true">${LG.esc(l.size)}</span>
+        <div>
+          <div class="fw-semibold">ขนาด ${LG.esc(l.size)} (${LG.esc(sz.label)})</div>
+          <div class="small text-body-secondary">${LG.badge('locker', l.status)}</div>
+        </div>
+      </div>
+      <dl class="row small mb-3">
+        <dt class="col-4 fw-normal text-body-secondary">รหัสล็อกเกอร์</dt><dd class="col-8 fw-semibold">${LG.esc(l.code)}</dd>
+        <dt class="col-4 fw-normal text-body-secondary">สาขา</dt><dd class="col-8">${LG.esc(l.locationName)}</dd>
+        <dt class="col-4 fw-normal text-body-secondary">โซน</dt><dd class="col-8">${LG.esc(l.zone || '-')}</dd>
+        <dt class="col-4 fw-normal text-body-secondary">ขนาดภายใน</dt><dd class="col-8">${LG.esc(sz.dim)}</dd>
+        <dt class="col-4 fw-normal text-body-secondary">เหมาะกับ</dt><dd class="col-8">${LG.esc(sz.fits)}</dd>
+        <dt class="col-4 fw-normal text-body-secondary">ช่วงเวลา</dt><dd class="col-8 mb-0">${LG.fmt.datetime(s)} - ${LG.fmt.datetime(e)}<br><span class="text-body-secondary">(${hourLabel(hours)})</span></dd>
+      </dl>
+      ${price ? `
+      <h3 class="h6">อัตราค่าบริการ</h3>
+      <div class="row row-cols-3 g-2 text-center mb-3">
+        ${[['ต่อชั่วโมง', price.hour], ['ต่อวัน', price.day], ['ต่อเดือน', price.month]].map(([t, v]) => `<div class="col"><div class="border rounded p-2 h-100"><div class="small text-body-secondary">${t}</div><div class="fw-semibold">${LG.fmt.baht(v)}</div></div></div>`).join('')}
+      </div>
+      <div class="alert alert-primary d-flex justify-content-between align-items-center mb-0 py-2" role="note">
+        <span class="small">ราคาโดยประมาณสำหรับช่วงเวลาที่เลือก</span><strong class="fs-5">${LG.fmt.baht(est)}</strong>
+      </div>` : ''}`;
+
+    const p = new URLSearchParams({ lockerId: l.id, date, time, hours });
+    $('book-link').href = `booking.html?${p}`;
+    modal.show();
+  }
+
+  // ---------- events ----------
+  f.date.addEventListener('change', () => { if (f.date.value) fillTimes(f.date.value, f.time.value); load(); });
+  [f.loc, f.size, f.time, f.hours].forEach((el) => el.addEventListener('change', load));
+  $('filters').addEventListener('submit', (ev) => ev.preventDefault());
+  $('f-reset').addEventListener('click', () => { setDefaults(); load(); });
+
+  load();
+})();
+</script>
+</body>
+</html>

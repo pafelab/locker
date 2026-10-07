@@ -1,0 +1,199 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ติดต่อเรา | LockerGo</title>
+<meta name="description" content="ติดต่อทีมงาน LockerGo สอบถามการใช้งาน การจอง การชำระเงิน หรือแจ้งปัญหา ตอบกลับภายใน 1 วันทำการ พร้อมที่อยู่และเวลาเปิดทำการของทุกสาขา">
+<link rel="icon" type="image/svg+xml" href="assets/img/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+<link href="assets/css/custom.css" rel="stylesheet">
+<script src="assets/js/config.js"></script>
+</head>
+<body data-page="contact">
+<a class="visually-hidden-focusable" href="#main">ข้ามไปยังเนื้อหา</a>
+<div id="lg-navbar"></div>
+
+<main id="main">
+
+  <section class="bg-body-tertiary border-bottom py-5" aria-labelledby="page-title">
+    <div class="container text-center">
+      <nav aria-label="breadcrumb" class="d-flex justify-content-center">
+        <ol class="breadcrumb small mb-2">
+          <li class="breadcrumb-item"><a href="index.html">หน้าแรก</a></li>
+          <li class="breadcrumb-item active" aria-current="page">ติดต่อเรา</li>
+        </ol>
+      </nav>
+      <h1 id="page-title" class="fw-bold">ติดต่อเรา</h1>
+      <p class="text-body-secondary mb-0">มีคำถามหรือต้องการความช่วยเหลือ ทีมงานพร้อมดูแลคุณทุกวัน</p>
+    </div>
+  </section>
+
+  <section class="section pb-4">
+    <div class="container">
+      <div class="row g-4">
+
+        <!-- Form -->
+        <div class="col-lg-7">
+          <div class="card card-soft">
+            <div class="card-body p-4">
+              <h2 class="h4 fw-bold mb-1">ส่งข้อความถึงเรา</h2>
+              <p class="text-body-secondary">กรอกแบบฟอร์มด้านล่าง ทีมงานจะตอบกลับทางอีเมลภายใน 1 วันทำการ</p>
+
+              <div id="success-box" class="alert alert-success d-none" role="status" tabindex="-1">
+                <h3 class="h6 alert-heading"><i class="bi bi-check-circle-fill me-2" aria-hidden="true"></i>ส่งข้อความเรียบร้อยแล้ว</h3>
+                <p class="mb-0">ขอบคุณที่ติดต่อ LockerGo ทีมงานจะตอบกลับทางอีเมลที่คุณระบุภายใน 1 วันทำการ หากเป็นเรื่องเร่งด่วนกรุณาโทร <span class="js-phone">02-123-4500</span></p>
+              </div>
+
+              <form id="contact-form" novalidate>
+                <div class="row g-3">
+                  <div class="col-md-6">
+                    <label for="c-name" class="form-label">ชื่อ-นามสกุล <span class="text-danger" aria-hidden="true">*</span></label>
+                    <input type="text" class="form-control" id="c-name" name="name" autocomplete="name" placeholder="เช่น สมชาย ใจดี" required minlength="2" maxlength="100">
+                    <div class="invalid-feedback">กรุณากรอกชื่อ-นามสกุล</div>
+                  </div>
+                  <div class="col-md-6">
+                    <label for="c-email" class="form-label">อีเมล <span class="text-danger" aria-hidden="true">*</span></label>
+                    <input type="email" class="form-control" id="c-email" name="email" autocomplete="email" placeholder="name@example.com" required maxlength="150">
+                    <div class="invalid-feedback">กรุณากรอกอีเมลให้ถูกต้อง</div>
+                  </div>
+                  <div class="col-md-6">
+                    <label for="c-phone" class="form-label">เบอร์โทรศัพท์ <span class="text-body-secondary small">(ไม่บังคับ)</span></label>
+                    <input type="tel" class="form-control" id="c-phone" name="phone" autocomplete="tel" placeholder="08x-xxx-xxxx" pattern="[0-9+ \-]{9,15}" inputmode="tel">
+                    <div class="invalid-feedback">กรุณากรอกเบอร์โทรศัพท์ 9-15 หลัก (ตัวเลข เว้นวรรค หรือขีดกลาง)</div>
+                  </div>
+                  <div class="col-md-6">
+                    <label for="c-topic" class="form-label">หัวข้อ <span class="text-danger" aria-hidden="true">*</span></label>
+                    <select class="form-select" id="c-topic" name="topic" required>
+                      <option value="" selected disabled>เลือกหัวข้อ</option>
+                      <option>สอบถามการจองและการใช้งาน</option>
+                      <option>การชำระเงินและการคืนเงิน</option>
+                      <option>แจ้งปัญหาล็อกเกอร์หรือรหัส PIN</option>
+                      <option>เช่ารายเดือนหรือองค์กร</option>
+                      <option>ข้อเสนอแนะ</option>
+                      <option>อื่น ๆ</option>
+                    </select>
+                    <div class="invalid-feedback">กรุณาเลือกหัวข้อ</div>
+                  </div>
+                  <div class="col-12">
+                    <label for="c-message" class="form-label">ข้อความ <span class="text-danger" aria-hidden="true">*</span></label>
+                    <textarea class="form-control" id="c-message" name="message" rows="5" placeholder="บอกรายละเอียดที่ต้องการสอบถาม พร้อมหมายเลขการจอง (ถ้ามี)" required minlength="10" maxlength="1000"></textarea>
+                    <div class="invalid-feedback">กรุณากรอกข้อความอย่างน้อย 10 ตัวอักษร</div>
+                  </div>
+                  <div class="col-12">
+                    <div class="form-check">
+                      <input class="form-check-input" type="checkbox" id="c-consent" name="consent" required>
+                      <label class="form-check-label" for="c-consent">ฉันยินยอมให้ LockerGo เก็บและใช้ข้อมูลเพื่อติดต่อกลับ ตาม<a href="terms.html#privacy">นโยบายความเป็นส่วนตัว</a></label>
+                      <div class="invalid-feedback">กรุณายอมรับนโยบายความเป็นส่วนตัวก่อนส่งข้อความ</div>
+                    </div>
+                  </div>
+                  <div class="col-12">
+                    <button type="submit" class="btn btn-primary px-4" id="contact-btn"><i class="bi bi-send me-1" aria-hidden="true"></i>ส่งข้อความ</button>
+                  </div>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+
+        <!-- Contact details -->
+        <div class="col-lg-5">
+          <div class="card card-soft mb-4">
+            <div class="card-body p-4">
+              <h2 class="h4 fw-bold mb-3">ช่องทางติดต่อ</h2>
+              <ul class="list-unstyled mb-0">
+                <li class="d-flex gap-3 mb-3"><span class="icon-circle"><i class="bi bi-geo-alt" aria-hidden="true"></i></span><div><strong class="d-block">สำนักงานใหญ่</strong><span id="c-address" class="text-body-secondary">99 อาคารตัวอย่าง ถนนพระราม 1 กรุงเทพฯ 10330</span></div></li>
+                <li class="d-flex gap-3 mb-3"><span class="icon-circle"><i class="bi bi-telephone" aria-hidden="true"></i></span><div><strong class="d-block">โทรศัพท์</strong><a id="c-phone-link" class="text-body-secondary text-decoration-none" href="tel:021234500">02-123-4500</a></div></li>
+                <li class="d-flex gap-3 mb-3"><span class="icon-circle"><i class="bi bi-envelope" aria-hidden="true"></i></span><div><strong class="d-block">อีเมล</strong><a id="c-email-link" class="text-body-secondary text-decoration-none" href="mailto:hello@lockergo.example">hello@lockergo.example</a></div></li>
+                <li class="d-flex gap-3"><span class="icon-circle"><i class="bi bi-clock" aria-hidden="true"></i></span><div><strong class="d-block">เวลาทำการฝ่ายบริการลูกค้า</strong><span class="text-body-secondary">ทุกวัน 08:00 - 20:00 น.<br>ตอบกลับอีเมลภายใน 1 วันทำการ</span></div></li>
+              </ul>
+            </div>
+          </div>
+          <div class="map-placeholder" role="img" aria-label="แผนที่สำนักงานใหญ่ (ภาพตัวอย่าง)">
+            <div><i class="bi bi-geo-alt-fill display-4 text-accent d-block" aria-hidden="true"></i><span class="fw-medium">แผนที่สำนักงานใหญ่</span><br><span class="small">ใส่แผนที่จริงของคุณที่นี่</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Branches -->
+  <section class="section pt-4" aria-labelledby="branches-title">
+    <div class="container">
+      <h2 id="branches-title" class="h3 fw-bold mb-3">สาขาและเวลาเปิดทำการ</h2>
+      <div id="branches-box" class="row g-3"></div>
+    </div>
+  </section>
+
+</main>
+
+<div id="lg-footer"></div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="assets/js/mock-data.js"></script>
+<script src="assets/js/mock-service.js"></script>
+<script src="assets/js/api-client.js"></script>
+<script src="assets/js/data-service.js"></script>
+<script src="assets/js/auth.js"></script>
+<script src="assets/js/main.js"></script>
+<script>
+(async () => {
+  const $ = (id) => document.getElementById(id);
+  const form = $('contact-form'), box = $('branches-box'), success = $('success-box');
+
+  box.innerHTML = [1, 2, 3, 4].map(() => `<div class="col-md-6 col-xl-3"><div class="card card-soft"><div class="card-body">${LG.skeleton(3)}</div></div></div>`).join('');
+
+  // Prefill from the logged-in user (if any) without blocking; never overwrite what the visitor already typed
+  Auth.current().then((u) => {
+    if (!u) return;
+    [['c-name', u.name], ['c-email', u.email], ['c-phone', u.phone]].forEach(([id, v]) => { if (!$(id).value) $(id).value = v || ''; });
+  }).catch(() => {});
+
+  // There is no contact API: a valid submit just shows the success state.
+  form.addEventListener('submit', async (ev) => {
+    ev.preventDefault();
+    success.classList.add('d-none');
+    if (!LG.validate(form)) {
+      const bad = form.querySelector(':invalid');
+      if (bad) bad.focus();
+      return;
+    }
+    await LG.busy($('contact-btn'), async () => {
+      await new Promise((r) => setTimeout(r, 400));
+      form.reset();
+      form.classList.remove('was-validated');
+      success.classList.remove('d-none');
+      success.focus();
+      LG.toast('ส่งข้อความเรียบร้อยแล้ว ทีมงานจะตอบกลับภายใน 1 วันทำการ');
+    });
+  });
+
+  // Contact details + branches
+  const [st, locs] = await Promise.allSettled([DS.getSettings(), DS.getLocations()]);
+  if (st.status === 'fulfilled') {
+    const s = st.value;
+    if (s.address) $('c-address').textContent = s.address;
+    if (s.contactPhone) {
+      $('c-phone-link').textContent = s.contactPhone;
+      $('c-phone-link').href = 'tel:' + s.contactPhone.replace(/[^0-9+]/g, '');
+      document.querySelectorAll('.js-phone').forEach((el) => { el.textContent = s.contactPhone; });
+    }
+    if (s.contactEmail) { $('c-email-link').textContent = s.contactEmail; $('c-email-link').href = 'mailto:' + s.contactEmail; }
+  }
+  if (locs.status === 'fulfilled') {
+    box.innerHTML = locs.value.length ? locs.value.map((l) => `<div class="col-md-6 col-xl-3"><article class="card card-soft h-100"><div class="card-body">
+      <h3 class="h6 fw-bold">${LG.esc(l.name)}</h3>
+      <p class="small text-body-secondary mb-2"><i class="bi bi-geo-alt me-1" aria-hidden="true"></i>${LG.esc(l.address)}</p>
+      <p class="small mb-1"><i class="bi bi-clock me-1" aria-hidden="true"></i>${LG.esc(l.openHours)}</p>
+      ${l.phone ? `<p class="small mb-2"><i class="bi bi-telephone me-1" aria-hidden="true"></i>${LG.esc(l.phone)}</p>` : ''}
+      <a href="lockers.html?locationId=${l.id}" class="small">ดูล็อกเกอร์ที่สาขานี้</a>
+    </div></article></div>`).join('') : `<div class="col-12">${LG.empty('ยังไม่มีสาขาให้บริการ', 'geo-alt')}</div>`;
+  } else {
+    box.innerHTML = `<div class="col-12">${LG.errorBox(locs.reason)}</div>`;
+  }
+})();
+</script>
+</body>
+</html>
