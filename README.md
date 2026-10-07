@@ -1,4 +1,4 @@
-# LockerGo — Online Locker Booking Website Template 
+# LockerGo — Online Locker Booking Website Template
 
 A complete template for an online locker booking system, with a public site for customers and an admin back office for staff. The UI is in Thai.
 
