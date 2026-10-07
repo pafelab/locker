@@ -115,16 +115,6 @@
                       <input type="text" id="c-name" class="form-control" autocomplete="name" required minlength="2" maxlength="100">
                       <div class="invalid-feedback">กรุณากรอกชื่อ-นามสกุล (อย่างน้อย 2 ตัวอักษร)</div>
                     </div>
-                    <div class="col-md-6">
-                      <label for="c-email" class="form-label">อีเมล <span class="text-danger" aria-hidden="true">*</span></label>
-                      <input type="email" id="c-email" class="form-control" autocomplete="email" required maxlength="150" placeholder="name@example.com">
-                      <div class="invalid-feedback">กรุณากรอกอีเมลให้ถูกต้อง</div>
-                    </div>
-                    <div class="col-md-6">
-                      <label for="c-phone" class="form-label">เบอร์โทรศัพท์ <span class="text-danger" aria-hidden="true">*</span></label>
-                      <input type="tel" id="c-phone" class="form-control" autocomplete="tel" required pattern="[0-9+ \-]{9,15}" inputmode="tel" placeholder="08x-xxx-xxxx">
-                      <div class="invalid-feedback">กรุณากรอกเบอร์โทรศัพท์ 9-15 หลัก (ตัวเลข เว้นวรรค หรือเครื่องหมาย - +)</div>
-                    </div>
                   </div>
                 </form>
               </section>
@@ -135,7 +125,6 @@
                 <p class="text-body-secondary">ตรวจสอบรายละเอียดให้ถูกต้องก่อนชำระเงิน</p>
                 <form id="form-4" novalidate>
                   <div id="review" class="mb-3"></div>
-                  <div id="promo-area" class="mb-3"></div>
                   <div id="review-price" class="mb-3"></div>
                   <div class="form-check">
                     <input class="form-check-input" type="checkbox" id="accept" required>
@@ -339,7 +328,7 @@
     $('b-date').value = state.date; fillTimes();
     applyQtyLimits();
     $('b-qty').value = state.qty;
-    $('c-name').value = state.name; $('c-email').value = state.email; $('c-phone').value = state.phone;
+    $('c-name').value = state.name;
     document.querySelectorAll('input[name="method"]').forEach((r) => { r.checked = r.value === state.method; });
     togglePayPanels();
   }
@@ -407,7 +396,6 @@
   function priceRows() {
     const c = calc();
     return `<div class="d-flex justify-content-between gap-3 small"><span>ค่าเช่าตู้ ${LG.fmt.baht(unitPrice())} / วัน × ${state.qty} วัน</span><span class="text-nowrap">${LG.fmt.baht(c.gross)}</span></div>
-      <div class="d-flex justify-content-between small${c.discount ? ' text-success' : ' text-body-secondary'}"><span>ส่วนลด${state.promo ? ` (${esc(state.promo.code)})` : ''}</span><span>${c.discount ? '-' : ''}${LG.fmt.baht(c.discount)}</span></div>
       <div class="d-flex justify-content-between align-items-baseline mt-2 pt-2 border-top"><span class="fw-semibold">ยอดรวมสุทธิ</span><span class="fs-4 fw-bold text-brand">${LG.fmt.baht(c.total)}</span></div>`;
   }
   function renderSummary() {
@@ -437,7 +425,7 @@
       <div class="col-md-6"><div class="border rounded p-3 h-100"><h3 class="h6 mb-2"><i class="bi bi-calendar-event me-1 text-brand"></i>ช่วงเวลา</h3><dl class="small mb-0">
         ${dtRow('เริ่ม', LG.fmt.datetime(startDate()))}${dtRow('สิ้นสุด', LG.fmt.datetime(endDate()))}${dtRow('ระยะเวลา', LG.fmt.duration('day', state.qty))}</dl></div></div>
       <div class="col-12"><div class="border rounded p-3"><h3 class="h6 mb-2"><i class="bi bi-person-fill me-1 text-brand"></i>ผู้จอง</h3><dl class="small mb-0">
-        ${dtRow('ชื่อ', esc(state.name))}${dtRow('อีเมล', esc(state.email))}${dtRow('โทรศัพท์', esc(state.phone))}</dl></div></div></div>`;
+        ${dtRow('ชื่อ', esc(state.name))}</dl></div></div></div>`;
     $('review-price').innerHTML = `<div class="border rounded p-3 bg-body-tertiary"><h3 class="h6 mb-2">รายละเอียดราคา</h3>${priceRows()}</div>`;
   }
   function renderAll() {
@@ -456,38 +444,6 @@
     $('pp-amount').textContent = t;
     $('btn-next').innerHTML = `<i class="bi bi-lock-fill me-1"></i>ชำระเงิน ${t}`;
   }
-
-  // ---------- promo ----------
-  function renderPromo() {
-    const area = $('promo-area'), p = state.promo;
-    if (p) {
-      area.innerHTML = `<div class="alert alert-success d-flex flex-wrap justify-content-between align-items-center gap-2 py-2 mb-0" role="status"><span><i class="bi bi-tag-fill me-1"></i>ใช้โค้ด <strong>${esc(p.code)}</strong> แล้ว (${p.type === 'percent' ? `ลด ${esc(p.value)}%` : `ลด ${LG.fmt.baht(p.value)}`})</span><button type="button" class="btn btn-sm btn-outline-secondary" id="promo-remove">เอาออก</button></div>`;
-    } else {
-      area.innerHTML = `<label for="promo-code" class="form-label">โค้ดส่วนลด (ถ้ามี)</label><div class="input-group has-validation"><input type="text" id="promo-code" class="form-control text-uppercase" maxlength="30" autocomplete="off" placeholder="เช่น WELCOME10"><button type="button" class="btn btn-outline-primary" id="promo-apply">ใช้โค้ด</button><div class="invalid-feedback" id="promo-error"></div></div>`;
-    }
-  }
-  async function applyPromo() {
-    const input = $('promo-code'), btn = $('promo-apply'), code = input.value.trim().toUpperCase();
-    input.classList.remove('is-invalid');
-    if (!code) { $('promo-error').textContent = 'กรุณากรอกโค้ดส่วนลด'; input.classList.add('is-invalid'); input.focus(); return; }
-    await LG.busy(btn, async () => {
-      try {
-        state.promo = await DS.checkPromo(code);
-        renderPromo(); renderAll();
-        LG.toast(`ใช้โค้ด ${state.promo.code} สำเร็จ`);
-        $('promo-remove').focus();
-      } catch (e) {
-        state.promo = null;
-        $('promo-error').textContent = e.message || 'รหัสโปรโมชันไม่ถูกต้อง';
-        input.classList.add('is-invalid'); input.focus();
-      }
-    });
-  }
-  $('promo-area').addEventListener('click', (ev) => {
-    if (ev.target.closest('#promo-apply')) applyPromo();
-    if (ev.target.closest('#promo-remove')) { state.promo = null; renderPromo(); renderAll(); $('promo-code').focus(); }
-  });
-  $('promo-area').addEventListener('keydown', (ev) => { if (ev.key === 'Enter' && ev.target.id === 'promo-code') { ev.preventDefault(); applyPromo(); } });
 
   // ---------- payment panel ----------
   function togglePayPanels() {
@@ -596,8 +552,6 @@
   $('qty-minus').addEventListener('click', () => { const { min } = limits(); state.qty = Math.max(min, (parseInt($('b-qty').value, 10) || state.qty) - 1); $('b-qty').value = state.qty; renderAll(); scheduleGrid(); });
   $('qty-plus').addEventListener('click', () => { const { max } = limits(); state.qty = Math.min(max, (parseInt($('b-qty').value, 10) || state.qty) + 1); $('b-qty').value = state.qty; renderAll(); scheduleGrid(); });
   $('c-name').addEventListener('input', (ev) => { state.name = ev.target.value.trim(); });
-  $('c-email').addEventListener('input', (ev) => { state.email = ev.target.value.trim(); });
-  $('c-phone').addEventListener('input', (ev) => { state.phone = ev.target.value.trim(); });
   $('edit-window').addEventListener('click', () => go(2));
 
   // ---------- wizard navigation ----------
@@ -619,7 +573,7 @@
     btnNext.innerHTML = 'ถัดไป<i class="bi bi-arrow-right ms-1"></i>';
     if (n === 1) loadGrid();
     if (n === 2) { renderEnd(); }
-    if (n === 4) { renderPromo(); renderReview(); }
+    if (n === 4) renderReview();
     if (n === 5) { $('pay-alert').classList.add('d-none'); renderPayAmount(); }
     renderSummary();
     const h = $(`h-${n}`);
@@ -673,8 +627,8 @@
     try {
       const b = await DS.createBooking({
         lockerId: state.locker.id, startAt: startStr(), durationType: 'day', quantity: state.qty,
-        customerName: state.name, customerEmail: state.email, customerPhone: state.phone,
-        promoCode: state.promo ? state.promo.code : '', paymentMethod: state.method,
+        customerName: state.name,   // email + phone come from the account on the server
+        paymentMethod: state.method,
         ...(state.method === 'promptpay' ? { slip: state.slip } : {}),
       });
       const url = `booking-success.html?ref=${encodeURIComponent(b.ref)}`;
@@ -710,11 +664,11 @@
   }));
   btnBack.addEventListener('click', () => { if (state.step > 1) go(state.step - 1); });
 
-  // Enter inside a text field = Next (the promo field handles Enter itself)
+  // Enter inside a text field = Next
   document.querySelectorAll('#wizard form').forEach((form) => {
     form.addEventListener('submit', (ev) => ev.preventDefault());
     form.addEventListener('keydown', (ev) => {
-      if (ev.key === 'Enter' && ev.target.tagName === 'INPUT' && !['checkbox', 'radio', 'button', 'file'].includes(ev.target.type) && ev.target.id !== 'promo-code') { ev.preventDefault(); btnNext.click(); }
+      if (ev.key === 'Enter' && ev.target.tagName === 'INPUT' && !['checkbox', 'radio', 'button', 'file'].includes(ev.target.type)) { ev.preventDefault(); btnNext.click(); }
     });
   });
 

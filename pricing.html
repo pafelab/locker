@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>ราคา | LockerGo</title>
-<meta name="description" content="ตารางราคาล็อกเกอร์ LockerGo ทุกขนาด S M L XL XXL คิดราคารายวัน แต่ละขนาดอยู่ในตึกที่กำหนด พร้อมตรวจสอบรหัสโปรโมชันและเงื่อนไขการยกเลิก">
+<meta name="description" content="ตารางราคาล็อกเกอร์ LockerGo ทุกขนาด S M L XL XXL คิดราคารายวัน แต่ละขนาดอยู่ในตึกที่กำหนด พร้อมเงื่อนไขการยกเลิก">
 <link rel="icon" type="image/svg+xml" href="assets/img/favicon.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -48,31 +48,14 @@
     </div>
   </section>
 
-  <!-- Promo + notes -->
-  <section class="section pt-4" aria-labelledby="promo-title">
+  <!-- Notes -->
+  <section class="section pt-4" aria-labelledby="notes-title">
     <div class="container">
       <div class="row g-4">
-        <div class="col-lg-6">
+        <div class="col-lg-8 mx-auto">
           <div class="card card-soft h-100">
             <div class="card-body p-4">
-              <h2 id="promo-title" class="h4 fw-bold"><i class="bi bi-ticket-perforated text-accent me-2" aria-hidden="true"></i>ตรวจสอบรหัสโปรโมชัน</h2>
-              <p class="text-body-secondary">มีรหัสส่วนลดอยู่ใช่ไหม ลองกรอกเพื่อดูส่วนลดก่อนจองได้เลย</p>
-              <form id="promo-form" novalidate>
-                <label for="promo-code" class="form-label">รหัสโปรโมชัน</label>
-                <div class="input-group has-validation">
-                  <input type="text" class="form-control text-uppercase" id="promo-code" name="code" placeholder="เช่น WELCOME10" autocomplete="off" required minlength="3" maxlength="30" pattern="[A-Za-z0-9_]+" aria-describedby="promo-result">
-                  <button type="submit" class="btn btn-primary" id="promo-btn"><i class="bi bi-check2-circle me-1" aria-hidden="true"></i>ตรวจสอบ</button>
-                  <div class="invalid-feedback">กรุณากรอกรหัสโปรโมชัน (ตัวอักษรภาษาอังกฤษหรือตัวเลข อย่างน้อย 3 ตัว)</div>
-                </div>
-              </form>
-              <div id="promo-result" class="mt-3" aria-live="polite"></div>
-            </div>
-          </div>
-        </div>
-        <div class="col-lg-6">
-          <div class="card card-soft h-100">
-            <div class="card-body p-4">
-              <h2 class="h4 fw-bold"><i class="bi bi-info-circle text-brand me-2" aria-hidden="true"></i>หมายเหตุสำคัญ</h2>
+              <h2 id="notes-title" class="h4 fw-bold"><i class="bi bi-info-circle text-brand me-2" aria-hidden="true"></i>หมายเหตุสำคัญ</h2>
               <ul class="list-unstyled mb-0" id="notes-list">
                 <li class="mb-3">กำลังโหลด...</li>
               </ul>
@@ -155,31 +138,10 @@
       ['clock-history', `ระยะเวลาการจองขั้นต่ำ <strong>${LG.esc(fmtDays(s.minDuration ?? 24))}</strong> และสูงสุด <strong>${LG.esc(fmtDays(s.maxDuration ?? 720))}</strong> ต่อหนึ่งการจอง`],
       ['hourglass-split', `หลังหมดเวลา มีเวลาผ่อนผัน <strong>${LG.esc(s.gracePeriod ?? 15)} นาที</strong> หลังจากนั้นกรุณาต่อวันหรือนำของออกจากล็อกเกอร์`],
       ['arrow-counterclockwise', `<strong>นโยบายการยกเลิก:</strong> ${LG.esc(s.cancelPolicy || 'ยกเลิกฟรีก่อนเวลาเริ่มใช้งาน 24 ชั่วโมง')} <a href="terms.html#refund">อ่านเพิ่มเติม</a>`],
-      ['receipt', 'ราคาทั้งหมดรวมภาษีมูลค่าเพิ่ม 7% แล้ว และสามารถใช้รหัสโปรโมชันได้ครั้งละ 1 รหัสต่อการจอง'],
+      ['receipt', 'ราคาทั้งหมดรวมภาษีมูลค่าเพิ่ม 7% แล้ว'],
     ];
     notes.innerHTML = items.map(([icon, html]) => `<li class="d-flex gap-3 mb-3"><i class="bi bi-${icon} text-brand fs-5" aria-hidden="true"></i><span>${html}</span></li>`).join('');
   }
-
-  // Promo checker
-  const promoForm = $('promo-form'), promoInput = $('promo-code'), promoOut = $('promo-result');
-  promoForm.addEventListener('submit', async (ev) => {
-    ev.preventDefault();
-    promoOut.innerHTML = '';
-    if (!LG.validate(promoForm)) return;
-    await LG.busy($('promo-btn'), async () => {
-      try {
-        const p = await DS.checkPromo(promoInput.value.trim().toUpperCase());
-        const value = p.type === 'percent' ? `ลด ${p.value}%` : `ลด ${LG.fmt.baht(p.value)}`;
-        let example = '';
-        const m = prices.find((x) => x.size === 'M');
-        if (m) { const q = quote(m.day, 1, p); example = `<div class="small mt-1">ตัวอย่าง: ล็อกเกอร์ขนาด M แบบ 1 วัน ราคา ${LG.fmt.baht(q.gross)} ลด ${LG.fmt.baht(q.discount)} เหลือ <strong>${LG.fmt.baht(q.total)}</strong></div>`; }
-        promoOut.innerHTML = `<div class="alert alert-success mb-0" role="status"><i class="bi bi-check-circle-fill me-2" aria-hidden="true"></i>รหัส <strong>${LG.esc(p.code)}</strong> ใช้งานได้: ${LG.esc(value)}${example}</div>`;
-        LG.toast('รหัสโปรโมชันใช้งานได้');
-      } catch (e) {
-        promoOut.innerHTML = `<div class="alert alert-danger mb-0" role="alert"><i class="bi bi-x-circle-fill me-2" aria-hidden="true"></i>${LG.esc(e.message || 'ไม่สามารถตรวจสอบรหัสได้')}</div>`;
-      }
-    });
-  });
 
   // Load data
   const [pr, st, lc, lk] = await Promise.allSettled([DS.getPricing(), DS.getSettings(), DS.getLocations(), DS.getLockers()]);
